@@ -906,7 +906,7 @@
         },
         "value": "info@viteh.org",
         "href": "mailto:info@viteh.org",
-        "demo": true
+        "demo": false
       },
       {
         "icon": "phone",
@@ -998,20 +998,30 @@
         "en": "Send request",
         "de": "Anfrage senden"
       },
-      "demoNotice": {
-        "uk": "Це демо-форма: дані нікуди не надсилаються.",
-        "en": "This is a demo form: no data is sent anywhere.",
-        "de": "Dies ist ein Demo-Formular: Es werden keine Daten übertragen."
-      },
       "success": {
-        "uk": "Дякуємо! У робочій версії ми б уже отримали ваш запит. Зараз це демонстрація.",
-        "en": "Thank you! In the live version we would have received your request. For now this is a demonstration.",
-        "de": "Vielen Dank! In der Live-Version hätten wir Ihre Anfrage erhalten. Aktuell handelt es sich um eine Demonstration."
+        "uk": "Дякуємо! Ми отримали ваш запит і відповімо на вказаний email.",
+        "en": "Thank you! We have received your request and will reply to the email address you gave.",
+        "de": "Vielen Dank! Wir haben Ihre Anfrage erhalten und antworten an die angegebene E-Mail-Adresse."
       },
       "required": {
         "uk": "Заповніть, будь ласка, обов'язкові поля.",
         "en": "Please fill in the required fields.",
         "de": "Bitte füllen Sie die Pflichtfelder aus."
+      },
+      "note": {
+        "uk": "Дані з форми надходять лише на нашу пошту й використовуються тільки для відповіді на запит.",
+        "en": "The form data goes only to our mailbox and is used only to answer your request.",
+        "de": "Die Formulardaten gehen nur an unser Postfach und werden ausschließlich zur Beantwortung Ihrer Anfrage verwendet."
+      },
+      "sending": {
+        "uk": "Надсилаю…",
+        "en": "Sending…",
+        "de": "Wird gesendet …"
+      },
+      "error": {
+        "uk": "Не вдалося надіслати. Спробуйте ще раз або напишіть нам на info@viteh.org.",
+        "en": "Could not send your request. Please try again or write to info@viteh.org.",
+        "de": "Die Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder schreiben Sie an info@viteh.org."
       }
     }
   },
@@ -1148,9 +1158,9 @@
             "de": "3. Kontaktformular und E-Mail"
           },
           "p": {
-            "uk": "Наразі форма є демонстраційною і не передає даних. Якщо ви пишете нам на email, ми обробляємо ваші дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає.",
-            "en": "The form is currently a demonstration and transmits no data. If you email us, we process your data solely to answer your request (Art. 6(1)(b) or (f) GDPR) and delete it once it is no longer needed.",
-            "de": "Das Formular ist derzeit eine Demonstration und überträgt keine Daten. Wenn Sie uns per E-Mail schreiben, verarbeiten wir Ihre Daten ausschließlich zur Beantwortung Ihrer Anfrage (Art. 6 Abs. 1 lit. b oder f DSGVO) und löschen sie, sobald sie nicht mehr benötigt werden."
+            "uk": "Контактна форма надсилає введені вами ім'я, email, тип проєкту та повідомлення на нашу поштову скриньку. Передача йде через Cloudflare (хостинг і маршрутизація пошти), сама скринька розміщена в Google Mail. Ми обробляємо ці дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає. Те саме стосується листів, які ви надсилаєте нам на email.",
+            "en": "The contact form sends the name, email address, project type and message you enter to our mailbox. The transfer runs through Cloudflare (hosting and mail routing); the mailbox itself is hosted with Google Mail. We process this data solely to answer your request (Art. 6(1)(b) or (f) GDPR) and delete it once it is no longer needed. The same applies to emails you send us directly.",
+            "de": "Das Kontaktformular sendet den von Ihnen eingegebenen Namen, die E-Mail-Adresse, den Projekttyp und die Nachricht an unser Postfach. Die Übertragung läuft über Cloudflare (Hosting und E-Mail-Weiterleitung); das Postfach selbst wird bei Google Mail betrieben. Wir verarbeiten diese Daten ausschließlich zur Beantwortung Ihrer Anfrage (Art. 6 Abs. 1 lit. b oder f DSGVO) und löschen sie, sobald sie nicht mehr benötigt werden. Dasselbe gilt für E-Mails, die Sie uns direkt senden."
           }
         },
         {

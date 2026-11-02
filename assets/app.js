@@ -335,12 +335,21 @@ const observeReveals = () => {
   nodes.forEach((node) => revealObserver.observe(node));
 };
 
+const CONTACT_ENDPOINT = "/api/contact";
+
 const setupForm = () => {
   const form = $("#contactForm");
   if (!form) return;
   const status = $("#formStatus");
-  form.addEventListener("submit", (event) => {
+  const button = form.querySelector("button[type=submit]");
+  let shownAt = Date.now();      // the server refuses forms that came back faster than a human could fill them
+  const say = (kind, key) => {
+    status.className = `form-status ${kind}`;
+    status.textContent = tr(state.site.contact.form[key]);
+  };
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (button.disabled) return;
     const data = new FormData(form);
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.get("email") || ""));
     const checks = {
@@ -349,10 +358,31 @@ const setupForm = () => {
       "f-msg": String(data.get("message") || "").trim().length > 0,
     };
     Object.entries(checks).forEach(([id, ok]) => $("#" + id).closest(".field").classList.toggle("invalid", !ok));
-    const valid = Object.values(checks).every(Boolean) && data.get("consent");
-    status.className = `form-status ${valid ? "ok" : "err"}`;
-    status.textContent = tr(valid ? state.site.contact.form.success : state.site.contact.form.required);
-    if (valid) form.reset();
+    if (!Object.values(checks).every(Boolean) || !data.get("consent")) return say("err", "required");
+
+    button.disabled = true;
+    say("", "sending");
+    try {
+      const response = await fetch(CONTACT_ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: String(data.get("name") || ""), email: String(data.get("email") || ""), type: Number(data.get("type")),
+          message: String(data.get("message") || ""), consent: true, lang: state.lang, hp: String(data.get("hp") || ""), t: shownAt,
+        }),
+      });
+      if (response.ok) {
+        say("ok", "success");
+        form.reset();
+        shownAt = Date.now();
+      } else {
+        say("err", response.status === 400 ? "required" : "error");
+      }
+    } catch {
+      say("err", "error");
+    } finally {
+      button.disabled = false;
+    }
   });
 };
 

@@ -5,6 +5,14 @@ development (light to medium complexity) and AI-agent integration.
 
 No build step, no external requests (no CDN, fonts, analytics or cookies) — GDPR-friendly by design.
 
+## Contact form
+
+The form posts JSON to `/api/contact` on the same origin. The Worker in `worker/` checks the fields (length limits, e-mail syntax,
+consent, a hidden honeypot field, a minimum fill time, the `Origin` header) and sends a plain-text mail through Cloudflare Email Routing
+(`send_email` binding `MAIL`, which can only send to the verified destination address) with the visitor's address as `Reply-To`.
+No password or API key is involved. Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is static.
+Tests: `node --test worker/contact.test.mjs`. Deploy: `viteh-site/deploy-worker.sh` of the Server repository.
+
 This site is independent from NanoKVM and from the OTA file server.
 
 - `viteh.org` is the public showcase.
@@ -19,7 +27,8 @@ This site is independent from NanoKVM and from the OTA file server.
 | `data/site.json` | All interface text (`uk`, `en`, `de`), services, FAQ, contact details |
 | `data/products.json` | Project cards (demo content) |
 | `assets/styles.css` | Design tokens, light/dark themes, responsive layout |
-| `assets/app.js` | Rendering, language switch, theme toggle, form demo, SEO meta |
+| `assets/app.js` | Rendering, language switch, theme toggle, contact form submit, SEO meta |
+| `worker/index.mjs`, `worker/contact.mjs` | Cloudflare Worker code for `POST /api/contact` (validation + mail); `worker/contact.test.mjs` = tests |
 | `assets/*.svg`, `og-image.png` | Illustrations, icons, favicon, social preview |
 
 ## Design
