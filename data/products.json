@@ -1,0 +1,77 @@
+[
+  {
+    "id": "cronos-controller",
+    "category": "automation",
+    "image": "assets/product-controller.svg",
+    "title": {
+      "uk": "Cronos Controller",
+      "en": "Cronos Controller",
+      "de": "Cronos Controller"
+    },
+    "summary": {
+      "uk": "Контролер для керування процесами, тестування прототипів і локальної автоматики.",
+      "en": "A controller for process control, prototype testing, and local automation.",
+      "de": "Controller fuer Prozesssteuerung, Prototypentests und lokale Automatisierung."
+    },
+    "status": {
+      "uk": "Прототип",
+      "en": "Prototype",
+      "de": "Prototyp"
+    },
+    "price": {
+      "uk": "Ціна за запитом",
+      "en": "Price on request",
+      "de": "Preis auf Anfrage"
+    }
+  },
+  {
+    "id": "custom-electronics",
+    "category": "custom",
+    "image": "assets/product-pcb.svg",
+    "title": {
+      "uk": "Електроніка під задачу",
+      "en": "Custom electronics",
+      "de": "Elektronik nach Aufgabe"
+    },
+    "summary": {
+      "uk": "Підбір компонентів, плата, корпус, прошивка і підготовка до малих серій.",
+      "en": "Component selection, PCB, enclosure, firmware, and preparation for small batches.",
+      "de": "Komponentenauswahl, Leiterplatte, Gehaeuse, Firmware und Vorbereitung fuer Kleinserien."
+    },
+    "status": {
+      "uk": "Під замовлення",
+      "en": "Custom order",
+      "de": "Auf Bestellung"
+    },
+    "price": {
+      "uk": "Оцінка після ТЗ",
+      "en": "Estimate after brief",
+      "de": "Schaetzung nach Briefing"
+    }
+  },
+  {
+    "id": "iot-module",
+    "category": "hardware",
+    "image": "assets/product-module.svg",
+    "title": {
+      "uk": "IoT модуль",
+      "en": "IoT module",
+      "de": "IoT-Modul"
+    },
+    "summary": {
+      "uk": "Компактний вузол для збору даних, індикації або керування через мережу.",
+      "en": "A compact node for data collection, indication, or network control.",
+      "de": "Kompakter Knoten fuer Datenerfassung, Anzeige oder Netzwerksteuerung."
+    },
+    "status": {
+      "uk": "Планується",
+      "en": "Planned",
+      "de": "Geplant"
+    },
+    "price": {
+      "uk": "Скоро",
+      "en": "Coming soon",
+      "de": "Bald verfuegbar"
+    }
+  }
+]

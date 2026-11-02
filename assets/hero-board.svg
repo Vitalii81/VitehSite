@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-label="Electronic device preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dbe4dd"/>
+      <stop offset="1" stop-color="#aebeb3"/>
+    </linearGradient>
+    <linearGradient id="board" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f6d5d"/>
+      <stop offset="1" stop-color="#173c58"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="675" fill="url(#bg)"/>
+  <rect x="130" y="115" width="640" height="445" rx="26" fill="url(#board)"/>
+  <rect x="180" y="165" width="220" height="130" rx="14" fill="#101820"/>
+  <rect x="445" y="170" width="210" height="82" rx="10" fill="#e8eee9"/>
+  <rect x="445" y="278" width="250" height="168" rx="14" fill="#0f151b"/>
+  <circle cx="210" cy="465" r="34" fill="#c97834"/>
+  <circle cx="312" cy="465" r="34" fill="#c97834"/>
+  <circle cx="668" cy="496" r="30" fill="#e8eee9"/>
+  <g fill="none" stroke="#8ed6c1" stroke-width="10" stroke-linecap="round">
+    <path d="M230 342h170"/>
+    <path d="M230 376h130"/>
+    <path d="M230 410h185"/>
+    <path d="M480 505h100"/>
+    <path d="M620 505h26"/>
+  </g>
+  <g fill="#e8eee9">
+    <circle cx="166" cy="151" r="14"/>
+    <circle cx="734" cy="151" r="14"/>
+    <circle cx="166" cy="524" r="14"/>
+    <circle cx="734" cy="524" r="14"/>
+  </g>
+</svg>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ViTeh product showcase and engineering offers.">
+  <title>ViTeh</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="ViTeh home">
+      <span class="brand-mark">VT</span>
+      <span>ViTeh</span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#products" data-i18n="nav.products">Вироби</a>
+      <a href="#services" data-i18n="nav.services">Послуги</a>
+      <a href="#contact" data-i18n="nav.contact">Контакти</a>
+    </nav>
+    <label class="language">
+      <span data-i18n="language.label">Мова</span>
+      <select id="languageSelect" aria-label="Language"></select>
+    </label>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Розробка та виробництво електроніки</p>
+        <h1 data-i18n="hero.title">ViTeh</h1>
+        <p class="lead" data-i18n="hero.lead">Вітрина готових виробів, прототипів та інженерних пропозицій.</p>
+        <div class="actions">
+          <a class="button primary" href="#products" data-i18n="hero.primaryCta">Переглянути вироби</a>
+          <a class="button secondary" href="#contact" data-i18n="hero.secondaryCta">Зв'язатися</a>
+        </div>
+      </div>
+      <picture class="hero-media" aria-hidden="true">
+        <source srcset="assets/hero-board.svg" type="image/svg+xml">
+        <img src="assets/hero-board.svg" alt="">
+      </picture>
+    </section>
+
+    <section class="section" id="products">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="products.eyebrow">Каталог</p>
+        <h2 data-i18n="products.title">Вироби та пропозиції</h2>
+        <p data-i18n="products.lead">Картки наповнюються з JSON-файлу і вже підтримують українську, англійську та німецьку.</p>
+      </div>
+      <div class="filters" id="categoryFilters" aria-label="Product categories"></div>
+      <div class="product-grid" id="productGrid"></div>
+    </section>
+
+    <section class="section services" id="services">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="services.eyebrow">Можливості</p>
+        <h2 data-i18n="services.title">Що можна розширити далі</h2>
+      </div>
+      <div class="service-grid">
+        <article>
+          <h3 data-i18n="services.items.catalog.title">Каталог</h3>
+          <p data-i18n="services.items.catalog.text">Додавання категорій, фото, файлів прошивок, документації та статусів наявності.</p>
+        </article>
+        <article>
+          <h3 data-i18n="services.items.leads.title">Заявки</h3>
+          <p data-i18n="services.items.leads.text">Форма запиту з відправкою на email, Telegram або легкий backend.</p>
+        </article>
+        <article>
+          <h3 data-i18n="services.items.i18n.title">Мови</h3>
+          <p data-i18n="services.items.i18n.text">Нові мови додаються через словник інтерфейсу і перекладні поля товарів.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div>
+        <p class="eyebrow" data-i18n="contact.eyebrow">Контакт</p>
+        <h2 data-i18n="contact.title">Обговоримо ваш виріб</h2>
+        <p data-i18n="contact.lead">Напишіть, що потрібно виготовити або адаптувати. Контакти можна змінити у data/site.json.</p>
+      </div>
+      <div class="contact-actions" id="contactActions"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>ViTeh</span>
+    <span data-i18n="footer.note">Легка мультимовна вітрина.</span>
+  </footer>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>
