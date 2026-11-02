@@ -1,15 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400">
-  <rect width="640" height="400" fill="#e7ebe5"/>
-  <rect x="108" y="66" width="424" height="268" rx="18" fill="#274f86"/>
-  <g fill="#e9eef2">
-    <rect x="158" y="112" width="92" height="78" rx="8"/>
-    <rect x="286" y="112" width="196" height="44" rx="8"/>
-    <rect x="286" y="188" width="120" height="68" rx="8"/>
-  </g>
-  <g fill="#c97834">
-    <circle cx="172" cy="274" r="18"/>
-    <circle cx="226" cy="274" r="18"/>
-    <circle cx="456" cy="274" r="18"/>
-  </g>
-  <path d="M202 151h84M346 256v32M406 222h50" stroke="#96c2ff" stroke-width="9" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" fill="none"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2b26"/><stop offset="1" stop-color="#0e1816"/></linearGradient><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2aa88e"/><stop offset="1" stop-color="#2a5f8a"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7f8fff"/><stop offset="1" stop-color="#4b5fc7"/></linearGradient><filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".4"/></filter></defs><rect width="480" height="320" fill="url(#bg)"/><g stroke="#223730" stroke-width="1"><path d="M0 80h480M0 160h480M0 240h480M120 0v320M240 0v320M360 0v320"/></g>
+<g filter="url(#s)"><rect x="70" y="50" width="340" height="220" rx="20" fill="url(#a)"/>
+<g fill="#d9f5ec" opacity=".9"><circle cx="92" cy="72" r="6"/><circle cx="388" cy="72" r="6"/><circle cx="92" cy="248" r="6"/><circle cx="388" cy="248" r="6"/></g>
+<rect x="120" y="90" width="110" height="84" rx="10" fill="#0d1513"/><g stroke="#9aa9a3" stroke-width="3" stroke-linecap="round"><path d="M138 82v8M158 82v8M178 82v8M198 82v8M218 82v8M138 174v8M158 174v8M178 174v8M198 174v8M218 174v8"/></g>
+<text x="175" y="138" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#4cc9ad">MCU</text>
+<rect x="270" y="90" width="90" height="38" rx="8" fill="#e8eee9"/><rect x="270" y="142" width="40" height="32" rx="6" fill="#0d1513"/><rect x="320" y="142" width="40" height="32" rx="6" fill="#0d1513"/>
+<circle cx="150" cy="226" r="16" fill="#d8873a"/><circle cx="196" cy="226" r="16" fill="#d8873a"/><rect x="250" y="206" width="110" height="40" rx="8" fill="#0d1513"/>
+<g stroke="#8ae6cd" stroke-width="3" stroke-linecap="round" fill="none"><path d="M230 120h40M230 150h30v40h-60M300 128v14M340 128v14M200 174v34M250 226h-34"/></g></g>
 </svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 760" fill="none">
+  <defs>
+    <linearGradient id="pcb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#23927b"/><stop offset="1" stop-color="#1b4a6b"/></linearGradient>
+    <linearGradient id="win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16231f"/><stop offset="1" stop-color="#0d1513"/></linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7f8fff"/><stop offset="1" stop-color="#4b5fc7"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#4cc9ad" stop-opacity=".45"/><stop offset="1" stop-color="#4cc9ad" stop-opacity="0"/></radialGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0a1512" flood-opacity=".32"/></filter>
+  </defs>
+  <circle cx="480" cy="380" r="360" fill="url(#glow)"/>
+
+  <!-- connecting traces -->
+  <g stroke="#4cc9ad" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12" opacity=".8">
+    <path d="M360 300C470 300 470 200 590 190"/>
+    <path d="M520 470C560 420 640 330 700 300"/>
+    <path d="M300 440C300 520 380 540 440 540"/>
+  </g>
+
+  <!-- code window -->
+  <g filter="url(#sh)">
+    <rect x="70" y="120" width="420" height="300" rx="22" fill="url(#win)" stroke="#2c4a42" stroke-width="2"/>
+    <path d="M70 142a22 22 0 0 1 22-22h376a22 22 0 0 1 22 22v28H70z" fill="#1d2f2a"/>
+    <circle cx="102" cy="145" r="6" fill="#ff7b72"/><circle cx="124" cy="145" r="6" fill="#f0b45a"/><circle cx="146" cy="145" r="6" fill="#4cc9ad"/>
+    <g stroke-width="9" stroke-linecap="round">
+      <path d="M106 208h70" stroke="#8c9cff"/><path d="M190 208h110" stroke="#4cc9ad"/>
+      <path d="M130 240h120" stroke="#e7efeb" opacity=".75"/><path d="M264 240h60" stroke="#f0a65a"/>
+      <path d="M130 272h60" stroke="#8c9cff"/><path d="M204 272h150" stroke="#e7efeb" opacity=".55"/>
+      <path d="M130 304h160" stroke="#4cc9ad"/><path d="M304 304h40" stroke="#e7efeb" opacity=".55"/>
+      <path d="M106 336h46" stroke="#8c9cff"/><path d="M166 336h100" stroke="#f0a65a"/>
+      <path d="M106 368h90" stroke="#e7efeb" opacity=".4"/>
+    </g>
+    <rect x="420" y="196" width="3" height="26" fill="#4cc9ad"/>
+  </g>
+
+  <!-- PCB -->
+  <g filter="url(#sh)">
+    <rect x="300" y="430" width="500" height="270" rx="26" fill="url(#pcb)"/>
+    <rect x="300" y="430" width="500" height="270" rx="26" stroke="#7ee0c6" stroke-opacity=".35" stroke-width="2"/>
+    <g fill="#d9f5ec" opacity=".9"><circle cx="330" cy="460" r="8"/><circle cx="770" cy="460" r="8"/><circle cx="330" cy="670" r="8"/><circle cx="770" cy="670" r="8"/></g>
+    <rect x="360" y="490" width="150" height="110" rx="12" fill="#0d1513" stroke="#3a5e54" stroke-width="2"/>
+    <g stroke="#9aa9a3" stroke-width="4" stroke-linecap="round"><path d="M380 480v10M410 480v10M440 480v10M470 480v10M500 480v10M380 600v10M410 600v10M440 600v10M470 600v10M500 600v10M350 510h10M350 540h10M350 570h10M510 510h10M510 540h10M510 570h10"/></g>
+    <text x="435" y="552" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="22" font-weight="700" fill="#4cc9ad">ViTeh</text>
+    <rect x="560" y="490" width="170" height="60" rx="10" fill="#e8eee9"/>
+    <g fill="#1b4a6b"><rect x="578" y="505" width="26" height="30" rx="4"/><rect x="616" y="505" width="26" height="30" rx="4"/><rect x="654" y="505" width="26" height="30" rx="4"/><rect x="692" y="505" width="22" height="30" rx="4"/></g>
+    <circle cx="590" cy="640" r="26" fill="#d8873a"/><circle cx="590" cy="640" r="11" fill="#f2c18a"/>
+    <circle cx="660" cy="640" r="26" fill="#d8873a"/><circle cx="660" cy="640" r="11" fill="#f2c18a"/>
+    <rect x="700" y="585" width="60" height="30" rx="8" fill="#0d1513"/>
+    <g stroke="#7ee0c6" stroke-width="4" stroke-linecap="round" fill="none"><path d="M360 640h140M360 660h100M540 600v20M520 580v50h20"/></g>
+  </g>
+
+  <!-- agent network -->
+  <g filter="url(#sh)">
+    <rect x="560" y="110" width="320" height="200" rx="22" fill="#15201d" stroke="#2c4a42" stroke-width="2"/>
+  </g>
+  <g stroke="#8c9cff" stroke-width="3" opacity=".9" stroke-linecap="round">
+    <path d="M720 210 620 160M720 210 820 160M720 210 630 270M720 210 815 268"/>
+  </g>
+  <g>
+    <circle cx="720" cy="210" r="34" fill="url(#node)"/>
+    <circle cx="720" cy="210" r="14" fill="#fff" opacity=".92"/>
+    <circle cx="620" cy="160" r="17" fill="#4cc9ad"/><circle cx="820" cy="160" r="17" fill="#f0a65a"/>
+    <circle cx="630" cy="270" r="17" fill="#8c9cff"/><circle cx="815" cy="268" r="17" fill="#4cc9ad"/>
+  </g>
+  <g stroke="#0d1513" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m612 160 6 6 11-12"/><path d="m812 160 6 6 11-12"/><path d="m622 270 6 6 11-12"/><path d="m807 268 6 6 11-12"/>
+  </g>
+
+  <!-- floating status chip -->
+  <g filter="url(#sh)">
+    <rect x="700" y="330" width="190" height="64" rx="32" fill="#e8f7f2" stroke="#4cc9ad" stroke-width="2"/>
+    <circle cx="734" cy="362" r="10" fill="#1c8a74"/>
+    <rect x="756" y="352" width="100" height="8" rx="4" fill="#1b4a6b" opacity=".75"/>
+    <rect x="756" y="368" width="64" height="8" rx="4" fill="#1b4a6b" opacity=".4"/>
+  </g>
+</svg>

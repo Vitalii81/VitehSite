@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" fill="none" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13201c"/><stop offset="1" stop-color="#0c1311"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7f8fff"/><stop offset="1" stop-color="#4b5fc7"/></linearGradient>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1l8 4-8 4z" fill="#4cc9ad"/></marker>
+  </defs>
+  <rect width="960" height="440" rx="28" fill="url(#bg)"/>
+  <g stroke="#1f332d" stroke-width="1"><path d="M0 110h960M0 220h960M0 330h960M240 0v440M480 0v440M720 0v440"/></g>
+
+  <!-- request -->
+  <rect x="36" y="168" width="170" height="104" rx="18" fill="#182823" stroke="#2c4a42" stroke-width="2"/>
+  <path d="M62 204h110M62 224h80M62 244h96" stroke="#9bada6" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+  <text x="121" y="150" text-anchor="middle" font-size="18" font-weight="600" fill="#e7efeb">Request</text>
+
+  <!-- agent -->
+  <circle cx="400" cy="220" r="84" fill="#4cc9ad" opacity=".08"/>
+  <circle cx="400" cy="220" r="62" fill="url(#core)"/>
+  <circle cx="400" cy="220" r="26" fill="#fff" opacity=".93"/>
+  <path d="M388 220l9 9 17-19" stroke="#4b5fc7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="130" text-anchor="middle" font-size="18" font-weight="600" fill="#e7efeb">AI agent</text>
+
+  <!-- tools -->
+  <g>
+    <rect x="590" y="40" width="170" height="64" rx="16" fill="#182823" stroke="#2c4a42" stroke-width="2"/>
+    <circle cx="624" cy="72" r="14" fill="#4cc9ad"/><text x="650" y="78" font-size="17" fill="#e7efeb">Documents</text>
+    <rect x="590" y="188" width="170" height="64" rx="16" fill="#182823" stroke="#2c4a42" stroke-width="2"/>
+    <circle cx="624" cy="220" r="14" fill="#f0a65a"/><text x="650" y="226" font-size="17" fill="#e7efeb">APIs / CRM</text>
+    <rect x="590" y="336" width="170" height="64" rx="16" fill="#182823" stroke="#2c4a42" stroke-width="2"/>
+    <circle cx="624" cy="368" r="14" fill="#8c9cff"/><text x="650" y="374" font-size="17" fill="#e7efeb">Devices</text>
+  </g>
+
+  <!-- human approval -->
+  <rect x="800" y="168" width="130" height="104" rx="18" fill="#182823" stroke="#4cc9ad" stroke-width="2"/>
+  <circle cx="865" cy="206" r="14" fill="#e7efeb" opacity=".85"/>
+  <path d="M838 252c2-16 14-24 27-24s25 8 27 24" fill="#e7efeb" opacity=".85"/>
+  <text x="865" y="150" text-anchor="middle" font-size="18" font-weight="600" fill="#e7efeb">Approval</text>
+
+  <!-- arrows -->
+  <g stroke="#4cc9ad" stroke-width="3" stroke-linecap="round" marker-end="url(#ar)">
+    <path d="M208 220H326"/>
+    <path d="M452 190C500 150 530 92 588 76"/>
+    <path d="M462 220H586"/>
+    <path d="M452 250C500 290 530 346 588 366"/>
+  </g>
+  <g stroke="#4cc9ad" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 9" marker-end="url(#ar)">
+    <path d="M762 76C800 90 830 120 850 164"/>
+    <path d="M762 220H798"/>
+    <path d="M762 368C800 350 830 310 850 276"/>
+  </g>
+</svg>
