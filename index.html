@@ -179,6 +179,13 @@
           <div class="field"><label for="f-email" data-i18n="contact.form.email"></label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
           <div class="field"><label for="f-type" data-i18n="contact.form.type"></label><select id="f-type" name="type"></select></div>
           <div class="field"><label for="f-msg" data-i18n="contact.form.message"></label><textarea id="f-msg" name="message" rows="5" required></textarea></div>
+          <div class="field attach">
+            <input id="f-files" name="files" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.odt,.ods,.txt,.csv">
+            <label class="btn ghost attach-btn" for="f-files"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-clip"/></svg><span data-i18n="contact.form.attach"></span></label>
+            <p class="attach-hint" data-i18n="contact.form.attachHint"></p>
+            <ul class="attach-list" id="attachList" aria-live="polite"></ul>
+            <p class="attach-error" id="attachError" role="alert"></p>
+          </div>
           <div class="hp" aria-hidden="true"><label>Website <input type="text" name="hp" tabindex="-1" autocomplete="off"></label></div>
           <label class="consent"><input type="checkbox" name="consent" required><span data-i18n="contact.form.consent"></span></label>
           <button class="btn primary wide" type="submit"><span data-i18n="contact.form.submit"></span><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-arrow"/></svg></button>

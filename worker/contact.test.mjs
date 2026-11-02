@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validate, buildMime, subjectOf, encodedWord, originAllowed, TYPES, LIMITS } from "./contact.mjs";
+import { validate, buildMime, subjectOf, encodedWord, originAllowed, leadPayload, validateFiles, safeFileName, FILE_LIMITS, TYPES, LIMITS } from "./contact.mjs";
 
 const NOW = 1_800_000_000_000;
 const good = (over = {}) => ({ name: "Ірина Müller", email: "irina@example.de", type: 2, message: "Потрібен AI-агент для пошти.", consent: true, lang: "uk", hp: "", t: NOW - 10_000, ...over });
@@ -87,4 +87,77 @@ test("only the site's own origins may post", () => {
   assert.equal(originAllowed("https://evil.example"), false);
   assert.equal(originAllowed(null), false);
   assert.equal(originAllowed("http://viteh.org"), false);
+});
+
+test("the queue entry and the letter share one id, so the mail agent keeps one item", () => {
+  const v = validate(good(), NOW).value;
+  const id = "0b9e6c1a-2d3f-4a5b-8c7d-1e2f3a4b5c6d";
+  assert.deepEqual(leadPayload(v, id), { id, name: v.name, email: v.email, type: 2, message: v.message, lang: "uk" });
+  const mime = buildMime({ from: "site@viteh.org", to: "info.viteh@gmail.com", value: v, id, date: new Date(NOW) });
+  assert.match(mime, new RegExp(`^Message-ID: <${id}@viteh.org>`, "m"));
+});
+
+const bytes = (...parts) => Uint8Array.from(parts.flat());
+const PDF = bytes([...Buffer.from("%PDF-1.7\n%test\n")]);
+const PNG = bytes([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+const ZIP = bytes([0x50, 0x4b, 0x03, 0x04, 1, 2, 3]);
+
+test("files: accepted types must match their first bytes", () => {
+  const r = validateFiles([{ name: "договір.pdf", bytes: PDF }, { name: "scan.PNG", bytes: PNG }, { name: "tabelle.xlsx", bytes: ZIP }, { name: "notes.txt", bytes: Uint8Array.from(Buffer.from("Привіт, світе\n")) }]
+    .slice(0, 3));
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.files.map((f) => f.type), ["application/pdf", "image/png", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
+});
+
+test("files: a renamed program, a wrong extension and unknown types are refused", () => {
+  const exe = bytes([0x4d, 0x5a, 0x90, 0, 3, 0]);
+  for (const f of [{ name: "invoice.pdf", bytes: exe }, { name: "photo.png", bytes: PDF }, { name: "run.exe", bytes: exe }, { name: "archive.zip", bytes: ZIP },
+                   { name: "noextension", bytes: PDF }, { name: "script.js", bytes: Uint8Array.from(Buffer.from("alert(1)")) }, { name: "bin.txt", bytes: bytes([65, 0, 66]) }]) {
+    assert.deepEqual(validateFiles([f]), { ok: false, error: "file_type" }, f.name);
+  }
+  assert.equal(validateFiles([{ name: "a.pdf", bytes: new Uint8Array(0) }]).error, "empty_file");
+});
+
+test("files: count and size limits", () => {
+  const one = { name: "a.pdf", bytes: PDF };
+  assert.equal(validateFiles([one, one, one, one]).error, "too_many_files");
+  const big = new Uint8Array(FILE_LIMITS.each + 1); big.set(PDF);
+  assert.equal(validateFiles([{ name: "big.pdf", bytes: big }]).error, "file_too_large");
+  const four = new Uint8Array(FILE_LIMITS.each); four.set(PDF);
+  assert.equal(validateFiles([{ name: "1.pdf", bytes: four }, { name: "2.pdf", bytes: four }]).ok, true);       // exactly the total
+  assert.equal(validateFiles([{ name: "1.pdf", bytes: four }, { name: "2.pdf", bytes: four }, one]).error, "files_too_large");
+  assert.deepEqual(validateFiles([]), { ok: true, files: [] });
+});
+
+test("file names are cleaned", () => {
+  assert.equal(safeFileName("../../etc/passwd"), "passwd");
+  assert.equal(safeFileName("C:\\Users\\x\\Звіт 2026.pdf"), "Звіт 2026.pdf");
+  assert.equal(safeFileName(".hidden.txt"), "hidden.txt");
+  assert.equal(safeFileName("a\r\nBcc: x.pdf"), "a Bcc_ x.pdf");
+  assert.equal(safeFileName(""), "file");
+  const long = safeFileName("x".repeat(300) + ".pdf");
+  assert.ok(long.length <= FILE_LIMITS.name && long.endsWith(".pdf"));
+});
+
+test("a message with attachments is multipart/mixed with the text first", () => {
+  const v = validate(good(), NOW).value;
+  const files = validateFiles([{ name: "Технічне завдання №1.pdf", bytes: PDF }, { name: "scan.png", bytes: PNG }]).files;
+  const mime = buildMime({ from: "site@viteh.org", to: "info.viteh@gmail.com", value: v, id: "0b9e6c1a-2d3f-4a5b-8c7d-1e2f3a4b5c6d", date: new Date(NOW), files });
+  const [head, rest] = [mime.slice(0, mime.indexOf("\r\n\r\n")), mime.slice(mime.indexOf("\r\n\r\n") + 4)];
+  assert.match(head, /^Content-Type: multipart\/mixed; boundary="viteh-0b9e6c1a2d3f4a5b8c7d1e2f3a4b5c6d"/m);
+  assert.ok(/^[\x20-\x7e\r\n]*$/.test(mime.replace(/[^\x00-\x7f]/g, "")), "ascii only after cleaning");
+  assert.equal((rest.match(/^--viteh-/gm) || []).length, 4);                                        // text, 2 files, closing line
+  assert.ok(rest.includes("filename*=UTF-8''" + encodeURIComponent("Технічне завдання №1.pdf")));
+  assert.match(rest, /Content-Type: application\/pdf/);
+  assert.match(rest, /Content-Disposition: attachment; filename="scan\.png"/);                            // plain ASCII names stay plain
+  const text = Buffer.from(rest.split("\r\n\r\n")[1].split("\r\n--")[0].replace(/\r\n/g, ""), "base64").toString("utf8");
+  assert.match(text, /Вкладення \(2\): Технічне завдання №1\.pdf \(1 КБ\), scan\.png \(1 КБ\)/);
+});
+
+test("the queue entry lists the files without their content", () => {
+  const v = validate(good(), NOW).value;
+  const files = validateFiles([{ name: "a.pdf", bytes: PDF }]).files;
+  const p = leadPayload(v, "id", files);
+  assert.deepEqual(p.files, [{ name: "a.pdf", size: PDF.length, type: "application/pdf" }]);
+  assert.equal("files" in leadPayload(v, "id"), false);
 });

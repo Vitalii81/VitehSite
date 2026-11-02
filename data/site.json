@@ -1022,6 +1022,48 @@
         "uk": "Не вдалося надіслати. Спробуйте ще раз або напишіть нам на info@viteh.org.",
         "en": "Could not send your request. Please try again or write to info@viteh.org.",
         "de": "Die Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder schreiben Sie an info@viteh.org."
+      },
+      "attach": {
+        "uk": "Додати документи",
+        "en": "Attach documents",
+        "de": "Dokumente anhängen"
+      },
+      "attachHint": {
+        "uk": "До 3 файлів, до 5 МБ кожен і до 10 МБ разом: PDF, зображення, Word, Excel, текст. Надсилайте лише те, що потрібне для запиту.",
+        "en": "Up to 3 files, 5 MB each and 10 MB in total: PDF, images, Word, Excel, text. Send only what your request needs.",
+        "de": "Bis zu 3 Dateien, je 5 MB und insgesamt 10 MB: PDF, Bilder, Word, Excel, Text. Senden Sie nur, was für Ihre Anfrage nötig ist."
+      },
+      "attachRemove": {
+        "uk": "Прибрати файл",
+        "en": "Remove file",
+        "de": "Datei entfernen"
+      },
+      "attachErrors": {
+        "too_many_files": {
+          "uk": "Не більше 3 файлів.",
+          "en": "No more than 3 files.",
+          "de": "Höchstens 3 Dateien."
+        },
+        "file_too_large": {
+          "uk": "Файл більший за 5 МБ.",
+          "en": "A file is larger than 5 MB.",
+          "de": "Eine Datei ist größer als 5 MB."
+        },
+        "files_too_large": {
+          "uk": "Усі файли разом більші за 10 МБ.",
+          "en": "All files together are larger than 10 MB.",
+          "de": "Alle Dateien zusammen sind größer als 10 MB."
+        },
+        "file_type": {
+          "uk": "Цей тип файлу не підтримується. Підійдуть PDF, зображення, Word, Excel і текст.",
+          "en": "This file type is not supported. Use PDF, images, Word, Excel or text.",
+          "de": "Dieser Dateityp wird nicht unterstützt. Möglich sind PDF, Bilder, Word, Excel und Text."
+        },
+        "empty_file": {
+          "uk": "Файл порожній.",
+          "en": "The file is empty.",
+          "de": "Die Datei ist leer."
+        }
       }
     }
   },
@@ -1158,9 +1200,9 @@
             "de": "3. Kontaktformular und E-Mail"
           },
           "p": {
-            "uk": "Контактна форма надсилає введені вами ім'я, email, тип проєкту та повідомлення на нашу поштову скриньку. Передача йде через Cloudflare (хостинг і маршрутизація пошти), сама скринька розміщена в Google Mail. Ми обробляємо ці дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає. Те саме стосується листів, які ви надсилаєте нам на email.",
-            "en": "The contact form sends the name, email address, project type and message you enter to our mailbox. The transfer runs through Cloudflare (hosting and mail routing); the mailbox itself is hosted with Google Mail. We process this data solely to answer your request (Art. 6(1)(b) or (f) GDPR) and delete it once it is no longer needed. The same applies to emails you send us directly.",
-            "de": "Das Kontaktformular sendet den von Ihnen eingegebenen Namen, die E-Mail-Adresse, den Projekttyp und die Nachricht an unser Postfach. Die Übertragung läuft über Cloudflare (Hosting und E-Mail-Weiterleitung); das Postfach selbst wird bei Google Mail betrieben. Wir verarbeiten diese Daten ausschließlich zur Beantwortung Ihrer Anfrage (Art. 6 Abs. 1 lit. b oder f DSGVO) und löschen sie, sobald sie nicht mehr benötigt werden. Dasselbe gilt für E-Mails, die Sie uns direkt senden."
+            "uk": "Контактна форма надсилає введені вами ім'я, email, тип проєкту та повідомлення на нашу поштову скриньку. Передача йде через Cloudflare (хостинг і маршрутизація пошти), сама скринька розміщена в Google Mail. Ми обробляємо ці дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає. Те саме стосується листів, які ви надсилаєте нам на email. Якщо ви додаєте документи, вони передаються разом із запитом тим самим шляхом і зберігаються лише для обробки запиту; не додавайте більше, ніж потрібно.",
+            "en": "The contact form sends the name, email address, project type and message you enter to our mailbox. The transfer runs through Cloudflare (hosting and mail routing); the mailbox itself is hosted with Google Mail. We process this data solely to answer your request (Art. 6(1)(b) or (f) GDPR) and delete it once it is no longer needed. The same applies to emails you send us directly. If you attach documents, they travel with your request the same way and are kept only to handle it; please attach no more than necessary.",
+            "de": "Das Kontaktformular sendet den von Ihnen eingegebenen Namen, die E-Mail-Adresse, den Projekttyp und die Nachricht an unser Postfach. Die Übertragung läuft über Cloudflare (Hosting und E-Mail-Weiterleitung); das Postfach selbst wird bei Google Mail betrieben. Wir verarbeiten diese Daten ausschließlich zur Beantwortung Ihrer Anfrage (Art. 6 Abs. 1 lit. b oder f DSGVO) und löschen sie, sobald sie nicht mehr benötigt werden. Dasselbe gilt für E-Mails, die Sie uns direkt senden. Wenn Sie Dokumente anhängen, werden sie auf demselben Weg mit Ihrer Anfrage übertragen und nur zu deren Bearbeitung aufbewahrt; bitte fügen Sie nicht mehr bei als nötig."
           }
         },
         {

@@ -10,6 +10,7 @@ No build step, no external requests (no CDN, fonts, analytics or cookies) — GD
 The form posts JSON to `/api/contact` on the same origin. The Worker in `worker/` checks the fields (length limits, e-mail syntax,
 consent, a hidden honeypot field, a minimum fill time, the `Origin` header) and sends a plain-text mail through Cloudflare Email Routing
 (`send_email` binding `MAIL`, which can only send to the verified destination address) with the visitor's address as `Reply-To`.
+Up to 3 documents (5 MB each, 10 MB in total; PDF, images, Word, Excel, text) can be attached: the form then posts multipart/form-data, the Worker checks the extension AND the first bytes of each file, sends them as attachments of the letter and puts them into the queue on the Radxa (documents first, the description last).
 No password or API key is involved. Only `/api/*` runs the Worker (`assets.run_worker_first`); everything else is static.
 Tests: `node --test worker/contact.test.mjs`. Deploy: `viteh-site/deploy-worker.sh` of the Server repository.
 

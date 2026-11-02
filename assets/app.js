@@ -336,17 +336,51 @@ const observeReveals = () => {
 };
 
 const CONTACT_ENDPOINT = "/api/contact";
+const FILE_RULES = { count: 3, each: 5 * 1024 * 1024, total: 10 * 1024 * 1024, ext: ["pdf", "png", "jpg", "jpeg", "webp", "doc", "docx", "xls", "xlsx", "odt", "ods", "txt", "csv"] };
+const prettySize = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
 
 const setupForm = () => {
   const form = $("#contactForm");
   if (!form) return;
   const status = $("#formStatus");
   const button = form.querySelector("button[type=submit]");
+  const input = $("#f-files");
+  const list = $("#attachList");
+  const attachError = $("#attachError");
+  let picked = [];
   let shownAt = Date.now();      // the server refuses forms that came back faster than a human could fill them
   const say = (kind, key) => {
     status.className = `form-status ${kind}`;
     status.textContent = tr(state.site.contact.form[key]);
   };
+  const attachProblem = (code) => {
+    const text = state.site.contact.form.attachErrors[code];
+    attachError.textContent = text ? tr(text) : "";
+  };
+  const renderPicked = () => {
+    list.replaceChildren(...picked.map((file, index) => {
+      const remove = h("button", { type: "button", "aria-label": tr(state.site.contact.form.attachRemove) }, "×");
+      remove.addEventListener("click", () => { picked.splice(index, 1); attachProblem(""); renderPicked(); });
+      return h("li", {}, h("span", { class: "name" }, file.name), h("span", { class: "size" }, prettySize(file.size)), remove);
+    }));
+  };
+  input.addEventListener("change", () => {
+    attachProblem("");
+    for (const file of Array.from(input.files)) {
+      const ext = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
+      const total = picked.reduce((sum, f) => sum + f.size, 0) + file.size;
+      let problem = "";
+      if (picked.length >= FILE_RULES.count) problem = "too_many_files";
+      else if (!FILE_RULES.ext.includes(ext)) problem = "file_type";
+      else if (file.size === 0) problem = "empty_file";
+      else if (file.size > FILE_RULES.each) problem = "file_too_large";
+      else if (total > FILE_RULES.total) problem = "files_too_large";
+      if (problem) { attachProblem(problem); continue; }
+      picked.push(file);
+    }
+    input.value = "";                 // the same file can be picked again after it was removed
+    renderPicked();
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (button.disabled) return;
@@ -360,23 +394,28 @@ const setupForm = () => {
     Object.entries(checks).forEach(([id, ok]) => $("#" + id).closest(".field").classList.toggle("invalid", !ok));
     if (!Object.values(checks).every(Boolean) || !data.get("consent")) return say("err", "required");
 
+    const body = new FormData();
+    for (const key of ["name", "email", "type", "message", "hp"]) body.append(key, String(data.get(key) || ""));
+    body.append("consent", "true");
+    body.append("lang", state.lang);
+    body.append("t", String(shownAt));
+    picked.forEach((file) => body.append("files", file, file.name));
+
     button.disabled = true;
     say("", "sending");
     try {
-      const response = await fetch(CONTACT_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: String(data.get("name") || ""), email: String(data.get("email") || ""), type: Number(data.get("type")),
-          message: String(data.get("message") || ""), consent: true, lang: state.lang, hp: String(data.get("hp") || ""), t: shownAt,
-        }),
-      });
+      const response = await fetch(CONTACT_ENDPOINT, { method: "POST", body });
       if (response.ok) {
         say("ok", "success");
         form.reset();
+        picked = [];
+        renderPicked();
+        attachProblem("");
         shownAt = Date.now();
       } else {
-        say("err", response.status === 400 ? "required" : "error");
+        const code = (await response.json().catch(() => ({}))).error;
+        if (state.site.contact.form.attachErrors[code]) { attachProblem(code); say("err", "error"); }
+        else say("err", response.status === 400 ? "required" : "error");
       }
     } catch {
       say("err", "error");
