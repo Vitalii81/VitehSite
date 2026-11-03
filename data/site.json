@@ -77,6 +77,38 @@
       "uk": "Не вдалося завантажити дані сайту.",
       "en": "Could not load site data.",
       "de": "Die Website-Daten konnten nicht geladen werden."
+    },
+    "gallery3d": {
+      "badge": {
+        "uk": "3D",
+        "en": "3D",
+        "de": "3D"
+      },
+      "open": {
+        "uk": "Крутити в 3D",
+        "en": "View in 3D",
+        "de": "In 3D ansehen"
+      },
+      "close": {
+        "uk": "Закрити",
+        "en": "Close",
+        "de": "Schließen"
+      },
+      "hint": {
+        "uk": "Крутіть пальцем або мишею, масштабуйте щипком чи коліщатком. Esc — закрити.",
+        "en": "Drag to rotate, pinch or scroll to zoom. Esc closes.",
+        "de": "Zum Drehen ziehen, zum Zoomen zusammenziehen oder scrollen. Esc schließt."
+      },
+      "loading": {
+        "uk": "Завантаження 3D-моделі…",
+        "en": "Loading 3D model…",
+        "de": "3D-Modell wird geladen …"
+      },
+      "unavailable": {
+        "uk": "3D-перегляд недоступний на цьому пристрої.",
+        "en": "3D view is not available on this device.",
+        "de": "Die 3D-Ansicht ist auf diesem Gerät nicht verfügbar."
+      }
     }
   },
   "nav": {

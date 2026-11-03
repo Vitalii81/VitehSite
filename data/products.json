@@ -3,6 +3,7 @@
     "id": "cronos-controller",
     "category": "automation",
     "image": "assets/product-controller.svg",
+    "model": "assets/models/cronos-controller.glb",
     "title": {
       "uk": "Cronos Controller",
       "en": "Cronos Controller",
@@ -53,6 +54,7 @@
     "id": "custom-electronics",
     "category": "hardware",
     "image": "assets/product-pcb.svg",
+    "model": "assets/models/custom-electronics.glb",
     "title": {
       "uk": "Електроніка під задачу",
       "en": "Custom electronics",
@@ -128,6 +130,7 @@
     "id": "sensor-node",
     "category": "automation",
     "image": "assets/product-sensor.svg",
+    "model": "assets/models/sensor-node.glb",
     "title": {
       "uk": "Автономний сенсорний вузол",
       "en": "Autonomous sensor node",
