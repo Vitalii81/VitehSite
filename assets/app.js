@@ -336,7 +336,7 @@ const observeReveals = () => {
 };
 
 const CONTACT_ENDPOINT = "/api/contact";
-const FILE_RULES = { count: 3, each: 5 * 1024 * 1024, total: 10 * 1024 * 1024, ext: ["pdf", "png", "jpg", "jpeg", "webp", "doc", "docx", "xls", "xlsx", "odt", "ods", "txt", "csv"] };
+const FILE_RULES = { count: 3, each: 5 * 1024 * 1024, total: 10 * 1024 * 1024, ext: ["pdf", "png", "jpg", "jpeg", "webp", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv"] };
 const prettySize = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
 
 const setupForm = () => {

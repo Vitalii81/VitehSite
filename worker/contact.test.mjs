@@ -109,6 +109,15 @@ test("files: accepted types must match their first bytes", () => {
   assert.deepEqual(r.files.map((f) => f.type), ["application/pdf", "image/png", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
 });
 
+test("files: presentations and rich text are accepted too", () => {
+  const OLE = bytes([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0]);
+  const r = validateFiles([{ name: "slides.pptx", bytes: ZIP }, { name: "old.ppt", bytes: OLE }, { name: "letter.rtf", bytes: Uint8Array.from(Buffer.from("{\\rtf1\\ansi hello}")) }]);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.files.map((f) => f.type), ["application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.ms-powerpoint", "application/rtf"]);
+  assert.equal(validateFiles([{ name: "x.rtf", bytes: PDF }]).error, "file_type");
+  assert.equal(validateFiles([{ name: "x.pptx", bytes: PDF }]).error, "file_type");
+});
+
 test("files: a renamed program, a wrong extension and unknown types are refused", () => {
   const exe = bytes([0x4d, 0x5a, 0x90, 0, 3, 0]);
   for (const f of [{ name: "invoice.pdf", bytes: exe }, { name: "photo.png", bytes: PDF }, { name: "run.exe", bytes: exe }, { name: "archive.zip", bytes: ZIP },

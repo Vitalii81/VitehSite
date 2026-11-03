@@ -1029,9 +1029,9 @@
         "de": "Dokumente anhängen"
       },
       "attachHint": {
-        "uk": "До 3 файлів, до 5 МБ кожен і до 10 МБ разом: PDF, зображення, Word, Excel, текст. Надсилайте лише те, що потрібне для запиту.",
-        "en": "Up to 3 files, 5 MB each and 10 MB in total: PDF, images, Word, Excel, text. Send only what your request needs.",
-        "de": "Bis zu 3 Dateien, je 5 MB und insgesamt 10 MB: PDF, Bilder, Word, Excel, Text. Senden Sie nur, was für Ihre Anfrage nötig ist."
+        "uk": "До 3 файлів, до 5 МБ кожен і до 10 МБ разом: PDF, зображення, Word, Excel, презентації, текст. Надсилайте лише те, що потрібне для запиту.",
+        "en": "Up to 3 files, 5 MB each and 10 MB in total: PDF, images, Word, Excel, presentations, text. Send only what your request needs.",
+        "de": "Bis zu 3 Dateien, je 5 MB und insgesamt 10 MB: PDF, Bilder, Word, Excel, Präsentationen, Text. Senden Sie nur, was für Ihre Anfrage nötig ist."
       },
       "attachRemove": {
         "uk": "Прибрати файл",
@@ -1055,9 +1055,9 @@
           "de": "Alle Dateien zusammen sind größer als 10 MB."
         },
         "file_type": {
-          "uk": "Цей тип файлу не підтримується. Підійдуть PDF, зображення, Word, Excel і текст.",
-          "en": "This file type is not supported. Use PDF, images, Word, Excel or text.",
-          "de": "Dieser Dateityp wird nicht unterstützt. Möglich sind PDF, Bilder, Word, Excel und Text."
+          "uk": "Цей тип файлу не підтримується. Підійдуть PDF, зображення, Word, Excel, презентації і текст.",
+          "en": "This file type is not supported. Use PDF, images, Word, Excel, presentations or text.",
+          "de": "Dieser Dateityp wird nicht unterstützt. Möglich sind PDF, Bilder, Word, Excel, Präsentationen und Text."
         },
         "empty_file": {
           "uk": "Файл порожній.",
