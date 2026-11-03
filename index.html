@@ -1,92 +1,218 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en" data-page="home">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ViTeh product showcase and engineering offers.">
-  <title>ViTeh</title>
+  <title>ViTeh — software, electronic devices and AI agents</title>
+  <meta name="description" content="Custom software and electronic devices of light to medium complexity, plus AI-agent integration into your workflows.">
+  <meta name="theme-color" content="#f3f6f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0c1311" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://viteh.org/">
+  <link rel="alternate" hreflang="uk" href="https://viteh.org/?lang=uk">
+  <link rel="alternate" hreflang="en" href="https://viteh.org/?lang=en">
+  <link rel="alternate" hreflang="de" href="https://viteh.org/?lang=de">
+  <link rel="alternate" hreflang="x-default" href="https://viteh.org/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ViTeh">
+  <meta property="og:title" content="ViTeh — software, electronic devices and AI agents">
+  <meta property="og:description" content="Custom software and electronic devices of light to medium complexity, plus AI-agent integration.">
+  <meta property="og:image" content="https://viteh.org/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script>
+    /* Apply the saved theme before first paint to avoid a flash. */
+    document.documentElement.classList.add("js"); try { var t = localStorage.getItem("viteh.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="ViTeh home">
-      <span class="brand-mark">VT</span>
-      <span>ViTeh</span>
-    </a>
-    <nav class="nav" aria-label="Primary">
-      <a href="#products" data-i18n="nav.products">Вироби</a>
-      <a href="#services" data-i18n="nav.services">Послуги</a>
-      <a href="#contact" data-i18n="nav.contact">Контакти</a>
-    </nav>
-    <label class="language">
-      <span data-i18n="language.label">Мова</span>
-      <select id="languageSelect" aria-label="Language"></select>
-    </label>
+  <a class="skip-link" href="#main" data-i18n="ui.skip">Skip to content</a>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="ViTeh">
+        <img class="brand-mark" src="assets/favicon.svg" alt="" width="36" height="36">
+        <span class="brand-name">ViTeh</span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Primary">
+        <a href="#services" data-i18n="nav.services">Services</a>
+        <a href="#ai" data-i18n="nav.ai">AI agents</a>
+        <a href="#process" data-i18n="nav.process">Process</a>
+        <a href="#work" data-i18n="nav.work">Projects</a>
+        <a href="#pricing" data-i18n="nav.pricing">Engagement</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a class="nav-cta" href="#contact" data-i18n="nav.cta">Request a project</a>
+      </nav>
+      <div class="tools">
+        <div class="lang" id="langSwitch" role="group" aria-label="Language"></div>
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Theme">
+          <svg class="ico ico-sun" aria-hidden="true"><use href="assets/icons.svg#i-sun"/></svg>
+          <svg class="ico ico-moon" aria-hidden="true"><use href="assets/icons.svg#i-moon"/></svg>
+        </button>
+        <button class="icon-btn menu-btn" id="menuToggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu">
+          <svg class="ico ico-open" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg>
+          <svg class="ico ico-close" aria-hidden="true"><use href="assets/icons.svg#i-close"/></svg>
+        </button>
+      </div>
+    </div>
   </header>
 
-  <main id="top">
+  <main id="main">
+    <span id="top"></span>
+
     <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow" data-i18n="hero.eyebrow">Розробка та виробництво електроніки</p>
-        <h1 data-i18n="hero.title">ViTeh</h1>
-        <p class="lead" data-i18n="hero.lead">Вітрина готових виробів, прототипів та інженерних пропозицій.</p>
-        <div class="actions">
-          <a class="button primary" href="#products" data-i18n="hero.primaryCta">Переглянути вироби</a>
-          <a class="button secondary" href="#contact" data-i18n="hero.secondaryCta">Зв'язатися</a>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="hero.eyebrow">Software · Electronics · AI agents</p>
+          <h1><span data-i18n="hero.title1">We build software and devices</span> <span class="grad" data-i18n="hero.title2">that work hand in hand with AI</span></h1>
+          <p class="lead" data-i18n="hero.lead"></p>
+          <div class="actions">
+            <a class="btn primary" href="#contact"><span data-i18n="hero.primaryCta">Discuss your project</span><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-arrow"/></svg></a>
+            <a class="btn ghost" href="#services" data-i18n="hero.secondaryCta">Explore services</a>
+          </div>
+          <ul class="badges" id="heroBadges"></ul>
         </div>
-      </div>
-      <picture class="hero-media" aria-hidden="true">
-        <source srcset="assets/hero-board.svg" type="image/svg+xml">
-        <img src="assets/hero-board.svg" alt="">
-      </picture>
-    </section>
-
-    <section class="section" id="products">
-      <div class="section-heading">
-        <p class="eyebrow" data-i18n="products.eyebrow">Каталог</p>
-        <h2 data-i18n="products.title">Вироби та пропозиції</h2>
-        <p data-i18n="products.lead">Картки наповнюються з JSON-файлу і вже підтримують українську, англійську та німецьку.</p>
-      </div>
-      <div class="filters" id="categoryFilters" aria-label="Product categories"></div>
-      <div class="product-grid" id="productGrid"></div>
-    </section>
-
-    <section class="section services" id="services">
-      <div class="section-heading">
-        <p class="eyebrow" data-i18n="services.eyebrow">Можливості</p>
-        <h2 data-i18n="services.title">Що можна розширити далі</h2>
-      </div>
-      <div class="service-grid">
-        <article>
-          <h3 data-i18n="services.items.catalog.title">Каталог</h3>
-          <p data-i18n="services.items.catalog.text">Додавання категорій, фото, файлів прошивок, документації та статусів наявності.</p>
-        </article>
-        <article>
-          <h3 data-i18n="services.items.leads.title">Заявки</h3>
-          <p data-i18n="services.items.leads.text">Форма запиту з відправкою на email, Telegram або легкий backend.</p>
-        </article>
-        <article>
-          <h3 data-i18n="services.items.i18n.title">Мови</h3>
-          <p data-i18n="services.items.i18n.text">Нові мови додаються через словник інтерфейсу і перекладні поля товарів.</p>
-        </article>
+        <figure class="hero-media">
+          <img id="heroImage" src="assets/hero-illustration.svg" alt="" width="960" height="760" fetchpriority="high">
+        </figure>
       </div>
     </section>
 
-    <section class="contact" id="contact">
-      <div>
-        <p class="eyebrow" data-i18n="contact.eyebrow">Контакт</p>
-        <h2 data-i18n="contact.title">Обговоримо ваш виріб</h2>
-        <p data-i18n="contact.lead">Напишіть, що потрібно виготовити або адаптувати. Контакти можна змінити у data/site.json.</p>
+    <section class="trust" aria-label="Capabilities">
+      <div class="container trust-inner">
+        <p class="trust-title" data-i18n="trust.title"></p>
+        <ul class="trust-list" id="trustList"></ul>
       </div>
-      <div class="contact-actions" id="contactActions"></div>
+    </section>
+
+    <section class="section" id="services">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="services.eyebrow"></p>
+          <h2 data-i18n="services.title"></h2>
+          <p class="section-lead" data-i18n="services.lead"></p>
+        </div>
+        <div class="card-grid" id="serviceGrid"></div>
+      </div>
+    </section>
+
+    <section class="section alt" id="ai">
+      <div class="container ai-grid">
+        <div class="ai-copy reveal">
+          <p class="eyebrow" data-i18n="ai.eyebrow"></p>
+          <h2 data-i18n="ai.title"></h2>
+          <p class="section-lead" data-i18n="ai.lead"></p>
+          <ul class="feature-list" id="aiFeatures"></ul>
+        </div>
+        <figure class="ai-media reveal">
+          <img id="aiDiagram" src="assets/agent-flow.svg" alt="" width="960" height="440" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="process">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="process.eyebrow"></p>
+          <h2 data-i18n="process.title"></h2>
+          <p class="section-lead" data-i18n="process.lead"></p>
+        </div>
+        <ol class="steps" id="processSteps"></ol>
+      </div>
+    </section>
+
+    <section class="section alt" id="work">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="work.eyebrow"></p>
+          <h2 data-i18n="work.title"></h2>
+          <p class="section-lead" data-i18n="work.lead"></p>
+        </div>
+        <div class="filters" id="categoryFilters" role="group" aria-label="Project categories"></div>
+        <div class="product-grid" id="productGrid"></div>
+        <p class="demo-note" data-i18n="ui.demoNote"></p>
+      </div>
+    </section>
+
+    <section class="section" id="stack">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="stack.eyebrow"></p>
+          <h2 data-i18n="stack.title"></h2>
+          <p class="section-lead" data-i18n="stack.lead"></p>
+        </div>
+        <div class="stack-grid" id="stackGrid"></div>
+      </div>
+    </section>
+
+    <section class="section alt" id="pricing">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="pricing.eyebrow"></p>
+          <h2 data-i18n="pricing.title"></h2>
+          <p class="section-lead" data-i18n="pricing.lead"></p>
+        </div>
+        <div class="pricing-grid" id="pricingGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container narrow">
+        <div class="section-heading reveal">
+          <p class="eyebrow" data-i18n="faq.eyebrow"></p>
+          <h2 data-i18n="faq.title"></h2>
+        </div>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+
+    <section class="section contact-section" id="contact">
+      <div class="container contact-grid">
+        <div class="contact-copy reveal">
+          <p class="eyebrow" data-i18n="contact.eyebrow"></p>
+          <h2 data-i18n="contact.title"></h2>
+          <p class="section-lead" data-i18n="contact.lead"></p>
+          <ul class="contact-details" id="contactDetails"></ul>
+        </div>
+        <form class="contact-form reveal" id="contactForm" novalidate>
+          <div class="field"><label for="f-name" data-i18n="contact.form.name"></label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
+          <div class="field"><label for="f-email" data-i18n="contact.form.email"></label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="f-type" data-i18n="contact.form.type"></label><select id="f-type" name="type"></select></div>
+          <div class="field"><label for="f-msg" data-i18n="contact.form.message"></label><textarea id="f-msg" name="message" rows="5" required></textarea></div>
+          <div class="field attach">
+            <input id="f-files" name="files" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv">
+            <label class="btn ghost attach-btn" for="f-files"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-clip"/></svg><span data-i18n="contact.form.attach"></span></label>
+            <p class="attach-hint" data-i18n="contact.form.attachHint"></p>
+            <ul class="attach-list" id="attachList" aria-live="polite"></ul>
+            <p class="attach-error" id="attachError" role="alert"></p>
+          </div>
+          <div class="hp" aria-hidden="true"><label>Website <input type="text" name="hp" tabindex="-1" autocomplete="off"></label></div>
+          <label class="consent"><input type="checkbox" name="consent" required><span data-i18n="contact.form.consent"></span></label>
+          <button class="btn primary wide" type="submit"><span data-i18n="contact.form.submit"></span><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-arrow"/></svg></button>
+          <p class="form-note"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-lock"/></svg><span data-i18n="contact.form.note"></span></p>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
     </section>
   </main>
 
   <footer class="footer">
-    <span>ViTeh</span>
-    <span data-i18n="footer.note">Легка мультимовна вітрина.</span>
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="ViTeh"><img class="brand-mark" src="assets/favicon.svg" alt="" width="32" height="32"><span class="brand-name">ViTeh</span></a>
+        <p data-i18n="footer.note"></p>
+      </div>
+      <nav class="footer-links" aria-label="Legal">
+        <a href="impressum.html" data-i18n="footer.imprint">Imprint</a>
+        <a href="datenschutz.html" data-i18n="footer.privacy">Privacy</a>
+      </nav>
+      <p class="footer-meta"><span>© <span id="year"></span> ViTeh. <span data-i18n="footer.rights"></span></span><span data-i18n="footer.privacyNote"></span></p>
+    </div>
   </footer>
 
+  <a class="to-top" id="toTop" href="#top" aria-label="Back to top"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-arrow"/></svg></a>
+
+  <noscript><p class="noscript">This site needs JavaScript to display its content. / Diese Website benötigt JavaScript. / Для відображення сайту потрібен JavaScript.</p></noscript>
   <script src="assets/app.js" defer></script>
 </body>
 </html>

@@ -9,24 +9,49 @@
       "de": "Cronos Controller"
     },
     "summary": {
-      "uk": "Контролер для керування процесами, тестування прототипів і локальної автоматики.",
-      "en": "A controller for process control, prototype testing, and local automation.",
-      "de": "Controller fuer Prozesssteuerung, Prototypentests und lokale Automatisierung."
+      "uk": "Компактний контролер для керування процесами, тестування прототипів і локальної автоматики.",
+      "en": "A compact controller for process control, prototype testing and local automation.",
+      "de": "Kompakter Controller für Prozesssteuerung, Prototypentests und lokale Automatisierung."
     },
     "status": {
       "uk": "Прототип",
       "en": "Prototype",
       "de": "Prototyp"
     },
-    "price": {
-      "uk": "Ціна за запитом",
-      "en": "Price on request",
-      "de": "Preis auf Anfrage"
-    }
+    "tags": [
+      "ESP32",
+      "RS-485",
+      "OTA"
+    ]
+  },
+  {
+    "id": "iot-module",
+    "category": "hardware",
+    "image": "assets/product-module.svg",
+    "title": {
+      "uk": "IoT-модуль",
+      "en": "IoT module",
+      "de": "IoT-Modul"
+    },
+    "summary": {
+      "uk": "Мініатюрний модуль із бездротовим зв'язком для збору даних датчиків та віддалених оновлень.",
+      "en": "A miniature wireless module for collecting sensor data and remote updates.",
+      "de": "Ein miniaturisiertes Funkmodul zum Erfassen von Sensordaten und für Remote-Updates."
+    },
+    "status": {
+      "uk": "Демо",
+      "en": "Demo",
+      "de": "Demo"
+    },
+    "tags": [
+      "BLE",
+      "Wi-Fi",
+      "MQTT"
+    ]
   },
   {
     "id": "custom-electronics",
-    "category": "custom",
+    "category": "hardware",
     "image": "assets/product-pcb.svg",
     "title": {
       "uk": "Електроніка під задачу",
@@ -34,44 +59,94 @@
       "de": "Elektronik nach Aufgabe"
     },
     "summary": {
-      "uk": "Підбір компонентів, плата, корпус, прошивка і підготовка до малих серій.",
-      "en": "Component selection, PCB, enclosure, firmware, and preparation for small batches.",
-      "de": "Komponentenauswahl, Leiterplatte, Gehaeuse, Firmware und Vorbereitung fuer Kleinserien."
+      "uk": "Підбір компонентів, плата, корпус, прошивка та підготовка до малих серій.",
+      "en": "Component selection, PCB, enclosure, firmware and preparation for small batches.",
+      "de": "Komponentenauswahl, Leiterplatte, Gehäuse, Firmware und Vorbereitung für Kleinserien."
     },
     "status": {
       "uk": "Під замовлення",
       "en": "Custom order",
       "de": "Auf Bestellung"
     },
-    "price": {
-      "uk": "Оцінка після ТЗ",
-      "en": "Estimate after brief",
-      "de": "Schaetzung nach Briefing"
-    }
+    "tags": [
+      "KiCad",
+      "STM32",
+      "3D"
+    ]
   },
   {
-    "id": "iot-module",
-    "category": "hardware",
-    "image": "assets/product-module.svg",
+    "id": "agent-assistant",
+    "category": "ai",
+    "image": "assets/product-agent.svg",
     "title": {
-      "uk": "IoT модуль",
-      "en": "IoT module",
-      "de": "IoT-Modul"
+      "uk": "AI-асистент для документів",
+      "en": "Document AI assistant",
+      "de": "KI-Assistent für Dokumente"
     },
     "summary": {
-      "uk": "Компактний вузол для збору даних, індикації або керування через мережу.",
-      "en": "A compact node for data collection, indication, or network control.",
-      "de": "Kompakter Knoten fuer Datenerfassung, Anzeige oder Netzwerksteuerung."
+      "uk": "Агент, що шукає відповіді у ваших документах, готує чернетки й передає складні випадки людині.",
+      "en": "An agent that finds answers in your documents, drafts replies and hands complex cases to a person.",
+      "de": "Ein Agent, der Antworten in Ihren Dokumenten findet, Entwürfe erstellt und komplexe Fälle an Menschen übergibt."
     },
     "status": {
-      "uk": "Планується",
-      "en": "Planned",
-      "de": "Geplant"
+      "uk": "Концепт",
+      "en": "Concept",
+      "de": "Konzept"
     },
-    "price": {
-      "uk": "Скоро",
-      "en": "Coming soon",
-      "de": "Bald verfuegbar"
-    }
+    "tags": [
+      "RAG",
+      "Claude",
+      "API"
+    ]
+  },
+  {
+    "id": "device-monitor",
+    "category": "software",
+    "image": "assets/product-dashboard.svg",
+    "title": {
+      "uk": "Панель моніторингу пристроїв",
+      "en": "Device monitoring dashboard",
+      "de": "Geräte-Monitoring-Dashboard"
+    },
+    "summary": {
+      "uk": "Веб-панель зі станом пристроїв, графіками телеметрії та сповіщеннями про відхилення.",
+      "en": "A web dashboard with device status, telemetry charts and deviation alerts.",
+      "de": "Web-Dashboard mit Gerätestatus, Telemetrie-Diagrammen und Abweichungsmeldungen."
+    },
+    "status": {
+      "uk": "Демо",
+      "en": "Demo",
+      "de": "Demo"
+    },
+    "tags": [
+      "TypeScript",
+      "PostgreSQL",
+      "MQTT"
+    ]
+  },
+  {
+    "id": "sensor-node",
+    "category": "automation",
+    "image": "assets/product-sensor.svg",
+    "title": {
+      "uk": "Автономний сенсорний вузол",
+      "en": "Autonomous sensor node",
+      "de": "Autonomer Sensorknoten"
+    },
+    "summary": {
+      "uk": "Низьке енергоспоживання, LoRa-зв'язок і агент, що пояснює аномалії у даних простою мовою.",
+      "en": "Low power, LoRa connectivity and an agent that explains anomalies in plain language.",
+      "de": "Geringer Stromverbrauch, LoRa-Anbindung und ein Agent, der Anomalien in einfacher Sprache erklärt."
+    },
+    "status": {
+      "uk": "Концепт",
+      "en": "Concept",
+      "de": "Konzept"
+    },
+    "tags": [
+      "LoRa",
+      "Zephyr",
+      "AI"
+    ]
   }
 ]
