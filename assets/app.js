@@ -1,399 +1,144 @@
-"use strict";
+const state = {
+  lang: "uk",
+  category: "all",
+  site: null,
+  products: []
+};
 
-const FALLBACK_LANG = "en";
-const ICON_BASE = "assets/icons.svg#i-";
+const fallbackLang = "uk";
 
-const state = { lang: FALLBACK_LANG, category: "all", site: null, products: [] };
-
-/* ---------- helpers ---------- */
-const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-
-const tr = (value, lang = state.lang) => {
+const getValue = (value, lang = state.lang) => {
   if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value[lang] ?? value[FALLBACK_LANG] ?? Object.values(value)[0] ?? "";
+    return value[lang] || value[fallbackLang] || Object.values(value)[0] || "";
   }
   return value ?? "";
 };
 
 const getPath = (object, path) => path.split(".").reduce((current, key) => current?.[key], object);
 
-const store = {
-  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
-  set(key, value) { try { localStorage.setItem(key, value); } catch { /* storage may be blocked */ } },
-};
-
-/** Tiny DOM builder: h("div", {class: "x"}, child, "text"). Uses textContent only, so no HTML injection. */
-const h = (tag, attrs = {}, ...children) => {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(attrs)) {
-    if (value === false || value == null) continue;
-    if (key === "class") node.className = value;
-    else if (key.startsWith("on") && typeof value === "function") node.addEventListener(key.slice(2), value);
-    else node.setAttribute(key, value === true ? "" : value);
-  }
-  for (const child of children.flat()) {
-    if (child == null || child === false) continue;
-    node.append(child.nodeType ? child : document.createTextNode(child));
-  }
-  return node;
-};
-
-const svgIcon = (name, cls = "ico") => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", cls);
-  svg.setAttribute("aria-hidden", "true");
-  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  use.setAttribute("href", ICON_BASE + name);
-  svg.append(use);
-  return svg;
+const setLanguage = (lang) => {
+  state.lang = lang;
+  document.documentElement.lang = lang;
+  localStorage.setItem("viteh.lang", lang);
+  render();
 };
 
 const loadJson = async (path) => {
-  const response = await fetch(path, { cache: "no-cache" });
+  const response = await fetch(path, { cache: "no-store" });
   if (!response.ok) throw new Error(`Failed to load ${path}`);
   return response.json();
 };
 
-const mount = (selector, ...nodes) => {
-  const target = $(selector);
-  if (!target) return null;
-  target.replaceChildren(...nodes.flat());
-  return target;
-};
-
-/* ---------- language ---------- */
-const supported = () => state.site.languages.map((language) => language.code);
-
-const detectLanguage = () => {
-  const codes = supported();
-  const fromUrl = new URLSearchParams(location.search).get("lang");
-  if (codes.includes(fromUrl)) return fromUrl;
-  const saved = store.get("viteh.lang");
-  if (codes.includes(saved)) return saved;
-  for (const candidate of navigator.languages || [navigator.language]) {
-    const short = (candidate || "").slice(0, 2).toLowerCase();
-    if (codes.includes(short)) return short;
-  }
-  return FALLBACK_LANG;
-};
-
-const setLanguage = (lang, { persist = true } = {}) => {
-  state.lang = lang;
-  document.documentElement.lang = lang;
-  if (persist) {
-    store.set("viteh.lang", lang);
-    const url = new URL(location.href);
-    url.searchParams.set("lang", lang);
-    history.replaceState(null, "", url);
-  }
-  render();
-};
-
-/* ---------- theme ---------- */
-const currentTheme = () => document.documentElement.dataset.theme
-  || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-
-const updateThemeButton = () => {
-  const button = $("#themeToggle");
-  if (!button || !state.site) return;
-  const dark = currentTheme() === "dark";
-  button.setAttribute("aria-label", tr(dark ? state.site.ui.themeToLight : state.site.ui.themeToDark));
-};
-
-const toggleTheme = () => {
-  const next = currentTheme() === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = next;
-  store.set("viteh.theme", next);
-  updateThemeButton();
-};
-
-/* ---------- renderers ---------- */
 const renderTranslations = () => {
-  $$("[data-i18n]").forEach((node) => {
-    const value = getPath(state.site, node.dataset.i18n);
-    if (value !== undefined) node.textContent = tr(value);
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const value = getPath(state.site.i18n, node.dataset.i18n);
+    node.textContent = getValue(value);
   });
+  document.title = getValue(state.site.meta.title);
 };
 
-const renderLanguageSwitch = () => {
-  const container = $("#langSwitch");
-  if (!container) return;
-  container.setAttribute("aria-label", tr(state.site.ui.language));
-  container.replaceChildren(...state.site.languages.map((language) => h("button", {
-    type: "button",
-    lang: language.code,
-    title: language.label,
-    "aria-label": language.label,
-    "aria-pressed": String(language.code === state.lang),
-    onclick: () => setLanguage(language.code),
-  }, language.short)));
-};
-
-const renderHero = () => {
-  const { hero } = state.site;
-  mount("#heroBadges", hero.badges.map((badge) => h("li", {}, svgIcon("check"), tr(badge))));
-  const image = $("#heroImage");
-  if (image) image.alt = tr(hero.imageAlt);
-};
-
-const renderTrust = () => {
-  mount("#trustList", state.site.trust.items.map((item) => h("li", {}, svgIcon("check"), tr(item))));
-};
-
-const renderServices = () => {
-  mount("#serviceGrid", state.site.services.items.map((item) => h("article", { class: "card reveal" },
-    h("div", { class: "card-icon" }, svgIcon(item.icon)),
-    h("h3", {}, tr(item.title)),
-    h("p", {}, tr(item.text)),
-    h("ul", { class: "check-list" }, item.points.map((point) => h("li", {}, svgIcon("check"), tr(point)))),
-  )));
-};
-
-const renderAi = () => {
-  const icons = ["globe", "shield", "lock", "chip"];
-  mount("#aiFeatures", state.site.ai.features.map((feature, index) => h("li", {},
-    h("span", { class: "dot" }, svgIcon(icons[index % icons.length])),
-    h("div", {}, h("h3", {}, tr(feature.title)), h("p", {}, tr(feature.text))),
-  )));
-  const diagram = $("#aiDiagram");
-  if (diagram) diagram.alt = tr(state.site.ai.diagramAlt);
-};
-
-const renderProcess = () => {
-  mount("#processSteps", state.site.process.steps.map((step, index) => h("li", { class: "reveal" },
-    h("div", { class: "num", "aria-hidden": "true" }, String(index + 1)),
-    h("h3", {}, tr(step.title)),
-    h("p", {}, tr(step.text)),
-  )));
+const renderLanguageSelect = () => {
+  const select = document.getElementById("languageSelect");
+  select.innerHTML = "";
+  state.site.languages.forEach((language) => {
+    const option = document.createElement("option");
+    option.value = language.code;
+    option.textContent = language.label;
+    option.selected = language.code === state.lang;
+    select.append(option);
+  });
 };
 
 const renderFilters = () => {
-  const categories = [{ id: "all", label: state.site.work.all }, ...state.site.work.categories];
-  mount("#categoryFilters", categories.map((category) => h("button", {
-    type: "button",
-    class: `filter${state.category === category.id ? " active" : ""}`,
-    "aria-pressed": String(state.category === category.id),
-    onclick: () => { state.category = category.id; renderFilters(); renderProducts(); },
-  }, tr(category.label))));
+  const filters = document.getElementById("categoryFilters");
+  const categories = [
+    { id: "all", label: state.site.i18n.categories.all },
+    ...state.site.categories
+  ];
+  filters.innerHTML = "";
+  categories.forEach((category) => {
+    const button = document.createElement("button");
+    button.className = `filter${state.category === category.id ? " active" : ""}`;
+    button.type = "button";
+    button.textContent = getValue(category.label);
+    button.addEventListener("click", () => {
+      state.category = category.id;
+      renderProducts();
+      renderFilters();
+    });
+    filters.append(button);
+  });
 };
 
 const renderProducts = () => {
-  const { work } = state.site;
-  const visible = state.category === "all" ? state.products : state.products.filter((p) => p.category === state.category);
-  mount("#productGrid", visible.map((product) => {
-    const category = work.categories.find((c) => c.id === product.category);
-    return h("article", { class: "product-card" },
-      h("img", { src: product.image, alt: "", width: 480, height: 320, loading: "lazy" }),
-      h("div", { class: "product-body" },
-        h("div", { class: "product-meta" },
-          h("span", { class: "tag" }, tr(category?.label ?? product.category)),
-          h("span", { class: "tag status" }, tr(product.status)),
-        ),
-        h("h3", {}, tr(product.title)),
-        h("p", {}, tr(product.summary)),
-        h("div", { class: "chips" }, product.tags.map((tag) => h("span", { class: "chip" }, tag))),
-        h("a", { class: "product-link", href: "#contact" }, tr(work.request), svgIcon("arrow")),
-      ),
-    );
-  }));
-};
+  const grid = document.getElementById("productGrid");
+  const products = state.category === "all"
+    ? state.products
+    : state.products.filter((product) => product.category === state.category);
 
-const renderStack = () => {
-  mount("#stackGrid", state.site.stack.groups.map((group) => h("div", { class: "stack-group reveal" },
-    h("h3", {}, tr(group.title)),
-    h("ul", {}, group.items.map((item) => h("li", {}, item))),
-  )));
-};
-
-const renderPricing = () => {
-  const { pricing } = state.site;
-  mount("#pricingGrid", pricing.models.map((model) => h("article", { class: `price-card reveal${model.featured ? " featured" : ""}` },
-    model.featured ? h("span", { class: "ribbon" }, tr(pricing.featured)) : null,
-    h("h3", {}, tr(model.title)),
-    h("p", {}, tr(model.text)),
-    h("div", { class: "price-tag" }, tr(pricing.price)),
-    h("ul", { class: "check-list" }, model.points.map((point) => h("li", {}, svgIcon("check"), tr(point)))),
-    h("a", { class: `btn ${model.featured ? "primary" : "ghost"}`, href: "#contact" }, tr(state.site.nav.cta), svgIcon("arrow")),
-  )));
-};
-
-const renderFaq = () => {
-  mount("#faqList", state.site.faq.items.map((item) => h("details", { class: "reveal" },
-    h("summary", {}, tr(item.q)),
-    h("div", { class: "answer" }, tr(item.a)),
-  )));
+  grid.innerHTML = "";
+  products.forEach((product) => {
+    const card = document.createElement("article");
+    card.className = "product-card";
+    card.innerHTML = `
+      <img src="${product.image}" alt="${getValue(product.title)}">
+      <div class="product-body">
+        <div class="product-meta">
+          <span class="tag">${getValue(state.site.categories.find((category) => category.id === product.category)?.label || product.category)}</span>
+          <span class="tag">${getValue(product.status)}</span>
+        </div>
+        <h3>${getValue(product.title)}</h3>
+        <p>${getValue(product.summary)}</p>
+        <div class="price">${getValue(product.price)}</div>
+      </div>
+    `;
+    grid.append(card);
+  });
 };
 
 const renderContact = () => {
-  const { contact } = state.site;
-  mount("#contactDetails", contact.details.map((detail) => {
-    const value = tr(detail.value);
-    const valueNode = detail.href ? h("a", { href: detail.href }, value) : h("span", { class: "val" }, value);
-    return h("li", {},
-      h("span", { class: "dot" }, svgIcon(detail.icon)),
-      h("div", {}, h("small", {}, tr(detail.label)), valueNode,
-        detail.demo ? h("span", { class: "demo-badge" }, tr(contact.demoBadge)) : null),
-    );
-  }));
-  const select = $("#f-type");
-  if (select) {
-    const previous = select.selectedIndex;
-    select.replaceChildren(...contact.form.types.map((type, index) => h("option", { value: String(index) }, tr(type))));
-    select.selectedIndex = Math.max(previous, 0);
-  }
-  const message = $("#f-msg");
-  if (message) message.placeholder = tr(contact.form.messagePh);
-};
-
-const renderLegal = () => {
-  const root = document.documentElement;
-  if (root.dataset.page !== "legal") return;
-  const section = state.site.legal[root.dataset.legal];
-  const title = $("#legalTitle");
-  if (title) title.textContent = tr(section.title);
-  mount("#legalBody", section.sections.map((block) => h("section", {},
-    h("h2", {}, tr(block.h)),
-    h("p", {}, tr(block.p)),
-  )));
-  document.title = `${tr(section.title)} — ViTeh`;
-};
-
-/* ---------- SEO / head ---------- */
-const setMeta = (selector, attr, value) => { const node = $(selector); if (node) node.setAttribute(attr, value); };
-
-const renderHead = () => {
-  if (document.documentElement.dataset.page !== "home") return;
-  const { meta, brand } = state.site;
-  const title = tr(meta.title);
-  const description = tr(meta.description);
-  document.title = title;
-  setMeta('meta[name="description"]', "content", description);
-  setMeta('meta[property="og:title"]', "content", title);
-  setMeta('meta[property="og:description"]', "content", description);
-
-  let ld = $("#ld-json");
-  if (!ld) { ld = h("script", { type: "application/ld+json", id: "ld-json" }); document.head.append(ld); }
-  ld.textContent = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    name: brand.name,
-    url: brand.url,
-    description,
-    inLanguage: state.lang,
-    knowsAbout: ["Software development", "Embedded systems", "Electronics design", "AI agents", "IoT"],
+  const container = document.getElementById("contactActions");
+  container.innerHTML = "";
+  state.site.contacts.forEach((contact) => {
+    const link = document.createElement("a");
+    link.href = contact.href;
+    link.textContent = getValue(contact.label);
+    container.append(link);
   });
 };
 
-/* ---------- interactions ---------- */
-const setupHeader = () => {
-  const topbar = $("#topbar") || $(".topbar");
-  const toTop = $("#toTop");
-  const onScroll = () => {
-    topbar?.classList.toggle("scrolled", window.scrollY > 8);
-    if (window.scrollY < 200) $$("#nav a.active").forEach((link) => link.classList.remove("active"));
-    toTop?.classList.toggle("show", window.scrollY > 700);
-  };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-
-  const nav = $("#nav");
-  const toggle = $("#menuToggle");
-  if (!nav || !toggle) return;
-  const setOpen = (open) => {
-    nav.classList.toggle("open", open);
-    toggle.setAttribute("aria-expanded", String(open));
-  };
-  toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
-  nav.addEventListener("click", (event) => { if (event.target.closest("a")) setOpen(false); });
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") setOpen(false); });
-};
-
-const setupScrollSpy = () => {
-  const links = $$('#nav a[href^="#"]').filter((link) => !link.classList.contains("nav-cta"));
-  if (!links.length || !("IntersectionObserver" in window)) return;
-  const byId = new Map(links.map((link) => [link.getAttribute("href").slice(1), link]));
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      links.forEach((link) => link.classList.remove("active"));
-      byId.get(entry.target.id)?.classList.add("active");
-    });
-  }, { rootMargin: "-45% 0px -50% 0px" });
-  byId.forEach((_, id) => { const section = document.getElementById(id); if (section) observer.observe(section); });
-};
-
-let revealObserver = null;
-const observeReveals = () => {
-  const nodes = $$(".reveal:not(.in)");
-  if (!("IntersectionObserver" in window)) { nodes.forEach((n) => n.classList.add("in")); return; }
-  revealObserver ??= new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) { entry.target.classList.add("in"); revealObserver.unobserve(entry.target); }
-    });
-  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
-  nodes.forEach((node) => revealObserver.observe(node));
-};
-
-const setupForm = () => {
-  const form = $("#contactForm");
-  if (!form) return;
-  const status = $("#formStatus");
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = new FormData(form);
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.get("email") || ""));
-    const checks = {
-      "f-name": String(data.get("name") || "").trim().length > 0,
-      "f-email": emailOk,
-      "f-msg": String(data.get("message") || "").trim().length > 0,
-    };
-    Object.entries(checks).forEach(([id, ok]) => $("#" + id).closest(".field").classList.toggle("invalid", !ok));
-    const valid = Object.values(checks).every(Boolean) && data.get("consent");
-    status.className = `form-status ${valid ? "ok" : "err"}`;
-    status.textContent = tr(valid ? state.site.contact.form.success : state.site.contact.form.required);
-    if (valid) form.reset();
-  });
-};
-
-/* ---------- main ---------- */
-function render() {
+const render = () => {
+  renderLanguageSelect();
   renderTranslations();
-  renderLanguageSwitch();
-  updateThemeButton();
-  if (document.documentElement.dataset.page === "home") {
-    renderHero(); renderTrust(); renderServices(); renderAi(); renderProcess();
-    renderFilters(); renderProducts(); renderStack(); renderPricing(); renderFaq(); renderContact();
-    observeReveals();
-  }
-  renderLegal();
-  renderHead();
-  const year = $("#year");
-  if (year) year.textContent = String(new Date().getFullYear());
-}
+  renderFilters();
+  renderProducts();
+  renderContact();
+};
 
 const init = async () => {
-  document.documentElement.classList.add("js");
-  const isHome = document.documentElement.dataset.page === "home";
   const [site, products] = await Promise.all([
     loadJson("data/site.json"),
-    isHome ? loadJson("data/products.json") : Promise.resolve([]),
+    loadJson("data/products.json")
   ]);
+
   state.site = site;
   state.products = products;
-  state.lang = detectLanguage();
-  document.documentElement.lang = state.lang;
 
-  $("#themeToggle")?.addEventListener("click", toggleTheme);
-  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", updateThemeButton);
-  setupHeader();
-  if (isHome) { setupForm(); setupScrollSpy(); }
+  const savedLang = localStorage.getItem("viteh.lang");
+  state.lang = site.languages.some((language) => language.code === savedLang)
+    ? savedLang
+    : (navigator.language || "").slice(0, 2);
+  if (!site.languages.some((language) => language.code === state.lang)) {
+    state.lang = fallbackLang;
+  }
+
+  document.getElementById("languageSelect").addEventListener("change", (event) => {
+    setLanguage(event.target.value);
+  });
+
   render();
 };
 
 init().catch((error) => {
-  console.error(error);
-  const message = h("p", { class: "noscript" }, "ViTeh — could not load site data. / Не вдалося завантажити дані. / Daten konnten nicht geladen werden.");
-  document.body.prepend(message);
-  $$(".reveal").forEach((node) => node.classList.add("in"));
+  document.body.innerHTML = `<main class="section"><h1>ViTeh</h1><p>${error.message}</p></main>`;
 });

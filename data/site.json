@@ -1,1183 +1,209 @@
 {
   "languages": [
-    {
-      "code": "uk",
-      "label": "Українська",
-      "short": "UA"
-    },
-    {
-      "code": "en",
-      "label": "English",
-      "short": "EN"
-    },
-    {
-      "code": "de",
-      "label": "Deutsch",
-      "short": "DE"
-    }
+    { "code": "uk", "label": "Українська" },
+    { "code": "en", "label": "English" },
+    { "code": "de", "label": "Deutsch" }
   ],
-  "brand": {
-    "name": "ViTeh",
-    "url": "https://viteh.org/"
-  },
   "meta": {
     "title": {
-      "uk": "ViTeh — програмне забезпечення, електроніка та AI-агенти",
-      "en": "ViTeh — software, electronic devices and AI agents",
-      "de": "ViTeh — Software, elektronische Geräte und KI-Agenten"
-    },
-    "description": {
-      "uk": "Розробка програмного забезпечення та електронних пристроїв легкої й середньої складності, інтеграція AI-агентів у ваші процеси. Від ідеї до прототипу та малої серії.",
-      "en": "Custom software and electronic devices of light to medium complexity, plus AI-agent integration into your workflows. From idea to prototype and small series.",
-      "de": "Entwicklung von Software und elektronischen Geräten mit geringer bis mittlerer Komplexität sowie Integration von KI-Agenten in Ihre Abläufe. Von der Idee zum Prototyp und zur Kleinserie."
+      "uk": "ViTeh - вироби та інженерні пропозиції",
+      "en": "ViTeh - products and engineering offers",
+      "de": "ViTeh - Produkte und Engineering-Angebote"
     }
   },
-  "ui": {
-    "skip": {
-      "uk": "Перейти до змісту",
-      "en": "Skip to content",
-      "de": "Zum Inhalt springen"
+  "categories": [
+    {
+      "id": "hardware",
+      "label": {
+        "uk": "Електроніка",
+        "en": "Electronics",
+        "de": "Elektronik"
+      }
     },
-    "language": {
-      "uk": "Мова",
-      "en": "Language",
-      "de": "Sprache"
+    {
+      "id": "automation",
+      "label": {
+        "uk": "Автоматика",
+        "en": "Automation",
+        "de": "Automatisierung"
+      }
     },
-    "themeToLight": {
-      "uk": "Світла тема",
-      "en": "Switch to light theme",
-      "de": "Zum hellen Design wechseln"
-    },
-    "themeToDark": {
-      "uk": "Темна тема",
-      "en": "Switch to dark theme",
-      "de": "Zum dunklen Design wechseln"
-    },
-    "menu": {
-      "uk": "Меню",
-      "en": "Menu",
-      "de": "Menü"
-    },
-    "top": {
-      "uk": "Нагору",
-      "en": "Back to top",
-      "de": "Nach oben"
-    },
-    "demoNote": {
-      "uk": "Демо-контент: контакти та приклади проєктів мають ілюстративний характер.",
-      "en": "Demo content: contact details and example projects are illustrative.",
-      "de": "Demo-Inhalt: Kontaktdaten und Beispielprojekte dienen der Veranschaulichung."
-    },
-    "noscript": {
-      "uk": "Для відображення сайту потрібен JavaScript.",
-      "en": "This site needs JavaScript to display its content.",
-      "de": "Diese Website benötigt JavaScript zur Darstellung der Inhalte."
-    },
-    "loadError": {
-      "uk": "Не вдалося завантажити дані сайту.",
-      "en": "Could not load site data.",
-      "de": "Die Website-Daten konnten nicht geladen werden."
+    {
+      "id": "custom",
+      "label": {
+        "uk": "Під замовлення",
+        "en": "Custom",
+        "de": "Sonderanfertigung"
+      }
     }
-  },
-  "nav": {
-    "services": {
-      "uk": "Послуги",
-      "en": "Services",
-      "de": "Leistungen"
-    },
-    "ai": {
-      "uk": "AI-агенти",
-      "en": "AI agents",
-      "de": "KI-Agenten"
-    },
-    "process": {
-      "uk": "Процес",
-      "en": "Process",
-      "de": "Ablauf"
-    },
-    "work": {
-      "uk": "Проєкти",
-      "en": "Projects",
-      "de": "Projekte"
-    },
-    "pricing": {
-      "uk": "Співпраця",
-      "en": "Engagement",
-      "de": "Zusammenarbeit"
-    },
-    "faq": {
-      "uk": "FAQ",
-      "en": "FAQ",
-      "de": "FAQ"
-    },
-    "contact": {
-      "uk": "Контакти",
-      "en": "Contact",
-      "de": "Kontakt"
-    },
-    "cta": {
-      "uk": "Запит на проєкт",
-      "en": "Request a project",
-      "de": "Projekt anfragen"
-    }
-  },
-  "hero": {
-    "eyebrow": {
-      "uk": "Софт · Електроніка · AI-агенти",
-      "en": "Software · Electronics · AI agents",
-      "de": "Software · Elektronik · KI-Agenten"
-    },
-    "title1": {
-      "uk": "Створюємо програми та пристрої,",
-      "en": "We build software and devices",
-      "de": "Wir entwickeln Software und Geräte,"
-    },
-    "title2": {
-      "uk": "які працюють разом з AI",
-      "en": "that work hand in hand with AI",
-      "de": "die mit KI zusammenarbeiten"
-    },
-    "lead": {
-      "uk": "ViTeh розробляє програмне забезпечення та електронні пристрої легкої й середньої складності та вбудовує AI-агентів у ваші процеси. Від ідеї до робочого прототипу й малої серії — одна команда, один контакт.",
-      "en": "ViTeh develops software and electronic devices of light to medium complexity and embeds AI agents into your workflows. From idea to working prototype and small series — one team, one point of contact.",
-      "de": "ViTeh entwickelt Software und elektronische Geräte mit geringer bis mittlerer Komplexität und integriert KI-Agenten in Ihre Abläufe. Von der Idee über den funktionierenden Prototyp bis zur Kleinserie – ein Team, ein Ansprechpartner."
-    },
-    "primaryCta": {
-      "uk": "Обговорити проєкт",
-      "en": "Discuss your project",
-      "de": "Projekt besprechen"
-    },
-    "secondaryCta": {
-      "uk": "Наші послуги",
-      "en": "Explore services",
-      "de": "Leistungen ansehen"
-    },
-    "badges": [
-      {
-        "uk": "Прозорі етапи й ціни",
-        "en": "Transparent steps and pricing",
-        "de": "Transparente Schritte und Preise"
-      },
-      {
-        "uk": "Без трекерів і cookies",
-        "en": "No trackers, no cookies",
-        "de": "Keine Tracker, keine Cookies"
-      },
-      {
-        "uk": "Працюємо українською, англійською, німецькою",
-        "en": "We work in Ukrainian, English and German",
-        "de": "Wir arbeiten auf Ukrainisch, Englisch und Deutsch"
-      }
-    ],
-    "imageAlt": {
-      "uk": "Ілюстрація: вікно коду, друкована плата та вузли AI-агентів, з'єднані між собою",
-      "en": "Illustration: code window, printed circuit board and connected AI-agent nodes",
-      "de": "Illustration: Code-Fenster, Leiterplatte und miteinander verbundene KI-Agenten-Knoten"
-    }
-  },
-  "trust": {
-    "title": {
-      "uk": "Від плати до хмари",
-      "en": "From circuit board to cloud",
-      "de": "Von der Leiterplatte bis zur Cloud"
-    },
-    "items": [
-      {
-        "uk": "Прошивки та вбудовані системи",
-        "en": "Firmware and embedded systems",
-        "de": "Firmware und Embedded-Systeme"
-      },
-      {
-        "uk": "Веб, API та інтеграції",
-        "en": "Web, APIs and integrations",
-        "de": "Web, APIs und Integrationen"
-      },
-      {
-        "uk": "AI-агенти та автоматизація",
-        "en": "AI agents and automation",
-        "de": "KI-Agenten und Automatisierung"
-      },
-      {
-        "uk": "Прототипи та малі серії",
-        "en": "Prototypes and small series",
-        "de": "Prototypen und Kleinserien"
-      }
-    ]
-  },
-  "services": {
-    "eyebrow": {
-      "uk": "Послуги",
-      "en": "Services",
-      "de": "Leistungen"
-    },
-    "title": {
-      "uk": "Усе, що потрібно, щоб ідея запрацювала",
-      "en": "Everything it takes to make an idea work",
-      "de": "Alles, damit aus einer Idee ein funktionierendes Produkt wird"
-    },
-    "lead": {
-      "uk": "Беремо проєкти легкої та середньої складності: чіткий обсяг, зрозумілий результат, чесні терміни.",
-      "en": "We take on projects of light to medium complexity: clear scope, tangible result, honest timelines.",
-      "de": "Wir übernehmen Projekte mit geringer bis mittlerer Komplexität: klarer Umfang, greifbares Ergebnis, ehrliche Zeitpläne."
-    },
-    "items": [
-      {
-        "icon": "code",
-        "title": {
-          "uk": "Розробка програмного забезпечення",
-          "en": "Software development",
-          "de": "Softwareentwicklung"
-        },
-        "text": {
-          "uk": "Веб-застосунки, внутрішні інструменти, API та десктопні утиліти під ваші процеси.",
-          "en": "Web apps, internal tools, APIs and desktop utilities tailored to your workflows.",
-          "de": "Web-Apps, interne Werkzeuge, APIs und Desktop-Utilities, zugeschnitten auf Ihre Abläufe."
-        },
-        "points": [
-          {
-            "uk": "Веб та хмара",
-            "en": "Web and cloud",
-            "de": "Web und Cloud"
-          },
-          {
-            "uk": "Інтеграції з вашими системами",
-            "en": "Integrations with your systems",
-            "de": "Integration in Ihre Systeme"
-          },
-          {
-            "uk": "Документація та передача коду",
-            "en": "Documentation and code handover",
-            "de": "Dokumentation und Code-Übergabe"
-          }
-        ]
-      },
-      {
-        "icon": "chip",
-        "title": {
-          "uk": "Електронні пристрої",
-          "en": "Electronic devices",
-          "de": "Elektronische Geräte"
-        },
-        "text": {
-          "uk": "Від схеми та плати до прошивки й корпусу — прототипи та малі серії.",
-          "en": "From schematic and PCB to firmware and enclosure — prototypes and small series.",
-          "de": "Von Schaltplan und Leiterplatte bis zu Firmware und Gehäuse – Prototypen und Kleinserien."
-        },
-        "points": [
-          {
-            "uk": "Схеми та розведення плат",
-            "en": "Schematics and PCB layout",
-            "de": "Schaltplan und Leiterplatten-Layout"
-          },
-          {
-            "uk": "Прошивка (ESP32, STM32, RP2040)",
-            "en": "Firmware (ESP32, STM32, RP2040)",
-            "de": "Firmware (ESP32, STM32, RP2040)"
-          },
-          {
-            "uk": "Корпуси та 3D-друк",
-            "en": "Enclosures and 3D printing",
-            "de": "Gehäuse und 3D-Druck"
-          }
-        ]
-      },
-      {
-        "icon": "agent",
-        "title": {
-          "uk": "Інтеграція AI-агентів",
-          "en": "AI-agent integration",
-          "de": "Integration von KI-Agenten"
-        },
-        "text": {
-          "uk": "Агенти, що читають документи, спілкуються з вашими системами й виконують рутину під контролем.",
-          "en": "Agents that read documents, talk to your systems and handle routine work under your control.",
-          "de": "Agenten, die Dokumente lesen, mit Ihren Systemen sprechen und Routineaufgaben unter Ihrer Kontrolle erledigen."
-        },
-        "points": [
-          {
-            "uk": "Підключення до ваших даних (RAG)",
-            "en": "Connected to your data (RAG)",
-            "de": "Anbindung an Ihre Daten (RAG)"
-          },
-          {
-            "uk": "Виклик інструментів та API",
-            "en": "Tool and API calling",
-            "de": "Tool- und API-Aufrufe"
-          },
-          {
-            "uk": "Хмарні або локальні моделі",
-            "en": "Cloud or local models",
-            "de": "Cloud- oder lokale Modelle"
-          }
-        ]
-      },
-      {
-        "icon": "iot",
-        "title": {
-          "uk": "IoT та автоматизація",
-          "en": "IoT and automation",
-          "de": "IoT und Automatisierung"
-        },
-        "text": {
-          "uk": "Датчики, шлюзи та панелі моніторингу: дані з пристроїв — у зрозумілу картину.",
-          "en": "Sensors, gateways and dashboards: turning device data into a clear picture.",
-          "de": "Sensoren, Gateways und Dashboards: Gerätedaten werden zu einem klaren Lagebild."
-        },
-        "points": [
-          {
-            "uk": "MQTT, Wi-Fi, BLE, LoRa",
-            "en": "MQTT, Wi-Fi, BLE, LoRa",
-            "de": "MQTT, WLAN, BLE, LoRa"
-          },
-          {
-            "uk": "OTA-оновлення прошивок",
-            "en": "OTA firmware updates",
-            "de": "OTA-Firmware-Updates"
-          },
-          {
-            "uk": "Панелі та сповіщення",
-            "en": "Dashboards and alerts",
-            "de": "Dashboards und Benachrichtigungen"
-          }
-        ]
-      },
-      {
-        "icon": "flask",
-        "title": {
-          "uk": "Прототипи та Proof of Concept",
-          "en": "Prototypes and proof of concept",
-          "de": "Prototypen und Proof of Concept"
-        },
-        "text": {
-          "uk": "Швидко перевіряємо ідею на реальному пристрої чи демо, перш ніж ви інвестуєте більше.",
-          "en": "We test your idea quickly on a real device or demo before you invest more.",
-          "de": "Wir prüfen Ihre Idee schnell an einem echten Gerät oder Demo, bevor Sie mehr investieren."
-        },
-        "points": [
-          {
-            "uk": "Робочий прототип за кілька тижнів",
-            "en": "Working prototype within weeks",
-            "de": "Funktionierender Prototyp in wenigen Wochen"
-          },
-          {
-            "uk": "Чіткі критерії успіху",
-            "en": "Clear success criteria",
-            "de": "Klare Erfolgskriterien"
-          },
-          {
-            "uk": "Рекомендації щодо масштабування",
-            "en": "Scale-up recommendations",
-            "de": "Empfehlungen zur Skalierung"
-          }
-        ]
-      },
-      {
-        "icon": "shield",
-        "title": {
-          "uk": "Технічний аудит і консалтинг",
-          "en": "Technical audit and consulting",
-          "de": "Technisches Audit und Beratung"
-        },
-        "text": {
-          "uk": "Незалежний погляд на архітектуру, вибір компонентів, безпеку та якість коду.",
-          "en": "An independent view on architecture, component choice, security and code quality.",
-          "de": "Ein unabhängiger Blick auf Architektur, Komponentenwahl, Sicherheit und Code-Qualität."
-        },
-        "points": [
-          {
-            "uk": "Огляд архітектури",
-            "en": "Architecture review",
-            "de": "Architektur-Review"
-          },
-          {
-            "uk": "Оцінка ризиків і витрат",
-            "en": "Risk and cost assessment",
-            "de": "Risiko- und Kostenbewertung"
-          },
-          {
-            "uk": "Безпека за замовчуванням",
-            "en": "Security by default",
-            "de": "Sicherheit von Anfang an"
-          }
-        ]
-      }
-    ]
-  },
-  "ai": {
-    "eyebrow": {
-      "uk": "AI-агенти",
-      "en": "AI agents",
-      "de": "KI-Agenten"
-    },
-    "title": {
-      "uk": "AI-агенти, які справді працюють у вашому процесі",
-      "en": "AI agents that actually work inside your process",
-      "de": "KI-Agenten, die in Ihrem Prozess wirklich arbeiten"
-    },
-    "lead": {
-      "uk": "Не чат заради чату. Ми проєктуємо агентів із чіткою роллю, доступом до потрібних інструментів і людським контролем там, де це важливо.",
-      "en": "Not a chatbot for the sake of a chatbot. We design agents with a clear role, access to the right tools and human oversight where it matters.",
-      "de": "Kein Chatbot um des Chatbots willen. Wir entwerfen Agenten mit klarer Rolle, Zugriff auf die richtigen Werkzeuge und menschlicher Kontrolle dort, wo sie wichtig ist."
-    },
-    "features": [
-      {
-        "title": {
-          "uk": "Підключення до ваших систем",
-          "en": "Wired into your systems",
-          "de": "In Ihre Systeme eingebunden"
-        },
-        "text": {
-          "uk": "Пошта, CRM, бази даних, файли, пристрої: агент працює з тим, що у вас уже є.",
-          "en": "Email, CRM, databases, files, devices: the agent works with what you already have.",
-          "de": "E-Mail, CRM, Datenbanken, Dateien, Geräte: Der Agent arbeitet mit dem, was Sie bereits haben."
-        }
-      },
-      {
-        "title": {
-          "uk": "Людина в контурі",
-          "en": "Human in the loop",
-          "de": "Mensch in der Schleife"
-        },
-        "text": {
-          "uk": "Важливі дії проходять підтвердження. Журнал усіх кроків доступний для перевірки.",
-          "en": "Important actions require approval. A log of every step is available for review.",
-          "de": "Wichtige Aktionen werden freigegeben. Ein Protokoll aller Schritte steht zur Prüfung bereit."
-        }
-      },
-      {
-        "title": {
-          "uk": "Приватність і вибір моделі",
-          "en": "Privacy and model choice",
-          "de": "Datenschutz und Modellwahl"
-        },
-        "text": {
-          "uk": "Хмарні моделі або локальні (Ollama, власний сервер) — залежно від чутливості даних.",
-          "en": "Cloud models or local ones (Ollama, your own server) — depending on data sensitivity.",
-          "de": "Cloud-Modelle oder lokale (Ollama, eigener Server) – je nach Sensibilität der Daten."
-        }
-      },
-      {
-        "title": {
-          "uk": "Агенти для пристроїв",
-          "en": "Agents for devices",
-          "de": "Agenten für Geräte"
-        },
-        "text": {
-          "uk": "Аналіз телеметрії, діагностика несправностей і підказки оператору на основі даних із ваших пристроїв.",
-          "en": "Telemetry analysis, fault diagnosis and operator hints based on data from your devices.",
-          "de": "Telemetrie-Analyse, Fehlerdiagnose und Bedienerhinweise auf Basis der Daten Ihrer Geräte."
-        }
-      }
-    ],
-    "diagramAlt": {
-      "uk": "Схема: запит надходить до AI-агента, який використовує документи, API та пристрої й передає результат людині на підтвердження",
-      "en": "Diagram: a request reaches the AI agent, which uses documents, APIs and devices and hands the result to a person for approval",
-      "de": "Diagramm: Eine Anfrage erreicht den KI-Agenten, der Dokumente, APIs und Geräte nutzt und das Ergebnis zur Freigabe an eine Person übergibt"
-    }
-  },
-  "process": {
-    "eyebrow": {
-      "uk": "Процес",
-      "en": "Process",
-      "de": "Ablauf"
-    },
-    "title": {
-      "uk": "Чотири зрозумілі кроки",
-      "en": "Four clear steps",
-      "de": "Vier klare Schritte"
-    },
-    "lead": {
-      "uk": "Ви завжди знаєте, на якому етапі проєкт і що буде далі.",
-      "en": "You always know where the project stands and what comes next.",
-      "de": "Sie wissen jederzeit, wo das Projekt steht und was als Nächstes kommt."
-    },
-    "steps": [
-      {
-        "title": {
-          "uk": "Знайомство",
-          "en": "Discovery",
-          "de": "Kennenlernen"
-        },
-        "text": {
-          "uk": "Розбираємо задачу, обмеження та бажаний результат. Безкоштовна початкова розмова.",
-          "en": "We unpack the task, constraints and desired outcome. The first conversation is free.",
-          "de": "Wir klären Aufgabe, Rahmenbedingungen und gewünschtes Ergebnis. Das Erstgespräch ist kostenlos."
-        }
-      },
-      {
-        "title": {
-          "uk": "Концепція та оцінка",
-          "en": "Concept and estimate",
-          "de": "Konzept und Angebot"
-        },
-        "text": {
-          "uk": "Архітектура, склад робіт, терміни та орієнтовний бюджет у письмовому вигляді.",
-          "en": "Architecture, scope of work, timeline and a budget estimate in writing.",
-          "de": "Architektur, Leistungsumfang, Zeitplan und Budgetschätzung in schriftlicher Form."
-        }
-      },
-      {
-        "title": {
-          "uk": "Розробка й тести",
-          "en": "Build and test",
-          "de": "Umsetzung und Test"
-        },
-        "text": {
-          "uk": "Короткі ітерації з демонстраціями. Ви бачите прогрес, а не лише фінал.",
-          "en": "Short iterations with demos. You see progress, not just the finish line.",
-          "de": "Kurze Iterationen mit Demos. Sie sehen Fortschritt, nicht nur das Endergebnis."
-        }
-      },
-      {
-        "title": {
-          "uk": "Передача й підтримка",
-          "en": "Handover and support",
-          "de": "Übergabe und Support"
-        },
-        "text": {
-          "uk": "Код, схеми, документація та навчання команди. За бажання — супровід.",
-          "en": "Code, schematics, documentation and team training. Ongoing support if you wish.",
-          "de": "Code, Schaltpläne, Dokumentation und Schulung des Teams. Auf Wunsch laufende Betreuung."
-        }
-      }
-    ]
-  },
-  "work": {
-    "eyebrow": {
-      "uk": "Проєкти",
-      "en": "Projects",
-      "de": "Projekte"
-    },
-    "title": {
-      "uk": "Приклади та напрацювання",
-      "en": "Examples and in-house work",
-      "de": "Beispiele und eigene Entwicklungen"
-    },
-    "lead": {
-      "uk": "Демонстраційні приклади того, що ми робимо. Реальні кейси — за запитом.",
-      "en": "Demonstration examples of what we build. Real case studies on request.",
-      "de": "Demonstrationsbeispiele unserer Arbeit. Echte Referenzen auf Anfrage."
-    },
-    "all": {
-      "uk": "Усі",
-      "en": "All",
-      "de": "Alle"
-    },
-    "request": {
-      "uk": "Запитати про схоже",
-      "en": "Ask about something similar",
-      "de": "Ähnliches anfragen"
-    },
-    "categories": [
-      {
-        "id": "software",
-        "label": {
-          "uk": "Софт",
-          "en": "Software",
-          "de": "Software"
-        }
-      },
-      {
-        "id": "hardware",
-        "label": {
-          "uk": "Електроніка",
-          "en": "Electronics",
-          "de": "Elektronik"
-        }
-      },
-      {
-        "id": "ai",
-        "label": {
-          "uk": "AI-агенти",
-          "en": "AI agents",
-          "de": "KI-Agenten"
-        }
-      },
-      {
-        "id": "automation",
-        "label": {
-          "uk": "Автоматизація",
-          "en": "Automation",
-          "de": "Automatisierung"
-        }
-      }
-    ]
-  },
-  "stack": {
-    "eyebrow": {
-      "uk": "Технології",
-      "en": "Technology",
-      "de": "Technologie"
-    },
-    "title": {
-      "uk": "Перевірені інструменти",
-      "en": "Proven tools",
-      "de": "Bewährte Werkzeuge"
-    },
-    "lead": {
-      "uk": "Обираємо технології під задачу, а не навпаки.",
-      "en": "We pick technology to fit the task, not the other way around.",
-      "de": "Wir wählen Technologie passend zur Aufgabe – nicht umgekehrt."
-    },
-    "groups": [
-      {
-        "title": {
-          "uk": "Електроніка",
-          "en": "Electronics",
-          "de": "Elektronik"
-        },
-        "items": [
-          "ESP32",
-          "STM32",
-          "RP2040",
-          "nRF52",
-          "KiCad",
-          "FreeRTOS",
-          "Zephyr",
-          "C / C++",
-          "Rust"
-        ]
-      },
-      {
-        "title": {
-          "uk": "Програмне забезпечення",
-          "en": "Software",
-          "de": "Software"
-        },
-        "items": [
-          "Python",
-          "TypeScript",
-          "Node.js",
-          "React",
-          "FastAPI",
-          "PostgreSQL",
-          "Docker",
-          "Linux",
-          "MQTT"
-        ]
-      },
-      {
-        "title": {
-          "uk": "AI та автоматизація",
-          "en": "AI and automation",
-          "de": "KI und Automatisierung"
-        },
-        "items": [
-          "Claude",
-          "OpenAI",
-          "Ollama",
-          "RAG",
-          "MCP",
-          "Tool calling",
-          "n8n",
-          "Vector DB"
-        ]
-      }
-    ]
-  },
-  "pricing": {
-    "eyebrow": {
-      "uk": "Співпраця",
-      "en": "Engagement",
-      "de": "Zusammenarbeit"
-    },
-    "title": {
-      "uk": "Формат, що підходить вашому проєкту",
-      "en": "A format that fits your project",
-      "de": "Ein Format, das zu Ihrem Projekt passt"
-    },
-    "lead": {
-      "uk": "Конкретні суми — після короткої розмови про задачу.",
-      "en": "Exact figures follow a short conversation about your task.",
-      "de": "Konkrete Beträge nennen wir nach einem kurzen Gespräch über Ihre Aufgabe."
-    },
-    "price": {
-      "uk": "За запитом",
-      "en": "On request",
-      "de": "Auf Anfrage"
-    },
-    "featured": {
-      "uk": "Найчастіше обирають",
-      "en": "Most popular",
-      "de": "Am häufigsten gewählt"
-    },
-    "models": [
-      {
-        "title": {
-          "uk": "Discovery-воркшоп",
-          "en": "Discovery workshop",
-          "de": "Discovery-Workshop"
-        },
-        "text": {
-          "uk": "Коротка робота, щоб перетворити ідею на план.",
-          "en": "A short engagement that turns an idea into a plan.",
-          "de": "Ein kurzer Einstieg, der aus einer Idee einen Plan macht."
-        },
-        "points": [
-          {
-            "uk": "Аналіз вимог",
-            "en": "Requirements analysis",
-            "de": "Anforderungsanalyse"
-          },
-          {
-            "uk": "Технічна концепція",
-            "en": "Technical concept",
-            "de": "Technisches Konzept"
-          },
-          {
-            "uk": "Оцінка термінів і бюджету",
-            "en": "Timeline and budget estimate",
-            "de": "Zeit- und Budgetschätzung"
-          }
-        ],
-        "featured": false
-      },
-      {
-        "title": {
-          "uk": "Проєкт із фіксованим обсягом",
-          "en": "Fixed-scope project",
-          "de": "Festpreis-Projekt"
-        },
-        "text": {
-          "uk": "Чіткий результат за узгоджений бюджет і термін.",
-          "en": "A defined result for an agreed budget and deadline.",
-          "de": "Ein definiertes Ergebnis für vereinbartes Budget und Termin."
-        },
-        "points": [
-          {
-            "uk": "Прототип або готове рішення",
-            "en": "Prototype or finished solution",
-            "de": "Prototyp oder fertige Lösung"
-          },
-          {
-            "uk": "Демонстрації на кожному етапі",
-            "en": "Demos at every stage",
-            "de": "Demos in jeder Phase"
-          },
-          {
-            "uk": "Повна передача документації",
-            "en": "Full documentation handover",
-            "de": "Vollständige Dokumentationsübergabe"
-          }
-        ],
-        "featured": true
-      },
-      {
-        "title": {
-          "uk": "Спринти та супровід",
-          "en": "Sprints and retainer",
-          "de": "Sprints und Betreuung"
-        },
-        "text": {
-          "uk": "Гнучка співпраця для продуктів, що розвиваються.",
-          "en": "Flexible collaboration for evolving products.",
-          "de": "Flexible Zusammenarbeit für sich entwickelnde Produkte."
-        },
-        "points": [
-          {
-            "uk": "Щомісячний обсяг годин",
-            "en": "Monthly hour budget",
-            "de": "Monatliches Stundenkontingent"
-          },
-          {
-            "uk": "Пріоритети змінюються разом із вами",
-            "en": "Priorities change with you",
-            "de": "Prioritäten ändern sich mit Ihnen"
-          },
-          {
-            "uk": "Підтримка та оновлення",
-            "en": "Support and updates",
-            "de": "Support und Updates"
-          }
-        ],
-        "featured": false
-      }
-    ]
-  },
-  "faq": {
-    "eyebrow": {
-      "uk": "FAQ",
-      "en": "FAQ",
-      "de": "FAQ"
-    },
-    "title": {
-      "uk": "Поширені запитання",
-      "en": "Frequently asked questions",
-      "de": "Häufige Fragen"
-    },
-    "items": [
-      {
-        "q": {
-          "uk": "Які проєкти ви беретесь робити?",
-          "en": "What kinds of projects do you take on?",
-          "de": "Welche Projekte übernehmen Sie?"
-        },
-        "a": {
-          "uk": "Програмне забезпечення та електронні пристрої легкої й середньої складності: прототипи, малі серії, внутрішні інструменти, інтеграції та AI-агенти. Для дуже складних або сертифікованих систем (медицина, авіація) ми не підійдемо, але можемо допомогти з концепцією.",
-          "en": "Software and electronic devices of light to medium complexity: prototypes, small series, internal tools, integrations and AI agents. We are not the right fit for highly complex or certified systems (medical, aviation), but we can help with the concept.",
-          "de": "Software und elektronische Geräte mit geringer bis mittlerer Komplexität: Prototypen, Kleinserien, interne Werkzeuge, Integrationen und KI-Agenten. Für hochkomplexe oder zertifizierte Systeme (Medizin, Luftfahrt) sind wir nicht der richtige Partner, helfen aber gern beim Konzept."
-        }
-      },
-      {
-        "q": {
-          "uk": "Чи можна почати з прототипу?",
-          "en": "Can we start with a prototype?",
-          "de": "Können wir mit einem Prototyp beginnen?"
-        },
-        "a": {
-          "uk": "Так, це наш рекомендований шлях. Робочий прототип або демо швидко показує, чи ідея життєздатна, і знижує ризики до більших інвестицій.",
-          "en": "Yes, that is our recommended route. A working prototype or demo quickly shows whether the idea is viable and reduces risk before larger investments.",
-          "de": "Ja, das ist unser empfohlener Weg. Ein funktionierender Prototyp oder eine Demo zeigt schnell, ob die Idee trägt, und senkt das Risiko vor größeren Investitionen."
-        }
-      },
-      {
-        "q": {
-          "uk": "Що з безпекою та приватністю даних?",
-          "en": "What about security and data privacy?",
-          "de": "Wie steht es um Sicherheit und Datenschutz?"
-        },
-        "a": {
-          "uk": "Безпека закладається з початку. Для AI-рішень можна використовувати локальні моделі, щоб дані не залишали вашу інфраструктуру. Сам сайт не використовує трекерів і cookies.",
-          "en": "Security is built in from the start. For AI solutions we can use local models so data never leaves your infrastructure. This website uses no trackers or cookies.",
-          "de": "Sicherheit wird von Anfang an mitgedacht. Bei KI-Lösungen können lokale Modelle eingesetzt werden, sodass Daten Ihre Infrastruktur nicht verlassen. Diese Website verwendet keine Tracker oder Cookies."
-        }
-      },
-      {
-        "q": {
-          "uk": "Кому належить код і схеми?",
-          "en": "Who owns the code and designs?",
-          "de": "Wem gehören Code und Entwürfe?"
-        },
-        "a": {
-          "uk": "Після оплати права на розроблений для вас код, схеми та документацію переходять до вас. Деталі фіксуються в договорі.",
-          "en": "After payment, the rights to the code, schematics and documentation developed for you pass to you. Details are set out in the contract.",
-          "de": "Nach Zahlung gehen die Rechte am für Sie entwickelten Code, an Schaltplänen und Dokumentation auf Sie über. Details werden vertraglich festgehalten."
-        }
-      },
-      {
-        "q": {
-          "uk": "Скільки це коштує і як швидко?",
-          "en": "How much does it cost and how long does it take?",
-          "de": "Was kostet es und wie lange dauert es?"
-        },
-        "a": {
-          "uk": "Залежить від обсягу. Після початкової розмови ми надсилаємо письмову оцінку з термінами й бюджетом. Прототипи зазвичай вимірюються тижнями, а не місяцями.",
-          "en": "It depends on scope. After an initial conversation we send a written estimate with timeline and budget. Prototypes are typically measured in weeks, not months.",
-          "de": "Das hängt vom Umfang ab. Nach einem ersten Gespräch erhalten Sie ein schriftliches Angebot mit Zeitplan und Budget. Prototypen werden in der Regel in Wochen, nicht Monaten gemessen."
-        }
-      },
-      {
-        "q": {
-          "uk": "Чи працюєте ви з клієнтами з Німеччини та ЄС?",
-          "en": "Do you work with clients from Germany and the EU?",
-          "de": "Arbeiten Sie mit Kunden aus Deutschland und der EU?"
-        },
-        "a": {
-          "uk": "Так. Ми спілкуємося німецькою, англійською та українською, дотримуємося вимог GDPR і працюємо за договором із чіткими етапами.",
-          "en": "Yes. We communicate in German, English and Ukrainian, follow GDPR requirements and work under a contract with clear milestones.",
-          "de": "Ja. Wir kommunizieren auf Deutsch, Englisch und Ukrainisch, beachten die DSGVO und arbeiten auf Vertragsbasis mit klaren Meilensteinen."
-        }
-      }
-    ]
-  },
-  "contact": {
-    "eyebrow": {
-      "uk": "Контакт",
-      "en": "Contact",
-      "de": "Kontakt"
-    },
-    "title": {
-      "uk": "Розкажіть про вашу ідею",
-      "en": "Tell us about your idea",
-      "de": "Erzählen Sie uns von Ihrer Idee"
-    },
-    "lead": {
-      "uk": "Опишіть задачу кількома реченнями. Ми відповімо з пропозицією наступного кроку.",
-      "en": "Describe your task in a few sentences. We will reply with a proposed next step.",
-      "de": "Beschreiben Sie Ihre Aufgabe in wenigen Sätzen. Wir antworten mit einem Vorschlag für den nächsten Schritt."
-    },
-    "details": [
-      {
-        "icon": "mail",
-        "label": {
-          "uk": "Email",
-          "en": "Email",
-          "de": "E-Mail"
-        },
-        "value": "info@viteh.org",
-        "href": "mailto:info@viteh.org",
-        "demo": true
-      },
-      {
-        "icon": "phone",
-        "label": {
-          "uk": "Телефон",
-          "en": "Phone",
-          "de": "Telefon"
-        },
-        "value": "+00 000 000 0000",
-        "href": "",
-        "demo": true
-      },
-      {
-        "icon": "pin",
-        "label": {
-          "uk": "Локація",
-          "en": "Location",
-          "de": "Standort"
-        },
-        "value": {
-          "uk": "Європа, віддалено",
-          "en": "Europe, remote",
-          "de": "Europa, remote"
-        },
-        "href": "",
-        "demo": false
-      }
-    ],
-    "demoBadge": {
-      "uk": "демо",
-      "en": "demo",
-      "de": "Demo"
-    },
-    "form": {
-      "name": {
-        "uk": "Ім'я",
-        "en": "Name",
-        "de": "Name"
-      },
-      "email": {
+  ],
+  "contacts": [
+    {
+      "href": "mailto:info@viteh.org",
+      "label": {
         "uk": "Email",
         "en": "Email",
         "de": "E-Mail"
-      },
-      "type": {
-        "uk": "Тип проєкту",
-        "en": "Project type",
-        "de": "Projekttyp"
-      },
-      "types": [
-        {
-          "uk": "Програмне забезпечення",
-          "en": "Software",
-          "de": "Software"
-        },
-        {
-          "uk": "Електронний пристрій",
-          "en": "Electronic device",
-          "de": "Elektronisches Gerät"
-        },
-        {
-          "uk": "Інтеграція AI-агента",
-          "en": "AI-agent integration",
-          "de": "KI-Agenten-Integration"
-        },
-        {
-          "uk": "Інше / не впевнений",
-          "en": "Other / not sure",
-          "de": "Sonstiges / noch unklar"
-        }
-      ],
-      "message": {
-        "uk": "Опис задачі",
-        "en": "Project description",
-        "de": "Projektbeschreibung"
-      },
-      "messagePh": {
-        "uk": "Що потрібно створити, для кого і в які терміни?",
-        "en": "What should be built, for whom and by when?",
-        "de": "Was soll entstehen, für wen und bis wann?"
-      },
-      "consent": {
-        "uk": "Я погоджуюсь на обробку даних для відповіді на запит (див. політику конфіденційності).",
-        "en": "I agree to my data being processed to answer this request (see privacy policy).",
-        "de": "Ich bin damit einverstanden, dass meine Daten zur Beantwortung der Anfrage verarbeitet werden (siehe Datenschutzerklärung)."
-      },
-      "submit": {
-        "uk": "Надіслати запит",
-        "en": "Send request",
-        "de": "Anfrage senden"
-      },
-      "demoNotice": {
-        "uk": "Це демо-форма: дані нікуди не надсилаються.",
-        "en": "This is a demo form: no data is sent anywhere.",
-        "de": "Dies ist ein Demo-Formular: Es werden keine Daten übertragen."
-      },
-      "success": {
-        "uk": "Дякуємо! У робочій версії ми б уже отримали ваш запит. Зараз це демонстрація.",
-        "en": "Thank you! In the live version we would have received your request. For now this is a demonstration.",
-        "de": "Vielen Dank! In der Live-Version hätten wir Ihre Anfrage erhalten. Aktuell handelt es sich um eine Demonstration."
-      },
-      "required": {
-        "uk": "Заповніть, будь ласка, обов'язкові поля.",
-        "en": "Please fill in the required fields.",
-        "de": "Bitte füllen Sie die Pflichtfelder aus."
+      }
+    },
+    {
+      "href": "https://t.me/",
+      "label": {
+        "uk": "Telegram",
+        "en": "Telegram",
+        "de": "Telegram"
       }
     }
-  },
-  "footer": {
-    "note": {
-      "uk": "Програмне забезпечення, електроніка та AI-агенти.",
-      "en": "Software, electronics and AI agents.",
-      "de": "Software, Elektronik und KI-Agenten."
+  ],
+  "i18n": {
+    "language": {
+      "label": {
+        "uk": "Мова",
+        "en": "Language",
+        "de": "Sprache"
+      }
     },
-    "imprint": {
-      "uk": "Імпресум",
-      "en": "Imprint",
-      "de": "Impressum"
-    },
-    "privacy": {
-      "uk": "Конфіденційність",
-      "en": "Privacy",
-      "de": "Datenschutz"
-    },
-    "rights": {
-      "uk": "Усі права захищено.",
-      "en": "All rights reserved.",
-      "de": "Alle Rechte vorbehalten."
-    },
-    "privacyNote": {
-      "uk": "Без cookies і сторонніх трекерів.",
-      "en": "No cookies or third-party trackers.",
-      "de": "Keine Cookies, keine Tracker von Drittanbietern."
-    }
-  },
-  "legal": {
-    "back": {
-      "uk": "На головну",
-      "en": "Back to home",
-      "de": "Zur Startseite"
-    },
-    "demo": {
-      "uk": "Шаблон: перед публікацією замініть позначені поля реальними даними.",
-      "en": "Template: replace the marked fields with real details before going live.",
-      "de": "Vorlage: Ersetzen Sie die markierten Felder vor der Veröffentlichung durch echte Angaben."
-    },
-    "imprint": {
-      "title": {
-        "uk": "Імпресум",
-        "en": "Imprint",
-        "de": "Impressum"
+    "nav": {
+      "products": {
+        "uk": "Вироби",
+        "en": "Products",
+        "de": "Produkte"
       },
-      "sections": [
-        {
-          "h": {
-            "uk": "Інформація згідно з § 5 DDG",
-            "en": "Information pursuant to § 5 DDG",
-            "de": "Angaben gemäß § 5 DDG"
+      "services": {
+        "uk": "Послуги",
+        "en": "Services",
+        "de": "Leistungen"
+      },
+      "contact": {
+        "uk": "Контакти",
+        "en": "Contact",
+        "de": "Kontakt"
+      }
+    },
+    "hero": {
+      "eyebrow": {
+        "uk": "Розробка та виробництво електроніки",
+        "en": "Electronics design and production",
+        "de": "Elektronikentwicklung und Fertigung"
+      },
+      "title": {
+        "uk": "ViTeh",
+        "en": "ViTeh",
+        "de": "ViTeh"
+      },
+      "lead": {
+        "uk": "Вітрина готових виробів, прототипів та інженерних пропозицій.",
+        "en": "A showcase for finished products, prototypes, and engineering offers.",
+        "de": "Eine Vitrine fuer fertige Produkte, Prototypen und Engineering-Angebote."
+      },
+      "primaryCta": {
+        "uk": "Переглянути вироби",
+        "en": "View products",
+        "de": "Produkte ansehen"
+      },
+      "secondaryCta": {
+        "uk": "Зв'язатися",
+        "en": "Get in touch",
+        "de": "Kontakt aufnehmen"
+      }
+    },
+    "products": {
+      "eyebrow": {
+        "uk": "Каталог",
+        "en": "Catalog",
+        "de": "Katalog"
+      },
+      "title": {
+        "uk": "Вироби та пропозиції",
+        "en": "Products and offers",
+        "de": "Produkte und Angebote"
+      },
+      "lead": {
+        "uk": "Картки наповнюються з JSON-файлу і вже підтримують українську, англійську та німецьку.",
+        "en": "Cards are loaded from JSON and already support Ukrainian, English, and German.",
+        "de": "Karten werden aus JSON geladen und unterstuetzen bereits Ukrainisch, Englisch und Deutsch."
+      }
+    },
+    "categories": {
+      "all": {
+        "uk": "Усі",
+        "en": "All",
+        "de": "Alle"
+      }
+    },
+    "services": {
+      "eyebrow": {
+        "uk": "Можливості",
+        "en": "Capabilities",
+        "de": "Moeglichkeiten"
+      },
+      "title": {
+        "uk": "Що можна розширити далі",
+        "en": "What can be extended next",
+        "de": "Was spaeter erweitert werden kann"
+      },
+      "items": {
+        "catalog": {
+          "title": {
+            "uk": "Каталог",
+            "en": "Catalog",
+            "de": "Katalog"
           },
-          "p": {
-            "uk": "ViTeh — [ПІБ / назва компанії]\n[Вулиця, номер]\n[Індекс, місто, країна]",
-            "en": "ViTeh — [Full name / company name]\n[Street, number]\n[Postcode, city, country]",
-            "de": "ViTeh — [Vor- und Nachname / Firmenname]\n[Straße, Hausnummer]\n[PLZ, Ort, Land]"
+          "text": {
+            "uk": "Додавання категорій, фото, файлів прошивок, документації та статусів наявності.",
+            "en": "Add categories, photos, firmware files, documentation, and availability states.",
+            "de": "Kategorien, Fotos, Firmware-Dateien, Dokumentation und Verfuegbarkeit ergaenzen."
           }
         },
-        {
-          "h": {
-            "uk": "Контакт",
-            "en": "Contact",
-            "de": "Kontakt"
+        "leads": {
+          "title": {
+            "uk": "Заявки",
+            "en": "Requests",
+            "de": "Anfragen"
           },
-          "p": {
-            "uk": "Email: info@viteh.org (демо)\nТелефон: [буде додано]",
-            "en": "Email: info@viteh.org (demo)\nPhone: [to be added]",
-            "de": "E-Mail: info@viteh.org (Demo)\nTelefon: [wird ergänzt]"
+          "text": {
+            "uk": "Форма запиту з відправкою на email, Telegram або легкий backend.",
+            "en": "A request form that sends to email, Telegram, or a lightweight backend.",
+            "de": "Ein Anfrageformular fuer E-Mail, Telegram oder ein leichtes Backend."
           }
         },
-        {
-          "h": {
-            "uk": "Податковий номер",
-            "en": "VAT ID",
-            "de": "Umsatzsteuer-ID"
+        "i18n": {
+          "title": {
+            "uk": "Мови",
+            "en": "Languages",
+            "de": "Sprachen"
           },
-          "p": {
-            "uk": "[за наявності]",
-            "en": "[if applicable]",
-            "de": "[falls vorhanden]"
-          }
-        },
-        {
-          "h": {
-            "uk": "Відповідальний за зміст",
-            "en": "Responsible for content",
-            "de": "Verantwortlich für den Inhalt"
-          },
-          "p": {
-            "uk": "[ПІБ, адреса]",
-            "en": "[Name, address]",
-            "de": "[Name, Anschrift]"
+          "text": {
+            "uk": "Нові мови додаються через словник інтерфейсу і перекладні поля товарів.",
+            "en": "New languages are added through the interface dictionary and translated product fields.",
+            "de": "Neue Sprachen werden ueber das Interface-Woerterbuch und uebersetzte Produktfelder hinzugefuegt."
           }
         }
-      ]
+      }
     },
-    "privacy": {
-      "title": {
-        "uk": "Політика конфіденційності",
-        "en": "Privacy policy",
-        "de": "Datenschutzerklärung"
+    "contact": {
+      "eyebrow": {
+        "uk": "Контакт",
+        "en": "Contact",
+        "de": "Kontakt"
       },
-      "sections": [
-        {
-          "h": {
-            "uk": "1. Загальні відомості",
-            "en": "1. Overview",
-            "de": "1. Überblick"
-          },
-          "p": {
-            "uk": "Цей сайт — статична вітрина. Ми не використовуємо cookies, засоби аналітики, рекламні пікселі чи сторонні шрифти й скрипти. Ваш вибір мови та теми зберігається лише локально у вашому браузері (localStorage) і нікуди не передається.",
-            "en": "This website is a static showcase. We do not use cookies, analytics, advertising pixels or third-party fonts and scripts. Your language and theme choice is stored only locally in your browser (localStorage) and is never transmitted.",
-            "de": "Diese Website ist eine statische Präsentation. Wir verwenden keine Cookies, keine Analyse- oder Werbe-Tools und keine Schriften oder Skripte von Drittanbietern. Ihre Sprach- und Designauswahl wird ausschließlich lokal in Ihrem Browser (localStorage) gespeichert und nicht übertragen."
-          }
-        },
-        {
-          "h": {
-            "uk": "2. Хостинг і журнали сервера",
-            "en": "2. Hosting and server logs",
-            "de": "2. Hosting und Server-Logfiles"
-          },
-          "p": {
-            "uk": "Сайт розміщується на [провайдер хостингу]. Провайдер може тимчасово записувати технічні дані (IP-адреса, час запиту) для забезпечення безпеки та стабільності (ст. 6(1)(f) GDPR).",
-            "en": "The site is hosted by [hosting provider]. The provider may temporarily record technical data (IP address, request time) to ensure security and stability (Art. 6(1)(f) GDPR).",
-            "de": "Die Website wird bei [Hosting-Anbieter] gehostet. Der Anbieter kann technische Daten (IP-Adresse, Zeitpunkt der Anfrage) zur Gewährleistung von Sicherheit und Stabilität vorübergehend protokollieren (Art. 6 Abs. 1 lit. f DSGVO)."
-          }
-        },
-        {
-          "h": {
-            "uk": "3. Контактна форма та email",
-            "en": "3. Contact form and email",
-            "de": "3. Kontaktformular und E-Mail"
-          },
-          "p": {
-            "uk": "Наразі форма є демонстраційною і не передає даних. Якщо ви пишете нам на email, ми обробляємо ваші дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає.",
-            "en": "The form is currently a demonstration and transmits no data. If you email us, we process your data solely to answer your request (Art. 6(1)(b) or (f) GDPR) and delete it once it is no longer needed.",
-            "de": "Das Formular ist derzeit eine Demonstration und überträgt keine Daten. Wenn Sie uns per E-Mail schreiben, verarbeiten wir Ihre Daten ausschließlich zur Beantwortung Ihrer Anfrage (Art. 6 Abs. 1 lit. b oder f DSGVO) und löschen sie, sobald sie nicht mehr benötigt werden."
-          }
-        },
-        {
-          "h": {
-            "uk": "4. Ваші права",
-            "en": "4. Your rights",
-            "de": "4. Ihre Rechte"
-          },
-          "p": {
-            "uk": "Ви маєте право на доступ, виправлення, видалення, обмеження обробки, перенесення даних та заперечення, а також на скаргу до наглядового органу.",
-            "en": "You have the right to access, rectification, erasure, restriction of processing, data portability and objection, as well as the right to lodge a complaint with a supervisory authority.",
-            "de": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht auf Beschwerde bei einer Aufsichtsbehörde."
-          }
-        },
-        {
-          "h": {
-            "uk": "5. Відповідальний",
-            "en": "5. Controller",
-            "de": "5. Verantwortlicher"
-          },
-          "p": {
-            "uk": "[ПІБ / назва компанії, адреса, email]",
-            "en": "[Name / company, address, email]",
-            "de": "[Name / Firma, Anschrift, E-Mail]"
-          }
-        }
-      ]
+      "title": {
+        "uk": "Обговоримо ваш виріб",
+        "en": "Let's discuss your product",
+        "de": "Lassen Sie uns Ihr Produkt besprechen"
+      },
+      "lead": {
+        "uk": "Напишіть, що потрібно виготовити або адаптувати. Контакти можна змінити у data/site.json.",
+        "en": "Tell us what needs to be built or adapted. Contacts can be edited in data/site.json.",
+        "de": "Beschreiben Sie, was gefertigt oder angepasst werden soll. Kontakte koennen in data/site.json geaendert werden."
+      }
+    },
+    "footer": {
+      "note": {
+        "uk": "Легка мультимовна вітрина.",
+        "en": "Lightweight multilingual showcase.",
+        "de": "Leichte mehrsprachige Vitrine."
+      }
     }
   }
 }
