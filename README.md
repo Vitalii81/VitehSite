@@ -36,6 +36,8 @@ This site is independent from NanoKVM and from the OTA file server.
 | `assets/viewer-settings.js` | Shared `<model-viewer>` look (also used by the poster tool) |
 | `tools/models/`, `tools/make-env.mjs`, `tools/make-posters.mjs`, `tools/poster.html` | Model generator modules, lighting map and poster tools |
 | `docs/3d-quality/` | Before/after screenshots of the models (not published by the deploy) |
+| `assets/portfolio/*.pdf`, `tools/make-portfolio.mjs`, `tools/portfolio/img/` | Engineering portfolio (A4 PDF) and its reproducible build (`node tools/make-portfolio.mjs`, needs Chrome; `--slots` adds a mock-up page for the owner, never published); linked from Projects and Contact |
+| `docs/portfolio-mapping.md` | Site service ↔ portfolio page ↔ evidence table and the list of unpublished `[confirm]` items |
 | `assets/vendor/` | Local third-party code: `<model-viewer>`; version, SHA-256 and licence in `assets/vendor/README.md` |
 | `tools/make-models.mjs` | Dependency-free generator of the demo GLB models |
 | `tests/gallery3d.test.mjs` | Tests for the gallery logic and the generated models |
@@ -107,7 +109,7 @@ Each card supports translated `title`, `summary`, `status`, plus `category`, `im
 ### Procedural models, environment and posters
 
 Models are generated, not drawn (`node tools/make-models.mjs`): rounded boxes and lathe solids with smooth normals on the bevels, instanced components,
-PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Six models: Cronos controller, custom board, sensor node (projects) and
+PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Seven models: Cronos controller v1 and v2 (real GLB exported from Blender, with an optional per-card `orbit` start camera in `data/products.json`), custom board, sensor node (projects) and
 software laptop, electronics in an enclosure, AI network (services). Each is below 400 KB (budget 600 KB; a test enforces it) and byte-for-byte reproducible
 (a test fails when a committed file is stale, so run the generator after changing `tools/models/`).
 

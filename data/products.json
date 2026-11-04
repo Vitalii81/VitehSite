@@ -25,7 +25,7 @@
       "HMI"
     ],
     "poster": "assets/posters/cronos-controller-v2",
-    "orbit": "-30deg 58deg 108%"
+    "orbit": "-30deg 58deg 88%"
   },
   {
     "id": "cronos-controller-v1",
@@ -53,7 +53,7 @@
       "Blender",
       "HMI"
     ],
-    "orbit": "30deg 66deg 100%"
+    "orbit": "30deg 66deg 94%"
   },
   {
     "id": "iot-module",

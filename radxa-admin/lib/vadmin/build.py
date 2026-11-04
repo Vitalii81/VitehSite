@@ -138,6 +138,7 @@ def merged_site(draft, ctx, assets):
         if override:                                         # the factory poster belongs to the factory model
             it["model"] = assets.url(override).lstrip("/")
             it.pop("poster", None)
+            it.pop("orbit", None)
         kept.append(it)
     for s in draft["extra"]["services"]:
         if s["id"] not in draft["disabled"]["services"]:
@@ -149,6 +150,7 @@ def merged_site(draft, ctx, assets):
         for it in kept:
             it.pop("model", None)
             it.pop("poster", None)
+            it.pop("orbit", None)
     site["services"]["items"] = kept
     for sid, paths in SECTION_LISTS.items():
         if not draft["sections"].get(sid, True):
@@ -175,9 +177,11 @@ def merged_products(draft, ctx, assets):
             p["model"] = model
             if draft["images"]["models"].get(pid):
                 p.pop("poster", None)                       # the factory poster belongs to the factory model
+                p.pop("orbit", None)
         else:
             p.pop("model", None)
             p.pop("poster", None)
+            p.pop("orbit", None)
         out.append(p)
     return out
 

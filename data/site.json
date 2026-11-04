@@ -27,9 +27,9 @@
       "de": "ViTeh — Software, elektronische Geräte und KI-Agenten"
     },
     "description": {
-      "uk": "Розробка програмного забезпечення та електронних пристроїв легкої й середньої складності, інтеграція AI-агентів у ваші процеси. Від ідеї до прототипу та малої серії.",
-      "en": "Custom software and electronic devices of light to medium complexity, plus AI-agent integration into your workflows. From idea to prototype and small series.",
-      "de": "Entwicklung von Software und elektronischen Geräten mit geringer bis mittlerer Komplexität sowie Integration von KI-Agenten in Ihre Abläufe. Von der Idee zum Prototyp und zur Kleinserie."
+      "uk": "Створення сайтів і Android-застосунків, програмне забезпечення та електронні пристрої, інтеграція AI-агентів. Інженерний досвід з 2014 року (12+ років). Від ідеї до прототипу та малої серії.",
+      "en": "Websites and Android apps, custom software and electronic devices, AI-agent integration. Engineering experience since 2014 (12+ years). From idea to prototype and small series.",
+      "de": "Webseiten und Android-Apps, individuelle Software und elektronische Geräte, Integration von KI-Agenten. Ingenieurpraxis seit 2014 (12+ Jahre). Von der Idee zum Prototyp und zur Kleinserie."
     }
   },
   "ui": {
@@ -210,6 +210,11 @@
       "uk": "Ілюстрація: вікно коду, друкована плата та вузли AI-агентів, з'єднані між собою",
       "en": "Illustration: code window, printed circuit board and connected AI-agent nodes",
       "de": "Illustration: Code-Fenster, Leiterplatte und miteinander verbundene KI-Agenten-Knoten"
+    },
+    "experience": {
+      "uk": "Інженерний досвід з 2014 року (12+ років): електроніка, прошивки, програмне забезпечення. Працював IT-інженером в Adventx і Tesla-service, а також над фріланс-проєктами.",
+      "en": "Engineering experience since 2014 (12+ years): electronics, firmware, software. Worked as an IT engineer at Adventx and Tesla-service, plus freelance projects.",
+      "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Elektronik, Firmware, Software. IT-Ingenieur bei Adventx und Tesla-service sowie Freelance-Projekte."
     }
   },
   "trust": {
@@ -225,9 +230,9 @@
         "de": "Firmware und Embedded-Systeme"
       },
       {
-        "uk": "Веб, API та інтеграції",
-        "en": "Web, APIs and integrations",
-        "de": "Web, APIs und Integrationen"
+        "uk": "Сайти, Android і десктопні застосунки",
+        "en": "Websites, Android and desktop apps",
+        "de": "Webseiten, Android- und Desktop-Apps"
       },
       {
         "uk": "AI-агенти та автоматизація",
@@ -443,6 +448,156 @@
             "de": "Sicherheit von Anfang an"
           }
         ]
+      },
+      {
+        "icon": "globe",
+        "title": {
+          "uk": "Створення сайтів",
+          "en": "Website development",
+          "de": "Webseiten-Entwicklung"
+        },
+        "text": {
+          "uk": "Швидкі багатомовні сайти без трекерів і сторонніх запитів, форми зі вкладеннями, приватні адмінки та 3D-галереї виробів.",
+          "en": "Fast multilingual websites without trackers or third-party requests, forms with attachments, private admin tools and 3D product galleries.",
+          "de": "Schnelle mehrsprachige Webseiten ohne Tracker und Drittanbieter-Anfragen, Formulare mit Anhängen, private Admin-Werkzeuge und 3D-Produktgalerien."
+        },
+        "points": [
+          {
+            "uk": "Статичні сайти без збірки",
+            "en": "Static sites without a build step",
+            "de": "Statische Seiten ohne Build-Schritt"
+          },
+          {
+            "uk": "Форми, пошта, Cloudflare Workers",
+            "en": "Forms, mail, Cloudflare Workers",
+            "de": "Formulare, Mail, Cloudflare Workers"
+          },
+          {
+            "uk": "3D-моделі виробів і приватна адмінка",
+            "en": "3D product models and a private admin",
+            "de": "3D-Produktmodelle und privates Admin"
+          }
+        ]
+      },
+      {
+        "icon": "code",
+        "title": {
+          "uk": "Android-застосунки",
+          "en": "Android apps",
+          "de": "Android-Apps"
+        },
+        "text": {
+          "uk": "Нативні застосунки на Kotlin і Jetpack Compose для ваших серверів і пристроїв: чат, голос, файли, сповіщення.",
+          "en": "Native apps in Kotlin and Jetpack Compose for your own servers and devices: chat, voice, files, notifications.",
+          "de": "Native Apps in Kotlin und Jetpack Compose für Ihre eigenen Server und Geräte: Chat, Sprache, Dateien, Benachrichtigungen."
+        },
+        "points": [
+          {
+            "uk": "Kotlin та Jetpack Compose",
+            "en": "Kotlin and Jetpack Compose",
+            "de": "Kotlin und Jetpack Compose"
+          },
+          {
+            "uk": "Голос, переклад, фонові служби",
+            "en": "Voice, translation, background services",
+            "de": "Sprache, Übersetzung, Hintergrunddienste"
+          },
+          {
+            "uk": "Автооновлення й приватні мережі",
+            "en": "Automatic updates and private networks",
+            "de": "Automatische Updates und private Netzwerke"
+          }
+        ]
+      },
+      {
+        "icon": "agent",
+        "title": {
+          "uk": "Застосунки під замовлення разом з AI-агентами",
+          "en": "Custom apps built together with AI agents",
+          "de": "Individuelle Apps, gemeinsam mit KI-Agenten entwickelt"
+        },
+        "text": {
+          "uk": "Застосунки для будь-якої платформи (Windows, Linux, macOS/iOS, Android, веб): розробка разом з AI-агентами, з тестами й підтримкою.",
+          "en": "Apps for almost any platform (Windows, Linux, macOS/iOS, Android, web), developed together with AI agents, with tests and support.",
+          "de": "Apps für nahezu jede Plattform (Windows, Linux, macOS/iOS, Android, Web), gemeinsam mit KI-Agenten entwickelt, mit Tests und Support."
+        },
+        "points": [
+          {
+            "uk": "Попередній досвід: C# (WinForms, WPF), Qt, GTK, Swift",
+            "en": "Prior experience: C# (WinForms, WPF), Qt, GTK, Swift",
+            "de": "Vorerfahrung: C# (WinForms, WPF), Qt, GTK, Swift"
+          },
+          {
+            "uk": "Приклади з поточної роботи: Android-клієнт, Rust/Slint, веб-інструменти",
+            "en": "Current examples: Android client, Rust/Slint, web tools",
+            "de": "Aktuelle Beispiele: Android-Client, Rust/Slint, Web-Werkzeuge"
+          },
+          {
+            "uk": "Тести та підтримка",
+            "en": "Tests and support",
+            "de": "Tests und Support"
+          }
+        ]
+      },
+      {
+        "icon": "chat",
+        "title": {
+          "uk": "Локальний AI і голос",
+          "en": "Local AI and voice",
+          "de": "Lokale KI und Sprache"
+        },
+        "text": {
+          "uk": "Запуск локальних мовних моделей на власному обладнанні, голосові інтерфейси й донавчання.",
+          "en": "Running local language models on your own hardware, voice interfaces and fine-tuning.",
+          "de": "Lokale Sprachmodelle auf eigener Hardware, Sprachschnittstellen und Fine-Tuning."
+        },
+        "points": [
+          {
+            "uk": "Локальні LLM, квантизація (GGUF)",
+            "en": "Local LLMs, quantisation (GGUF)",
+            "de": "Lokale LLMs, Quantisierung (GGUF)"
+          },
+          {
+            "uk": "Розпізнавання й синтез мовлення",
+            "en": "Speech recognition and synthesis",
+            "de": "Spracherkennung und Sprachsynthese"
+          },
+          {
+            "uk": "Донавчання моделей",
+            "en": "Model fine-tuning",
+            "de": "Fine-Tuning von Modellen"
+          }
+        ]
+      },
+      {
+        "icon": "iot",
+        "title": {
+          "uk": "Linux, мережі та діагностика",
+          "en": "Linux, networks and diagnostics",
+          "de": "Linux, Netzwerke und Diagnose"
+        },
+        "text": {
+          "uk": "Налаштування Linux/OpenWrt, віддаленого доступу та діагностика зависань, пам'яті й мережі.",
+          "en": "Linux/OpenWrt setup, remote access, and diagnosis of hangs, memory and network problems.",
+          "de": "Einrichtung von Linux/OpenWrt, Fernzugriff und Diagnose von Hängern, Speicher- und Netzwerkproblemen."
+        },
+        "points": [
+          {
+            "uk": "Linux, OpenWrt, systemd",
+            "en": "Linux, OpenWrt, systemd",
+            "de": "Linux, OpenWrt, systemd"
+          },
+          {
+            "uk": "Tailscale, Cloudflare Tunnel",
+            "en": "Tailscale, Cloudflare Tunnel",
+            "de": "Tailscale, Cloudflare Tunnel"
+          },
+          {
+            "uk": "Аналіз логів і налагодження",
+            "en": "Log analysis and debugging",
+            "de": "Log-Analyse und Fehlersuche"
+          }
+        ]
       }
     ]
   },
@@ -644,7 +799,12 @@
           "de": "Automatisierung"
         }
       }
-    ]
+    ],
+    "portfolio": {
+      "uk": "Інженерне портфоліо (PDF)",
+      "en": "Engineering portfolio (PDF)",
+      "de": "Engineering-Portfolio (PDF)"
+    }
   },
   "stack": {
     "eyebrow": {
@@ -677,8 +837,11 @@
           "KiCad",
           "FreeRTOS",
           "Zephyr",
-          "C / C++",
-          "Rust"
+          "Rust",
+          "Altium",
+          "Modbus",
+          "CAN",
+          "LVGL"
         ]
       },
       {
@@ -688,14 +851,20 @@
           "de": "Software"
         },
         "items": [
+          "C / C++",
+          "C# (WinForms, WPF)",
+          "Qt",
+          "GTK",
+          "Swift",
+          "Kotlin / Jetpack Compose",
+          "Rust / Slint",
           "Python",
-          "TypeScript",
+          "Bash",
+          "HTML / CSS / JS",
           "Node.js",
-          "React",
-          "FastAPI",
-          "PostgreSQL",
-          "Docker",
+          "Cloudflare Workers",
           "Linux",
+          "Docker",
           "MQTT"
         ]
       },
@@ -788,9 +957,9 @@
         },
         "points": [
           {
-            "uk": "Прототип або готове рішення",
-            "en": "Prototype or finished solution",
-            "de": "Prototyp oder fertige Lösung"
+            "uk": "Прототип, застосунок або готове рішення",
+            "en": "Prototype, app or finished solution",
+            "de": "Prototyp, App oder fertige Lösung"
           },
           {
             "uk": "Демонстрації на кожному етапі",
@@ -856,9 +1025,33 @@
           "de": "Welche Projekte übernehmen Sie?"
         },
         "a": {
-          "uk": "Програмне забезпечення та електронні пристрої легкої й середньої складності: прототипи, малі серії, внутрішні інструменти, інтеграції та AI-агенти. Для дуже складних або сертифікованих систем (медицина, авіація) ми не підійдемо, але можемо допомогти з концепцією.",
-          "en": "Software and electronic devices of light to medium complexity: prototypes, small series, internal tools, integrations and AI agents. We are not the right fit for highly complex or certified systems (medical, aviation), but we can help with the concept.",
-          "de": "Software und elektronische Geräte mit geringer bis mittlerer Komplexität: Prototypen, Kleinserien, interne Werkzeuge, Integrationen und KI-Agenten. Für hochkomplexe oder zertifizierte Systeme (Medizin, Luftfahrt) sind wir nicht der richtige Partner, helfen aber gern beim Konzept."
+          "uk": "Сайти, Android- та десктопні застосунки, електронні пристрої легкої й середньої складності: прототипи, малі серії, внутрішні інструменти, інтеграції та AI-агенти. Для дуже складних або сертифікованих систем (медицина, авіація) ми не підійдемо, але можемо допомогти з концепцією.",
+          "en": "Websites, Android and desktop apps, and electronic devices of light to medium complexity: prototypes, small series, internal tools, integrations and AI agents. We are not the right fit for highly complex or certified systems (medical, aviation), but we can help with the concept.",
+          "de": "Webseiten, Android- und Desktop-Apps sowie elektronische Geräte mit geringer bis mittlerer Komplexität: Prototypen, Kleinserien, interne Werkzeuge, Integrationen und KI-Agenten. Für hochkomplexe oder zertifizierte Systeme (Medizin, Luftfahrt) sind wir nicht der richtige Partner, helfen aber gern beim Konzept."
+        }
+      },
+      {
+        "q": {
+          "uk": "Для яких платформ ви робите застосунки?",
+          "en": "Which platforms do you build apps for?",
+          "de": "Für welche Plattformen entwickeln Sie Apps?"
+        },
+        "a": {
+          "uk": "Для Windows, Linux, macOS/iOS, Android і веба. Маємо досвід із C# (WinForms, WPF), Qt, GTK і Swift; розробляємо разом з AI-агентами, з тестами й підтримкою. Як приклади з поточної роботи можемо показати Android-клієнт, застосунок на Rust/Slint і веб-інструменти.",
+          "en": "For Windows, Linux, macOS/iOS, Android and the web. We have experience with C# (WinForms, WPF), Qt, GTK and Swift, and we develop together with AI agents, with tests and support. Current examples we can show: an Android client, a Rust/Slint app and web tools.",
+          "de": "Für Windows, Linux, macOS/iOS, Android und das Web. Wir haben Erfahrung mit C# (WinForms, WPF), Qt, GTK und Swift und entwickeln gemeinsam mit KI-Agenten, mit Tests und Support. Aktuelle Beispiele: ein Android-Client, eine Rust/Slint-App und Web-Werkzeuge."
+        }
+      },
+      {
+        "q": {
+          "uk": "Який у вас досвід?",
+          "en": "How much experience do you have?",
+          "de": "Wie viel Erfahrung haben Sie?"
+        },
+        "a": {
+          "uk": "Інженерний досвід з 2014 року (12+ років): вбудовані системи, електроніка, ПЗ. Працював IT-інженером в Adventx і Tesla-service, а також над фріланс-проєктами. Видима частина робіт зібрана в портфоліо; були й внутрішні та інструментальні проєкти, які ми не показуємо.",
+          "en": "Engineering experience since 2014 (12+ years): embedded systems, electronics, software. Worked as an IT engineer at Adventx and Tesla-service, plus freelance projects. The visible part of the work is in the portfolio; there were also internal and tooling projects that we do not show.",
+          "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Embedded-Systeme, Elektronik, Software. IT-Ingenieur bei Adventx und Tesla-service sowie Freelance-Projekte. Der sichtbare Teil der Arbeit steht im Portfolio; dazu kamen interne Projekte und Werkzeuge, die wir nicht zeigen."
         }
       },
       {
@@ -1108,6 +1301,11 @@
           "de": "Die Datei ist leer."
         }
       }
+    },
+    "portfolio": {
+      "uk": "Інженерне портфоліо (PDF)",
+      "en": "Engineering portfolio (PDF)",
+      "de": "Engineering-Portfolio (PDF)"
     }
   },
   "footer": {
