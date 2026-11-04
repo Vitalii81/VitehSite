@@ -2,6 +2,7 @@
   "projects": [
     {
       "slug": "prometheus-controller",
+      "portfolioOnly": true,
       "category": "electronics",
       "years": "2022–2023",
       "title": {

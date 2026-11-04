@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { filterProjects, projectSlots, ratioOf, slotUrl } from "../assets/portfolio.js";
+import { filterProjects, onSite, projectSlots, ratioOf, slotUrl } from "../assets/portfolio.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const json = (p) => JSON.parse(readFileSync(join(root, p), "utf8"));
@@ -73,4 +73,14 @@ test("page logic: placeholders stay hidden for visitors and are labelled in prev
 test("nothing from the owner's confirm-list leaks: no customers, contracts or private words in the archive data", () => {
   const all = JSON.stringify([projects, manifest.map((m) => m.alt)]);
   assert.ok(!/договір|contract|Sinnexel|Vertrag|\bNDA\b|@|https?:/i.test(all));
+});
+
+test("projects marked portfolioOnly (another company) stay out of the home page and out of the site texts, but remain in the portfolio data", () => {
+  const prometheus = projects.find((p) => p.slug === "prometheus-controller");
+  assert.equal(prometheus.portfolioOnly, true);
+  assert.ok(!onSite(projects).some((p) => p.portfolioOnly));
+  assert.equal(onSite(projects).length, projects.length - projects.filter((p) => p.portfolioOnly).length);
+  const { portfolioPage, work, ...rest } = site;
+  assert.ok(!/prometheus/i.test(JSON.stringify([rest, json("data/products.json")])), "no mention in the site texts");
+  assert.ok(prometheus.slots.every((s) => manifest.some((m) => m.slug === prometheus.slug && m.slot === s)), "its picture slots stay for the portfolio");
 });
