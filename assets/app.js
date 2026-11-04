@@ -183,7 +183,7 @@ const renderProducts = () => {
   const visible = state.category === "all" ? state.products : state.products.filter((p) => p.category === state.category);
   mount("#productGrid", visible.map((product) => {
     const category = work.categories.find((c) => c.id === product.category);
-    return h("article", { class: "product-card" },
+    return h("article", { class: "product-card", "data-id": product.id },
       h("img", { src: product.image, alt: "", width: 480, height: 320, loading: "lazy" }),
       h("div", { class: "product-body" },
         h("div", { class: "product-meta" },
@@ -197,6 +197,10 @@ const renderProducts = () => {
       ),
     );
   }));
+  // Hook for assets/gallery3d.js (optional enhancement); the data is also kept for a module that loads later.
+  const detail = { products: state.products, lang: state.lang, ui: state.site.ui };
+  window.vitehGalleryData = detail;
+  document.dispatchEvent(new CustomEvent("viteh:products", { detail }));
 };
 
 const renderStack = () => {

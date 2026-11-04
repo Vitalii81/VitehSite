@@ -411,3 +411,42 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   .topbar, .to-top, .contact-form, .hero-media { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+/* ===== 3D gallery (assets/gallery3d.js) — progressive enhancement of .product-card ===== */
+.g3d-media { position: relative; line-height: 0; background: #0e1816; }
+.g3d-live {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity .4s;
+  --poster-color: transparent; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%);
+}
+.g3d-live.ready { opacity: 1; }
+.g3d-open { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: pointer; font: inherit; }
+.g3d-open:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; border-radius: 0; }
+.g3d-badge, .g3d-cap {
+  position: absolute; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700; line-height: 1.3;
+  background: rgba(12, 19, 17, 0.72); color: #e7efeb; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background .2s, color .2s;
+}
+.g3d-badge { top: 12px; right: 12px; letter-spacing: .06em; }
+.g3d-cap { left: 12px; bottom: 12px; }
+.g3d-open:hover .g3d-cap, .g3d-open:focus-visible .g3d-cap { background: var(--accent); color: var(--accent-ink); }
+
+.g3d-dialog {
+  width: min(960px, 94vw); height: min(82vh, 720px); max-width: none; max-height: none; padding: 0; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 22px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lg);
+}
+.g3d-dialog[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.g3d-dialog::backdrop { background: rgba(6, 12, 10, 0.64); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.g3d-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px 22px; }
+.g3d-head h3 { font-size: 19px; font-weight: 720; }
+.g3d-close { width: 44px; height: 44px; padding: 0; font-size: 26px; line-height: 1; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--ink); cursor: pointer; }
+.g3d-close:hover { border-color: var(--accent); }
+.g3d-stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%); }
+.g3d-stage .g3d-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: .45; }
+.g3d-stage .g3d-live { pointer-events: auto; background: transparent; }
+.g3d-stage:has(.g3d-live.ready) .g3d-poster { opacity: 0; }
+.g3d-status { min-height: 1.5em; padding: 10px 22px 0; font-size: 14px; color: var(--muted); }
+.g3d-hint { padding: 2px 22px 16px; font-size: 14px; color: var(--muted); }
+body:has(.g3d-dialog[open]) { overflow: hidden; }
+@media (max-width: 640px) {
+  .g3d-dialog { inset: 0; width: 100vw; height: 100vh; height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+}
+@media print { .g3d-open, .g3d-dialog { display: none !important; } }
