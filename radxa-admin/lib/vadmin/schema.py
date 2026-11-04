@@ -314,22 +314,31 @@ def clean_order(value):
     return [] if tuple(full) == MOVABLE_IDS else full
 
 
-def clean_portfolio(raw, ctx):
-    """The project gallery ("Замовні розробки"): which factory projects are off, their order, and text overrides.
-    Slugs come ONLY from the factory data/portfolio.json (nothing a browser sends can name a new item or a file path); an override is kept
-    only where it differs from the factory text, so an untouched draft stays empty and builds the factory gallery byte for byte."""
-    raw = raw if isinstance(raw, dict) else {}
-    factory = {p.get("slug"): p for p in ctx.portfolio_projects if isinstance(p, dict) and isinstance(p.get("slug"), str)}
-    slugs = list(factory)
-    out = {"disabled": [], "order": [], "items": {}}
-    off = raw.get("disabled") if isinstance(raw.get("disabled"), list) else []
-    out["disabled"] = sorted({x for x in off if isinstance(x, str) and x in factory})
+def _slug_order(value, slugs):
+    """A full permutation of `slugs` from a browser list (unknown/repeated dropped, missing keep their factory place at the end), or [] when it equals the factory order."""
     seen = []
-    for slug in raw.get("order") if isinstance(raw.get("order"), list) else []:
-        if isinstance(slug, str) and slug in factory and slug not in seen:
+    for slug in value if isinstance(value, list) else []:
+        if isinstance(slug, str) and slug in slugs and slug not in seen:
             seen.append(slug)
     full = seen + [x for x in slugs if x not in seen]
-    out["order"] = [] if not seen or full == slugs else full
+    return [] if not seen or full == slugs else full
+
+
+def clean_portfolio(raw_draft, ctx):
+    """The PORTFOLIO's own content (draft.portfolio): the single place where an item's text, pictures, order and on/off are edited. Feeds /portfolio/ and the PDF,
+    and offers the items that the home page may pick (draft.site.gallery). Slugs come ONLY from the factory data/portfolio.json (no new items, no paths); an override is
+    kept only where it differs from the factory, so an untouched draft stays empty. Older drafts kept parts of this elsewhere (images.portfolio, images.portfolioAlt,
+    disabled.portfolio, texts["portfolioPage.*"]); they are read here and moved, so nothing is lost; a value already present in `portfolio` wins."""
+    raw = raw_draft.get("portfolio") if isinstance(raw_draft.get("portfolio"), dict) else {}
+    legacy_imgs = raw_draft.get("images") if isinstance(raw_draft.get("images"), dict) else {}
+    legacy_dis = raw_draft.get("disabled") if isinstance(raw_draft.get("disabled"), dict) else {}
+    legacy_texts = raw_draft.get("texts") if isinstance(raw_draft.get("texts"), dict) else {}
+    factory = {p.get("slug"): p for p in ctx.portfolio_projects if isinstance(p, dict) and isinstance(p.get("slug"), str)}
+    slugs = list(factory)
+    out = {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}}
+    off = raw.get("disabled") if isinstance(raw.get("disabled"), list) else []
+    out["disabled"] = sorted({x for x in off if isinstance(x, str) and x in factory})
+    out["order"] = _slug_order(raw.get("order"), slugs)
     items = raw.get("items") if isinstance(raw.get("items"), dict) else {}
     for slug, src in items.items():
         if slug not in factory or not isinstance(src, dict):
@@ -347,13 +356,43 @@ def clean_portfolio(raw, ctx):
             kept["tags"] = tags
         if kept:
             out["items"][slug] = kept
+    # picture slots, keyed "<slug>/<slot>" exactly as in data/portfolio-images.json; only uploaded images the public script can show
+    known_slots = {"%s/%s" % (m.get("slug"), m.get("slot")) for m in ctx.portfolio_images if isinstance(m, dict)}
+    imgs = dict(legacy_imgs.get("portfolio") if isinstance(legacy_imgs.get("portfolio"), dict) else {})
+    imgs.update(raw.get("images") if isinstance(raw.get("images"), dict) else {})
+    out["images"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in imgs.items()) if k in known_slots and v.startswith("u:") and gallery_file_ok(v, ctx)}
+    alts = dict(legacy_imgs.get("portfolioAlt") if isinstance(legacy_imgs.get("portfolioAlt"), dict) else {})
+    alts.update(raw.get("alts") if isinstance(raw.get("alts"), dict) else {})
+    out["alts"] = {k: a for k, a in ((k, i18n(v, 200)) for k, v in alts.items() if k in known_slots) if any(a.get(l) for l in LANGS)}
+    known_sections = {x.get("id") for x in ctx.site.get("portfolioPage", {}).get("sections", [])}
+    secs = list(raw.get("disabledSections") if isinstance(raw.get("disabledSections"), list) else []) + list(legacy_dis.get("portfolio") if isinstance(legacy_dis.get("portfolio"), list) else [])
+    out["disabledSections"] = sorted({x for x in secs if x in known_sections})
+    leaves = editable_texts(ctx.site)
+    texts = {k: v for k, v in legacy_texts.items() if isinstance(k, str) and k.startswith("portfolioPage.")}
+    texts.update(raw.get("texts") if isinstance(raw.get("texts"), dict) else {})
+    for path, value in list(texts.items())[:LIMITS["texts"]]:
+        if isinstance(path, str) and path.startswith("portfolioPage.") and TEXT_PATH.match(path) and path in leaves:
+            clean = i18n(value, 2000, True)
+            if clean != {k: leaves[path].get(k, "") for k in LANGS}:
+                out["texts"][path] = clean
     return out
 
 
+def clean_site(raw, ctx):
+    """What the HOME page takes from the portfolio: draft.site.gallery = {hidden: [slug], order: [slug]}. Only ids of items the home page can show (not the portfolio-only
+    ones); texts and pictures are never stored here, they come from draft.portfolio."""
+    raw = raw if isinstance(raw, dict) else {}
+    g = raw.get("gallery") if isinstance(raw.get("gallery"), dict) else {}
+    slugs = [p["slug"] for p in ctx.portfolio_projects if isinstance(p, dict) and isinstance(p.get("slug"), str) and not p.get("portfolioOnly")]
+    hidden = g.get("hidden") if isinstance(g.get("hidden"), list) else []
+    return {"gallery": {"hidden": sorted({x for x in hidden if isinstance(x, str) and x in slugs}), "order": _slug_order(g.get("order"), slugs)}}
+
+
 def empty_draft():
-    return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
-            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}, "portfolioAlt": {}},
-            "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}}}
+    return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": []}, "widgets": {}, "effects": {}, "texts": {},
+            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
+            "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}},
+            "site": {"gallery": {"hidden": [], "order": []}}}
 
 
 def sanitize(raw, ctx):
@@ -377,13 +416,11 @@ def sanitize(raw, ctx):
     dis = raw.get("disabled") if isinstance(raw.get("disabled"), dict) else {}
     d["disabled"]["services"] = sorted({x for x in (dis.get("services") or []) if x in known_s})
     d["disabled"]["projects"] = sorted({x for x in (dis.get("projects") or []) if x in known_p})
-    known_pf = {x.get("id") for x in ctx.site.get("portfolioPage", {}).get("sections", [])}
-    d["disabled"]["portfolio"] = sorted({x for x in (dis.get("portfolio") or []) if x in known_pf})
 
     texts = raw.get("texts") if isinstance(raw.get("texts"), dict) else {}
     leaves = editable_texts(ctx.site)
     for path, value in list(texts.items())[:LIMITS["texts"]]:
-        if isinstance(path, str) and TEXT_PATH.match(path) and path in leaves:
+        if isinstance(path, str) and TEXT_PATH.match(path) and path in leaves and not path.startswith("portfolioPage."):          # portfolio texts live in draft.portfolio
             clean = i18n(value, 2000, True)
             if clean != {k: leaves[path].get(k, "") for k in LANGS}:
                 d["texts"][path] = clean
@@ -393,14 +430,8 @@ def sanitize(raw, ctx):
     for key, check, known in (("projects", image_ref, known_p), ("models", upload_model_ref, known_p), ("serviceModels", upload_model_ref, known_s)):
         src = imgs.get(key) if isinstance(imgs.get(key), dict) else {}
         d["images"][key] = {pid: check(v, ctx) for pid, v in src.items() if pid in known and check(v, ctx)}
-    # project-archive image slots, keyed "<slug>/<slot>" exactly as in data/portfolio-images.json; only uploaded images (u:...) may fill a slot
-    known_slots = {"%s/%s" % (m.get("slug"), m.get("slot")) for m in ctx.portfolio_images if isinstance(m, dict)}
-    src = imgs.get("portfolio") if isinstance(imgs.get("portfolio"), dict) else {}
-    d["images"]["portfolio"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in src.items()) if k in known_slots and v.startswith("u:") and gallery_file_ok(v, ctx)}
-    alts = imgs.get("portfolioAlt") if isinstance(imgs.get("portfolioAlt"), dict) else {}
-    d["images"]["portfolioAlt"] = {k: a for k, a in ((k, i18n(v, 200)) for k, v in alts.items() if k in known_slots) if any(a.get(l) for l in LANGS)}
-
-    d["portfolio"] = clean_portfolio(raw.get("portfolio"), ctx)
+    d["portfolio"] = clean_portfolio(raw, ctx)
+    d["site"] = clean_site(raw.get("site"), ctx)
     d["products"] = clean_products(raw.get("products"), ctx)
     plain, src = editable_plain(ctx.site), raw.get("plain") if isinstance(raw.get("plain"), dict) else {}
     for path, value in list(src.items())[:LIMITS["texts"]]:

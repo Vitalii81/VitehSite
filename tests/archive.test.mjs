@@ -79,8 +79,28 @@ test("projects marked portfolioOnly (another company) stay out of the home page 
   const prometheus = projects.find((p) => p.slug === "prometheus-controller");
   assert.equal(prometheus.portfolioOnly, true);
   assert.ok(!onSite(projects).some((p) => p.portfolioOnly));
+  const pick = ["lvgl-smartwatch", "can-helper", "prometheus-controller", "no-such"];
+  assert.deepEqual(onSite(projects, pick).map((p) => p.slug), ["lvgl-smartwatch", "can-helper"], "the home page's own selection: its ids in its order; portfolio-only and unknown ids never show");
+  assert.deepEqual(onSite(projects, []), [], "an explicit empty selection shows nothing");
   assert.equal(onSite(projects).length, projects.length - projects.filter((p) => p.portfolioOnly).length);
   const { portfolioPage, work, ...rest } = site;
   assert.ok(!/prometheus/i.test(JSON.stringify([rest, json("data/products.json")])), "no mention in the site texts");
   assert.ok(prometheus.slots.every((s) => manifest.some((m) => m.slug === prometheus.slug && m.slot === s)), "its picture slots stay for the portfolio");
+});
+
+test("the public portfolio markup carries no editor attributes; the editor mode marks every text with its data path", async () => {
+  const { sectionsFor } = await import("../assets/portfolio-render.js");
+  const site = JSON.parse(readFileSync(new URL("../data/site.json", import.meta.url), "utf8"));
+  const data = JSON.parse(readFileSync(new URL("../data/portfolio.json", import.meta.url), "utf8"));
+  const manifest = JSON.parse(readFileSync(new URL("../data/portfolio-images.json", import.meta.url), "utf8"));
+  const html = (ve) => sectionsFor(site.portfolioPage, site, data.projects, manifest, "en", { ve }).map((s) => s.body + (s.kicker || "")).join("");
+  assert.ok(!/data-p=|data-f=|data-slug=/.test(html(false)), "nothing of the editor in the public page");
+  const marked = html(true);
+  assert.ok(/data-slug="lvgl-smartwatch"/.test(marked) && /data-f="title"/.test(marked));
+  for (const path of marked.match(/data-p="[^"]+"/g)) {            // every marked path is a real {uk,en,de} leaf of site.json
+    const parts = path.slice(8, -1).split(".");
+    let node = site;
+    for (const k of parts) node = node?.[k];
+    assert.ok(node && typeof node === "object" && "en" in node, path);
+  }
 });

@@ -427,7 +427,8 @@ class BuildTests(unittest.TestCase):
         path = "portfolioPage.sections.0.title"
         self.assertIn(path, leaves)
         self.assertEqual(set(leaves[path]), {"uk", "en", "de"})
-        self.assertIn("portfolioPage:profile", api.catalog(self.w.paths, ctx)["texts"])
+        self.assertIn("portfolioPage:profile", api.catalog(self.w.paths, ctx)["portfolioTexts"], "the portfolio page texts are edited with the portfolio, not among the site texts")
+        self.assertNotIn("portfolioPage:profile", api.catalog(self.w.paths, ctx)["texts"])
         d = self.w.draft()
         d["texts"][path] = {"uk": "Новий", "en": "New", "de": "Neu"}
         d["disabled"]["portfolio"] = ["web", "no-such-section"]
@@ -439,7 +440,11 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(secs[0]["title"]["de"], "Neu")
         self.assertNotIn("web", [x["id"] for x in secs])
         self.assertIn("android", [x["id"] for x in secs])
-        self.assertEqual(schema.sanitize(d, ctx)["disabled"]["portfolio"], ["web"], "unknown ids are dropped by the sanitiser")
+        clean = schema.sanitize(d, ctx)
+        self.assertEqual(clean["portfolio"]["disabledSections"], ["web"], "unknown ids are dropped by the sanitiser; the old key was migrated")
+        self.assertNotIn("portfolio", clean["disabled"])
+        self.assertEqual(clean["portfolio"]["texts"][path]["de"], "Neu")
+        self.assertNotIn(path, clean["texts"])
 
     def test_archive_slot_alt_texts_are_editable(self):
         ctx = self.w.ctx()
@@ -447,7 +452,7 @@ class BuildTests(unittest.TestCase):
         d = self.w.draft()
         d["images"]["portfolioAlt"] = {"can-helper/window": {"uk": "Вікно CanHelper", "en": "", "de": ""}, "no-such/slot": {"en": "x"}, "can-helper/device": {"uk": "", "en": "", "de": ""}}
         self.w.save(d)
-        clean = schema.sanitize(d, ctx)["images"]["portfolioAlt"]
+        clean = schema.sanitize(d, ctx)["portfolio"]["alts"]
         self.assertEqual(list(clean), ["can-helper/window"], "unknown slots and empty texts are dropped")
         r = build.build(self.w.paths)
         self.assertTrue(r["ok"], r)
@@ -1032,9 +1037,10 @@ class PortfolioDraftTests(Base):
     def test_untouched_gallery_and_factory_order_are_stored_as_nothing(self):
         ctx = self.w.ctx()
         slugs = [p["slug"] for p in ctx.portfolio_projects]
-        self.assertEqual(schema.sanitize({}, ctx)["portfolio"], {"disabled": [], "order": [], "items": {}})
+        empty = {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}}
+        self.assertEqual(schema.sanitize({}, ctx)["portfolio"], empty)
         self.assertEqual(schema.sanitize({"portfolio": {"order": slugs}}, ctx)["portfolio"]["order"], [])
-        self.assertEqual(schema.sanitize({"portfolio": "junk"}, ctx)["portfolio"], {"disabled": [], "order": [], "items": {}})
+        self.assertEqual(schema.sanitize({"portfolio": "junk"}, ctx)["portfolio"], empty)
         self.assertEqual(schema.sanitize({"portfolio": {"items": {"toyota-hv-monitor": {"title": {"uk": "", "en": "", "de": ""}}}}}, ctx)["portfolio"]["items"], {}, "an emptied title is not an override")
 
     def test_a_slot_takes_only_uploaded_files_the_public_script_can_show(self):
@@ -1042,7 +1048,8 @@ class PortfolioDraftTests(Base):
         avif = uploads.store(self.w.paths, b"\x00\x00\x00\x1cftypavif" + b"\x00" * 40, "a.avif")
         ctx = self.w.ctx()
         d = {"images": {"portfolio": {"toyota-hv-monitor/device-photo": png_item["ref"], "can-helper/window": avif["ref"], "lvgl-smartwatch/home": "assets/hero-illustration.svg", "x/y": png_item["ref"]}}}
-        self.assertEqual(schema.sanitize(d, ctx)["images"]["portfolio"], {"toyota-hv-monitor/device-photo": png_item["ref"]})
+        self.assertEqual(schema.sanitize(d, ctx)["portfolio"]["images"], {"toyota-hv-monitor/device-photo": png_item["ref"]})
+        self.assertNotIn("portfolio", schema.sanitize(d, ctx)["images"], "the old key is gone")
 
 
 class PortfolioBuildTests(unittest.TestCase):
@@ -1094,7 +1101,7 @@ class PortfolioBuildTests(unittest.TestCase):
             self.assertIn("LVGL smartwatch prototype", text)
             self.assertIn("Prometheus: control board", text, "projects that only the portfolio shows stay in the PDF")
 
-    def test_the_pdf_follows_the_web_texts_pictures_and_order_and_switches_with_the_web_portfolio(self):
+    def test_the_pdf_follows_the_portfolio_texts_pictures_order_and_switches(self):
         item = uploads.store(self.w.paths, png(), "shot.png")
         d = self.w.draft()
         d["portfolio"]["items"] = {"lvgl-smartwatch": {"title": {"uk": "Годинник-Тест", "en": "Watch-Test", "de": "Uhr-Test"}}}
@@ -1111,14 +1118,13 @@ class PortfolioBuildTests(unittest.TestCase):
             self.assertIn("Watch-Test", text)
             self.assertNotIn(TOYOTA, text)
             self.assertIn("Годинник-Тест", uk)
-        d["widgets"]["portfolioLink"] = False                           # no web portfolio to follow: the admin's data as it is, switches of the web ignored
-        bid = self.build(d)
-        site_off = self.w.site(bid)
-        self.assertNotIn("toyota-hv-monitor", [p["slug"] for p in json.loads(read_file(os.path.join(site_off, "data/portfolio.json")))["projects"]], "the home gallery still honours the switch")
+        d["widgets"]["portfolioLink"] = False                           # the widget only controls the page /portfolio/ and its links: the PDF is still made from the portfolio
+        d["site"] = {"gallery": {"hidden": ["lvgl-smartwatch"], "order": []}}
+        site_off = self.w.site(self.build(d))
         text = pdf_text(read_bytes(os.path.join(site_off, PDF_EN)))
         if text is not None:
-            self.assertIn(TOYOTA, text)
-            self.assertIn("Watch-Test", text)
+            self.assertIn("Watch-Test", text, "hidden on the home page, still in the PDF")
+            self.assertNotIn(TOYOTA, text)
 
     def test_no_pdf_work_needs_the_network_or_external_tools(self):
         for name in ("pdf.py", "portfolio_pdf.py"):
@@ -1242,31 +1248,60 @@ class PortfolioPdfTests(unittest.TestCase):
 class EditPagePortfolioTests(EditPageTests):
     """The portfolio gallery in the on-page editor: shown (not stripped), every project present with its switch state, data embedded for the fetch stub."""
 
-    def test_the_gallery_script_and_the_data_are_on_the_page(self):
+    def test_the_home_page_has_the_gallery_with_only_the_selection_controls(self):
         d = self.w.draft()
         d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
         d["portfolio"]["items"] = {"can-helper": {"title": {"uk": "Мій CanHelper", "en": "My CanHelper", "de": "Mein CanHelper"}}}
+        d["site"] = {"gallery": {"hidden": ["lvgl-smartwatch"], "order": []}}
         item = uploads.store(self.w.paths, png(), "shot.png")
-        d["images"]["portfolio"] = {"lvgl-smartwatch/home": item["ref"]}
+        d["portfolio"]["images"] = {"lvgl-smartwatch/home": item["ref"]}
         self.save(d)
         html = self.page()[2].decode()
-        self.assertIn('src="assets/portfolio.js"', html, "the gallery is no longer stripped from the edit view")
+        self.assertIn('src="assets/portfolio.js"', html)
         self.assertIn('id="archiveGrid"', html)
         data = self.embedded(html, "ve-portfolio")
+        slugs = [p["slug"] for p in data["projects"]]
+        self.assertNotIn("toyota-hv-monitor", slugs, "an item switched off in the portfolio is not offered to the home page")
+        self.assertIn("lvgl-smartwatch", data["home"], "hidden on the home page: still listed, so the overlay can show it dimmed")
+        self.assertNotIn("prometheus-controller", data["home"], "portfolio-only items are never on the home page")
         by = dict((p["slug"], p) for p in data["projects"])
-        self.assertEqual(len(by), len(read_json_file(os.path.join(REPO, "data/portfolio.json"))["projects"]), "no project is dropped, disabled ones too")
-        self.assertTrue(by["toyota-hv-monitor"]["disabled"], "flagged, so the overlay shows it dimmed")
-        self.assertNotIn("disabled", by["lvgl-smartwatch"])
-        self.assertEqual(by["can-helper"]["title"]["en"], "My CanHelper")
+        self.assertEqual(by["can-helper"]["title"]["en"], "My CanHelper", "texts come from the portfolio")
         manifest = dict(("%s/%s" % (m["slug"], m["slot"]), m) for m in self.embedded(html, "ve-portfolio-images"))
-        self.assertEqual(manifest["lvgl-smartwatch/home"]["file"], "assets/u/%s.jpg" % item["id"], "an upload passes the public script's file check; the overlay points it at the file action")
-        self.assertIn('"/data/portfolio.json":"ve-portfolio"', html, "fetch() of the data is answered from the page")
+        self.assertEqual(manifest["lvgl-smartwatch/home"]["file"], "assets/u/%s.jpg" % item["id"])
+        self.assertIn('"/data/portfolio.json":"ve-portfolio"', html)
         boot = self.embedded(html, "ve-boot")
+        self.assertEqual(boot["page"], "home")
+        self.assertEqual(boot["draft"]["site"]["gallery"]["hidden"], ["lvgl-smartwatch"])
         self.assertEqual(boot["draft"]["portfolio"]["disabled"], ["toyota-hv-monitor"], "the real draft is embedded untouched")
-        self.assertIn("toyota-hv-monitor", boot["galleryVisible"])
-        self.assertNotIn("prometheus-controller", boot["galleryVisible"], "portfolio-only projects are not on the home page")
-        self.assertEqual(boot["factoryGallery"]["can-helper"]["title"]["en"], "CanHelper")
-        self.assertIn("can-helper/window", boot["factoryGallery"]["can-helper"]["slots"])
+        self.assertNotIn("toyota-hv-monitor", boot["homeBase"])
+        self.assertNotIn("data-ve", html, "the page-marking flag belongs to the portfolio page only")
+
+    def test_the_portfolio_page_is_editable_with_every_item_and_marked_texts(self):
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        d["portfolio"]["disabledSections"] = ["web"]
+        d["site"] = {"gallery": {"hidden": ["can-helper"], "order": []}}
+        self.save(d)
+        st, hd, body = api.handle(self.w.paths, "GET", "edit-page", dict(self.h, cookie="vadmin=" + self.cookie), b"", {"lang": ["uk"], "page": ["portfolio"]}, "10.0.0.5")
+        html = body.decode()
+        self.assertEqual(st, 200)
+        self.assertIn('data-page="portfolio" data-ve="1"', html.replace('lang="uk" ', ""))
+        self.assertIn('assets/portfolio-page.js', html)
+        self.assertNotIn('id="archiveGrid"', html)
+        data = self.embedded(html, "ve-portfolio")
+        by = dict((p["slug"], p) for p in data["projects"])
+        self.assertEqual(len(by), len(read_json_file(os.path.join(REPO, "data/portfolio.json"))["projects"]), "every item, switched-off ones too")
+        self.assertTrue(by["toyota-hv-monitor"]["disabled"])
+        self.assertIn("prometheus-controller", by, "portfolio-only items are edited here")
+        self.assertNotIn("home", data, "the portfolio page ignores the home page's selection")
+        self.assertIn("can-helper", by, "hidden on the home page, still in the portfolio")
+        site = self.embedded(html, "ve-site")
+        self.assertIn("web", [x["id"] for x in site["portfolioPage"]["sections"]], "switched-off sections are shown (dimmed by the overlay)")
+        boot = self.embedded(html, "ve-boot")
+        self.assertEqual(boot["page"], "portfolio")
+        self.assertEqual(boot["portfolioSections"][0]["id"], site["portfolioPage"]["sections"][0]["id"])
+        self.assertEqual(boot["draft"]["portfolio"]["disabledSections"], ["web"])
+        self.assertIn("overlay", html.lower().replace("edit-overlay", "overlay"))
 
     def test_the_gallery_view_never_leaks_into_a_package(self):
         d = self.w.draft()
@@ -1444,6 +1479,119 @@ class EditPageAuditTests(EditPageTests):
                         self.assertNotIn(needle, text, "%s in %s" % (needle, name))
 
 
+class SeparationTests(unittest.TestCase):
+    """Stage 3: the portfolio is edited ONLY in draft.portfolio; the home page (draft.site) only selects items by id; /portfolio/ and the PDF ignore that selection."""
+
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def build(self, draft=None):
+        if draft is not None:
+            self.w.save(draft)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        return r["id"]
+
+    def projects(self, bid, rel="data/portfolio.json"):
+        return json.loads(self.w.read(bid, rel))
+
+    def test_fields_are_separated_in_the_schema(self):
+        ctx = self.w.ctx()
+        d = schema.sanitize({"site": {"gallery": {"hidden": ["can-helper", "prometheus-controller", "../x", 3], "order": ["lvgl-smartwatch", "can-helper", "nope"],
+                                                  "items": {"can-helper": {"title": {"en": "Sneaky"}}}, "images": {"x/y": "u:0123456789abcdef"}}, "title": "x"}}, ctx)
+        self.assertEqual(sorted(d["site"]), ["gallery"])
+        self.assertEqual(sorted(d["site"]["gallery"]), ["hidden", "order"], "the home page stores ids only: no texts, no pictures")
+        self.assertEqual(d["site"]["gallery"]["hidden"], ["can-helper"], "portfolio-only and unknown ids are not selectable")
+        self.assertEqual(d["site"]["gallery"]["order"][:2], ["lvgl-smartwatch", "can-helper"])
+        self.assertEqual(d["portfolio"]["items"], {}, "nothing leaks from site into portfolio")
+        for key in ("portfolio", "portfolioAlt"):
+            self.assertNotIn(key, d["images"])
+        self.assertNotIn("portfolio", d["disabled"])
+        self.assertEqual(schema.sanitize(d, ctx), d, "idempotent")
+
+    def test_old_drafts_are_migrated_without_loss(self):
+        item = uploads.store(self.w.paths, png(), "a.png")
+        ctx = self.w.ctx()
+        old = {"rev": 7, "disabled": {"services": [], "projects": [], "portfolio": ["web"]},
+               "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {"can-helper/window": item["ref"]},
+                          "portfolioAlt": {"can-helper/window": {"uk": "Вікно", "en": "", "de": ""}}},
+               "texts": {"portfolioPage.sections.0.title": {"uk": "А", "en": "B", "de": "C"}, "hero.lead": {"uk": "h", "en": "h", "de": "h"}},
+               "portfolio": {"disabled": ["toyota-hv-monitor"], "order": [], "items": {"can-helper": {"years": "2030"}}}}
+        new = schema.sanitize(old, ctx)
+        self.assertEqual(new["portfolio"]["images"], {"can-helper/window": item["ref"]})
+        self.assertEqual(new["portfolio"]["alts"]["can-helper/window"]["uk"], "Вікно")
+        self.assertEqual(new["portfolio"]["disabledSections"], ["web"])
+        self.assertEqual(new["portfolio"]["texts"]["portfolioPage.sections.0.title"]["de"], "C")
+        self.assertEqual(new["portfolio"]["disabled"], ["toyota-hv-monitor"])
+        self.assertEqual(new["portfolio"]["items"]["can-helper"]["years"], "2030")
+        self.assertEqual(list(new["texts"]), ["hero.lead"], "site texts stay, portfolio texts moved")
+        self.assertEqual(new["rev"], 7)
+        # the migrated draft builds the same package as the new-format draft
+        self.w.save(old)
+        b1 = self.build()
+        d2 = schema.sanitize(old, ctx)
+        core.write_json(self.w.paths.draft, d2)
+        b2 = self.build()
+        for rel in ("data/portfolio.json", "data/portfolio-images.json", "data/site.json", "index.html"):
+            self.assertEqual(self.w.read(b1, rel), self.w.read(b2, rel), rel)
+
+    def test_an_empty_draft_builds_the_factory_site_byte_for_byte(self):
+        bid = self.build()
+        for rel in ("index.html", "data/site.json", "data/products.json", "data/portfolio.json", "data/portfolio-images.json", "portfolio/index.html",
+                    "assets/portfolio.js", "assets/portfolio-page.js", "assets/portfolio-render.js") + tuple("assets/portfolio/" + n for n in build.PDF_NAMES.values()):
+            self.assertEqual(read_bytes(os.path.join(self.w.src, rel)), read_bytes(os.path.join(self.w.site(bid), rel)), rel)
+        self.assertNotIn("home", self.projects(bid), "no home selection key: the public script uses its default")
+
+    def test_a_portfolio_change_shows_on_the_home_page_the_portfolio_page_and_in_the_pdf(self):
+        d = self.w.draft()
+        d["portfolio"]["items"] = {"lvgl-smartwatch": {"title": {"uk": "Годинник-Х", "en": "Watch-X", "de": "Uhr-X"}, "years": "2031"}}
+        bid = self.build(d)
+        data = self.projects(bid)
+        self.assertEqual(next(p for p in data["projects"] if p["slug"] == "lvgl-smartwatch")["title"]["en"], "Watch-X", "the one file the home gallery and /portfolio/ both read")
+        self.assertNotIn("home", data)
+        text = pdf_text(read_bytes(os.path.join(self.w.site(bid), PDF_EN)))
+        if text is not None:
+            self.assertIn("Watch-X", text)
+            self.assertIn("2031", text)
+
+    def test_hiding_on_the_home_page_leaves_the_portfolio_page_and_the_pdf_alone(self):
+        base = self.build(self.w.draft())
+        base_pdf = read_bytes(os.path.join(self.w.site(base), PDF_EN))
+        base_data = self.projects(base)["projects"]
+        d = self.w.draft()
+        d["site"] = {"gallery": {"hidden": ["toyota-hv-monitor"], "order": ["lvgl-smartwatch", "can-helper"]}}
+        bid = self.build(d)
+        data = self.projects(bid)
+        self.assertEqual(data["projects"], base_data, "/portfolio/ reads the full portfolio: the same items, texts and order as before")
+        self.assertNotIn("toyota-hv-monitor", data["home"])
+        self.assertEqual(data["home"][:2], ["lvgl-smartwatch", "can-helper"])
+        self.assertNotIn("prometheus-controller", data["home"])
+        self.assertEqual(read_bytes(os.path.join(self.w.site(bid), PDF_EN)), base_pdf, "the PDF does not depend on the home page's selection")
+        self.assertEqual(self.w.read(bid, "data/portfolio-images.json"), self.w.read(base, "data/portfolio-images.json"))
+        self.assertTrue(os.path.isdir(os.path.join(self.w.site(bid), "assets/portfolio/toyota-hv-monitor")), "its pictures still ship: /portfolio/ and the PDF use them")
+
+    def test_switching_an_item_off_in_the_portfolio_removes_it_from_all_three(self):
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        bid = self.build(d)
+        data = self.projects(bid)
+        self.assertNotIn("toyota-hv-monitor", [p["slug"] for p in data["projects"]])
+        self.assertNotIn("home", data, "no explicit home selection: the home page simply gets the portfolio without it")
+        text = pdf_text(read_bytes(os.path.join(self.w.site(bid), PDF_EN)))
+        if text is not None:
+            self.assertNotIn(TOYOTA, text)
+
+    def test_the_home_cannot_change_portfolio_content_and_the_portfolio_cannot_hide_the_home_selection(self):
+        d = self.w.draft()
+        d["site"] = {"gallery": {"hidden": [], "order": [], "items": {"can-helper": {"title": {"en": "X"}}}}}
+        self.assertEqual(schema.sanitize(d, self.w.ctx())["portfolio"]["items"], {})
+        d = self.w.draft()
+        d["portfolio"]["order"] = ["can-helper", "lvgl-smartwatch"]
+        bid = self.build(d)
+        self.assertEqual([p["slug"] for p in self.projects(bid)["projects"]][:2], ["can-helper", "lvgl-smartwatch"], "the portfolio's own order; the home page follows it unless it has its own")
+
+
 class PreviewTests(unittest.TestCase):
     """The hover previews of the admin: every id the admin lists has words and a picture (or a live demo), and the files are small."""
     WEB = os.path.join(REPO, "radxa-admin", "web")
@@ -1464,7 +1612,7 @@ class PreviewTests(unittest.TestCase):
         keys = ["section:%s" % s["id"] for s in c["sections"]]
         keys += ["service:%s" % s["id"] for s in c["factory"]["services"]] + ["service:custom"]
         keys += ["project:%s" % p["id"] for p in c["factory"]["projects"]] + ["project:custom"]
-        keys += ["gallery:item"]                                                    # one preview for every card of the portfolio gallery editor
+        keys += ["portfolio:item", "portfolio:section", "site:gallery"]      # the portfolio editor and the home page's selection
         keys += ["block:%s" % t for t in c["blocks"]]
         keys += ["effect:%s" % e["id"] for e in c["effects"]] + ["widget:%s" % w["id"] for w in c["widgets"]]
         return keys

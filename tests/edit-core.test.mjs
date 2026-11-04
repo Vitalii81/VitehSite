@@ -195,28 +195,42 @@ test("gallery texts: binding, read, write into draft.portfolio.items, caps", () 
   }
 });
 
-test("gallery switch, order among visible projects and slot images", () => {
+test("home selection vs portfolio content: separate switches, separate orders, slot images in draft.portfolio", () => {
   const d = newDraft();
-  assert.equal(C.isOff(d, { type: "gallery", id: "can-helper" }), false);
+  // the HOME page only hides/shows (draft.site.gallery); the portfolio switches items on/off (draft.portfolio.disabled)
   C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
   C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
-  assert.deepEqual(d.portfolio.disabled, ["can-helper"]);
+  assert.deepEqual(d.site.gallery.hidden, ["can-helper"]);
   assert.equal(C.isOff(d, { type: "gallery", id: "can-helper" }), true);
+  assert.equal(C.isOff(d, { type: "portfolio", id: "can-helper" }), false, "hiding on the home page does not touch the portfolio");
+  assert.equal(d.portfolio?.disabled?.length ?? 0, 0);
   C.setEnabled(d, { type: "gallery", id: "can-helper" }, true);
-  assert.deepEqual(d.portfolio.disabled, []);
+  assert.deepEqual(d.site.gallery.hidden, []);
+  C.setEnabled(d, { type: "portfolio", id: "can-helper" }, false);
+  assert.deepEqual(d.portfolio.disabled, ["can-helper"]);
+  assert.deepEqual(d.site.gallery.hidden, [], "switching it off in the portfolio does not touch the home selection");
+  C.setEnabled(d, { type: "ppsection", id: "web" }, false);
+  assert.deepEqual(d.portfolio.disabledSections, ["web"]);
+  assert.equal(C.isOff(d, { type: "ppsection", id: "web" }), true);
 
-  assert.equal(C.moveGallery(d, VISIBLE[0], -1, ALL, VISIBLE), false, "the first visible project cannot go up");
-  assert.equal(C.moveGallery(d, VISIBLE[0], 1, ALL, VISIBLE), true);
-  assert.ok(d.portfolio.order.indexOf(VISIBLE[1]) < d.portfolio.order.indexOf(VISIBLE[0]));
-  assert.equal(C.moveGallery(d, VISIBLE[0], -1, ALL, VISIBLE), true);
-  assert.deepEqual(d.portfolio.order, [], "back to the factory order is stored as nothing");
+  const d2 = newDraft();
+  assert.equal(C.moveGallery(d2, VISIBLE[0], -1, VISIBLE, VISIBLE, "home"), false, "the first one cannot go up");
+  assert.equal(C.moveGallery(d2, VISIBLE[0], 1, VISIBLE, VISIBLE, "home"), true);
+  assert.ok(d2.site.gallery.order.indexOf(VISIBLE[1]) < d2.site.gallery.order.indexOf(VISIBLE[0]));
+  assert.equal(d2.portfolio?.order?.length ?? 0, 0, "the home order is not the portfolio order");
+  assert.equal(C.moveGallery(d2, VISIBLE[0], -1, VISIBLE, VISIBLE, "home"), true);
+  assert.deepEqual(d2.site.gallery.order, [], "back to the default is stored as nothing");
+  assert.equal(C.moveGallery(d2, ALL[0], 1, ALL, ALL, "portfolio"), true);
+  assert.ok(d2.portfolio.order.length === ALL.length);
+  assert.deepEqual(d2.site.gallery.order, [], "the portfolio order does not touch the home selection");
   assert.ok(ALL.includes("prometheus-controller") && !VISIBLE.includes("prometheus-controller"));
-  assert.equal(C.moveGallery(d, "prometheus-controller", 1, ALL, VISIBLE), false, "a portfolio-only project has no place on the home page");
 
-  C.setMedia(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "u:0123456789abcdef");
-  assert.equal(C.mediaRef(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }), "u:0123456789abcdef");
-  C.setMedia(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "");
-  assert.deepEqual(d.images.portfolio, {});
+  C.setMedia(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "u:0123456789abcdef");
+  assert.equal(C.mediaRef(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }), "u:0123456789abcdef");
+  assert.equal(d2.portfolio.images["toyota-hv-monitor/device-photo"], "u:0123456789abcdef");
+  assert.equal(d2.images?.portfolio, undefined, "no picture of the portfolio lives in draft.images any more");
+  C.setMedia(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "");
+  assert.deepEqual(d2.portfolio.images, {});
   const boot = { factoryImages: ["assets/a.svg"], uploads: [{ kind: "image", ref: "u:0123456789abcdef", name: "a" }] };
   assert.deepEqual(C.pickerItems("image", boot, true).map((i) => i.ref), ["u:0123456789abcdef"], "a gallery slot offers uploads only");
   assert.equal(C.pickerItems("image", boot).length, 2);

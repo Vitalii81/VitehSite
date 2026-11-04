@@ -44,7 +44,7 @@
   const PLAIN_PATH = /^(?:stack\.groups\.\d{1,2}\.items\.\d{1,2}|contact\.details\.\d{1,2}\.value)$/;
   const SINGLE = ["plain", "tag", "galleryTag", "galleryYears"];           // bindings whose value has no translation
   const GALLERY_FIELDS = { title: MAX.galleryTitle, summary: MAX.gallerySummary };
-  const gallery = (draft) => (draft.portfolio ||= { disabled: [], order: [], items: {} });
+  const gallery = (draft) => (draft.portfolio ||= { disabled: [], order: [], items: {}, images: {}, alts: {}, disabledSections: [], texts: {} });
 
   /** env = {draft, editable, factoryServices, factoryGallery}. Returns a binding {kind, key, ...} or null when the text cannot be edited here
    *  (not in the draft's schema, a plain string, or a factory project card whose text is not part of the draft). */
@@ -167,7 +167,9 @@
   // target: {type: "section"|"service"|"project"|"gallery", id}
   function isOff(draft, target) {
     if (target.type === "section") return draft.sections?.[target.id] === false;
-    if (target.type === "gallery") return (draft.portfolio?.disabled || []).includes(target.id);
+    if (target.type === "gallery") return (draft.site?.gallery?.hidden || []).includes(target.id);          // hidden on the HOME page (the item stays in the portfolio)
+    if (target.type === "portfolio") return (draft.portfolio?.disabled || []).includes(target.id);
+    if (target.type === "ppsection") return (draft.portfolio?.disabledSections || []).includes(target.id);
     const list = draft.disabled?.[target.type === "service" ? "services" : "projects"] || [];
     return list.includes(target.id);
   }
@@ -179,8 +181,13 @@
       return;
     }
     if (target.type === "gallery") {
-      const g = gallery(draft);
-      g.disabled = on ? g.disabled.filter((x) => x !== target.id) : [...g.disabled.filter((x) => x !== target.id), target.id];
+      const g = ((draft.site ||= {}).gallery ||= { hidden: [], order: [] });
+      g.hidden = on ? (g.hidden || []).filter((x) => x !== target.id) : [...(g.hidden || []).filter((x) => x !== target.id), target.id];
+      return;
+    }
+    if (target.type === "portfolio" || target.type === "ppsection") {
+      const g = gallery(draft), key = target.type === "portfolio" ? "disabled" : "disabledSections";
+      g[key] = on ? (g[key] || []).filter((x) => x !== target.id) : [...(g[key] || []).filter((x) => x !== target.id), target.id];
       return;
     }
     draft.disabled ||= {};
@@ -218,18 +225,18 @@
     return true;
   }
 
-  /** Moves a gallery project one step among the VISIBLE ones (`all` = every factory slug in factory order, `visible` = those the home page shows;
-   *  projects only the portfolio page shows keep their places). An order equal to the factory one is stored as []. */
-  function moveGallery(draft, slug, dir, all, visible) {
-    const g = gallery(draft);
-    const order = (g.order?.length === all.length ? g.order : all).slice();
+  /** Moves a project one step among the shown ones. scope "portfolio": draft.portfolio.order (all = every item in factory order); scope "home": draft.site.gallery.order
+   *  (all = what the home page can pick from). `visible` = the ones on the page. A result equal to `all` is stored as [] (the server normalises it again). */
+  function moveGallery(draft, slug, dir, all, visible, scope = "portfolio") {
+    const holder = scope === "home" ? ((draft.site ||= {}).gallery ||= { hidden: [], order: [] }) : gallery(draft);
+    const order = (holder.order?.length === all.length ? holder.order : all).slice();
     const shown = order.filter((x) => visible.includes(x));
     const at = shown.indexOf(slug);
     const other = shown[at + (dir < 0 ? -1 : 1)];
     if (at < 0 || other === undefined) return false;
     const a = order.indexOf(slug), b = order.indexOf(other);
     [order[a], order[b]] = [order[b], order[a]];
-    g.order = order.every((x, i) => x === all[i]) ? [] : order;
+    holder.order = order.every((x, i) => x === all[i]) ? [] : order;
     return true;
   }
 
@@ -254,7 +261,11 @@
     if (target.type === "hero") draft.images.hero = ref || "";
     else if (target.type === "projectImage") put("projects", target.id);
     else if (target.type === "projectModel") put("models", target.id);
-    else if (target.type === "gallerySlot") put("portfolio", target.id);
+    else if (target.type === "gallerySlot") {
+      const g = gallery(draft);
+      g.images ||= {};
+      if (ref) g.images[target.id] = ref; else delete g.images[target.id];
+    }
     else if (target.type === "serviceModel") {
       const own = extraServices(draft).find((s) => s.id === target.id);
       if (own) own.model = ref || "";
@@ -267,7 +278,7 @@
     if (target.type === "hero") return im.hero || "";
     if (target.type === "projectImage") return im.projects?.[target.id] || "";
     if (target.type === "projectModel") return im.models?.[target.id] || "";
-    if (target.type === "gallerySlot") return im.portfolio?.[target.id] || "";
+    if (target.type === "gallerySlot") return draft.portfolio?.images?.[target.id] || "";
     return im.serviceModels?.[target.id] || extraServices(draft).find((s) => s.id === target.id)?.model || "";
   };
 

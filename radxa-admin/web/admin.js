@@ -95,7 +95,8 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["gallery", "Галерея портфоліо"], ["portfolio", "Портфоліо (сторінка)"], ["archive-images", "Зображення проєктів 2022–2025"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Портфоліо", [["portfolio", "Елементи портфоліо"], ["portfolio-page", "Сторінка й PDF: розділи, тексти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
@@ -376,11 +377,9 @@ const VIEWS = {
     main.append(templateButton("service", "Додати послугу з шаблону"));
   },
 
-  gallery(main) {
-    main.append(...head("Галерея портфоліо", "Картки «Замовні розробки» на головній, сторінка /portfolio/ і PDF-портфоліо беруть дані звідси. Вимкнена картка зникає з усіх трьох місць після збирання пакета. Фото обирайте з завантажених файлів (JPEG, PNG або WebP). Поки сторінка /portfolio/ увімкнена (віджет «Портфоліо»), PDF збирається з увімкнених карток; коли вимкнена, у PDF потрапляють усі картки з вашими текстами."));
-    const g = (S.draft.portfolio ||= { disabled: [], order: [], items: {} });
-    g.disabled ||= []; g.order ||= []; g.items ||= {};
-    S.draft.images.portfolio ||= {};
+  portfolio(main) {
+    main.append(...head("Елементи портфоліо", "Єдине місце, де редагуються картки портфоліо: тексти трьома мовами, роки, теги, фото, порядок і вмикання. З цих даних збираються сторінка /portfolio/ і PDF. Головна лише вибирає, які з цих карток показати (розділ «Картки проєктів»). Вимкнена тут картка зникає звідусіль. Фото обирайте з завантажених файлів (JPEG, PNG або WebP)."));
+    const g = gallerySettings();
     const all = S.catalog.factory.gallery;
     const bySlug = Object.fromEntries(all.map((x) => [x.slug, x]));
     const order = (g.order.length === all.length ? g.order : all.map((x) => x.slug)).filter((slug) => bySlug[slug]);
@@ -396,7 +395,7 @@ const VIEWS = {
       const ov = (g.items[slug] ||= {});
       ov.title ||= { ...f.title }; ov.summary ||= { ...f.summary };
       ov.years ??= f.years || ""; ov.tags ||= [...(f.tags || [])];
-      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("gallery:item", { title: uk(ov.title), text: uk(ov.summary) },
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("portfolio:item", { title: uk(ov.title), text: uk(ov.summary) },
         toggle(`${uk(ov.title)}${f.portfolioOnly ? " (лише портфоліо й PDF)" : ""}`, on, (v) => { g.disabled = g.disabled.filter((x) => x !== slug); if (!v) g.disabled.push(slug); card.classList.toggle("off", !v); }),
         h("button", { class: "btn small", type: "button", "aria-label": `Вгору: ${uk(ov.title)}`, title: "Вгору", disabled: at === 0 || null, onclick: () => move(slug, -1) }, "▲"),
         h("button", { class: "btn small", type: "button", "aria-label": `Вниз: ${uk(ov.title)}`, title: "Вниз", disabled: at === order.length - 1 || null, onclick: () => move(slug, 1) }, "▼")));
@@ -404,31 +403,38 @@ const VIEWS = {
         i18nField(ov, "title", { max: 80, label: "Назва" }), i18nField(ov, "summary", { multiline: true, max: 600, label: "Опис" }),
         h("div", { class: "field" }, h("label", {}, "Роки"), h("input", { type: "text", maxlength: 20, value: ov.years, oninput: (e) => { ov.years = e.target.value; touch(); } })),
         h("div", { class: "field" }, h("label", {}, "Теги через кому (до 8)"), h("input", { type: "text", value: ov.tags.join(", "), oninput: (e) => { ov.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })),
-        ...f.slots.map((sl, i) => imageField(S.draft.images.portfolio, sl.key, `Фото ${i + 1} (${sl.key}${S.draft.images.portfolio[sl.key] ? "" : sl.status === "final" ? ", заводське фото" : ", ще немає фото"})`, "image"))));
+        ...f.slots.map((sl, i) => h("div", { class: "block-body" },
+          imageField(g.images, sl.key, `Фото ${i + 1} (${sl.key}${g.images[sl.key] ? "" : sl.status === "final" ? ", заводське фото" : ", ще немає фото"})`, "image"),
+          i18nField(g.alts, sl.key, { max: 200, label: "Alt-текст фото" })))));
       main.append(card);
     });
   },
 
-  portfolio(main) {
-    main.append(...head("Портфоліо", "Розділи сторінки /portfolio/ (і PDF після перезбирання): вмикайте й вимикайте. Тексти кожного розділу трьома мовами редагуються в «Тексти» (групи «portfolioPage:назва»). Саме посилання на сторінку вмикається у «Віджетах й ефектах»."));
-    S.draft.disabled.portfolio ||= [];
+  "portfolio-page"(main) {
+    main.append(...head("Сторінка й PDF: розділи й тексти", "Розділи сторінки /portfolio/ і PDF: вмикайте й вимикайте. Тексти кожного розділу трьома мовами редагуються нижче. Усе це зберігається в портфоліо й не залежить від головної."));
+    const g = gallerySettings();
     for (const s of S.catalog.factory.portfolio) {
-      const on = !S.draft.disabled.portfolio.includes(s.id);
-      const card = h("div", { class: `card${on ? "" : " off"}` }, toggle(`${uk(s.title)} (${s.id})`, on, (v) => { setDisabled("portfolio", s.id, !v); card.classList.toggle("off", !v); }));
+      const on = !g.disabledSections.includes(s.id);
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("portfolio:section", { title: uk(s.title) },
+        toggle(`${uk(s.title)} (${s.id})`, on, (v) => { g.disabledSections = g.disabledSections.filter((x) => x !== s.id); if (!v) g.disabledSections.push(s.id); card.classList.toggle("off", !v); })));
       main.append(card);
     }
-  },
-
-  "archive-images"(main) {
-    main.append(...head("Зображення проєктів 2022–2025", "Для кожного слоту оберіть зображення з файлів (воно стає «фінальним» і з'являється на сайті) та за потреби змініть alt-текст трьома мовами. Порожній слот відвідувачі не бачать. Пропорція слоту вказана поруч: обріжте фото по пристрою заздалегідь, без імен, адрес, IP/MAC, паролів і договорів."));
-    S.draft.images.portfolio ||= {}; S.draft.images.portfolioAlt ||= {};
-    for (const s of S.catalog.factory.portfolioSlots) {
-      const filled = !!S.draft.images.portfolio[s.key];
-      main.append(h("div", { class: "card" }, h("div", { class: "row between" }, h("strong", {}, s.key), h("span", { class: "muted" }, `${s.ratio} · ${filled ? "заповнено в адмінці" : (s.status === "final" ? "фінальне" : "очікує зображення")}`)),
-        h("p", { class: "muted mono" }, s.hint || ""),
-        imageField(S.draft.images.portfolio, s.key, "Зображення слоту", "image"),
-        i18nField(S.draft.images.portfolioAlt, s.key, { max: 200, label: "Alt-текст" })));
-    }
+    main.append(h("h2", { style: "margin-top:22px" }, "Тексти сторінки"));
+    const groups = Object.keys(S.catalog.portfolioTexts);
+    const sel = h("select", { "aria-label": "Група текстів портфоліо" }, groups.map((k) => h("option", { value: k }, k)));
+    const list = h("div", { class: "stack" });
+    const paint = () => list.replaceChildren(...Object.entries(S.catalog.portfolioTexts[sel.value]).slice(0, 80).map(([path, factory]) => {
+      const holder = { v: g.texts[path] ? { ...g.texts[path] } : { ...factory } };
+      const card = h("div", { class: "card" }, h("div", { class: "row between" }, h("span", { class: "mono muted" }, path),
+        h("button", { class: "btn small", type: "button", onclick: () => { delete g.texts[path]; touch(); paint(); } }, "До заводського")));
+      const field = i18nField(holder, "v", { multiline: (factory.en || factory.uk || "").length > 70, max: 2000 });
+      field.addEventListener("input", () => { g.texts[path] = { ...holder.v }; touch(); });
+      card.append(field);
+      return card;
+    }));
+    sel.addEventListener("change", paint);
+    main.append(h("div", { class: "row" }, h("div", { class: "grow" }, sel)), list);
+    paint();
   },
 
   projects(main) {
@@ -461,6 +467,28 @@ const VIEWS = {
       main.append(card);
     }
     main.append(templateButton("project", "Додати картку проєкту з шаблону"));
+    // the home page's gallery "Замовні розробки": only a SELECTION of portfolio items (draft.site.gallery); their content is edited in «Елементи портфоліо»
+    const sg = ((S.draft.site ||= {}).gallery ||= { hidden: [], order: [] });
+    sg.hidden ||= []; sg.order ||= [];
+    const pg = gallerySettings();
+    const eligible = S.catalog.factory.gallery.filter((x) => !x.portfolioOnly && !pg.disabled.includes(x.slug));
+    const base = (pg.order.length ? pg.order : S.catalog.factory.gallery.map((x) => x.slug)).filter((slug) => eligible.some((x) => x.slug === slug));
+    const list = (sg.order.length ? [...sg.order.filter((slug) => base.includes(slug)), ...base.filter((slug) => !sg.order.includes(slug))] : base);
+    main.append(h("h2", { style: "margin-top:22px" }, "Галерея «Замовні розробки» на головній"),
+      h("p", { class: "lead" }, "Тут лише вибір карток портфоліо для головної: показати чи сховати й порядок. Тексти й фото беруться з портфоліо, сторінка /portfolio/ і PDF від цього вибору не залежать."));
+    list.forEach((slug, at) => {
+      const f = eligible.find((x) => x.slug === slug);
+      const ov = pg.items[slug] || {};
+      const title = uk(ov.title) || uk(f.title);
+      const on = !sg.hidden.includes(slug);
+      const move = (dir) => { const to = at + dir; if (to < 0 || to >= list.length) return; const next = list.slice(); [next[at], next[to]] = [next[to], next[at]]; sg.order = next; touch(); rerender(); };
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("site:gallery", { title, text: uk(ov.summary) || uk(f.summary) },
+        toggle(title, on, (v) => { sg.hidden = sg.hidden.filter((x) => x !== slug); if (!v) sg.hidden.push(slug); card.classList.toggle("off", !v); }),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вгору: ${title}`, disabled: at === 0 || null, onclick: () => move(-1) }, "▲"),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вниз: ${title}`, disabled: at === list.length - 1 || null, onclick: () => move(1) }, "▼"),
+        h("button", { class: "btn small", type: "button", onclick: () => go("portfolio") }, "Змінити в портфоліо")));
+      main.append(card);
+    });
   },
 
   "home-blocks"(main) {
@@ -571,6 +599,13 @@ const VIEWS = {
     main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
   },
 };
+
+/** draft.portfolio with every list present (the sanitiser re-checks everything on save). */
+function gallerySettings() {
+  const g = (S.draft.portfolio ||= {});
+  g.disabled ||= []; g.order ||= []; g.items ||= {}; g.images ||= {}; g.alts ||= {}; g.disabledSections ||= []; g.texts ||= {};
+  return g;
+}
 
 function setDisabled(kind, id, off) {
   const list = S.draft.disabled[kind];

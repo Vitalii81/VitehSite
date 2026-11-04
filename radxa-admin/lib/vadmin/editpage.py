@@ -8,6 +8,7 @@ import os
 import re
 
 from . import build, render, schema
+from . import core
 from .core import LANGS
 from .richtext import esc
 
@@ -36,7 +37,6 @@ def view_draft(draft):
     view["sections"] = {sid: True for sid in schema.SECTION_IDS}
     view["disabled"]["services"] = []
     view["disabled"]["projects"] = []
-    view["portfolio"]["disabled"] = []
     view["widgets"]["gallery3d"] = True
     return view
 
@@ -65,33 +65,49 @@ def login_page():
     return 401, HTML_HEADERS, html.encode("utf-8")
 
 
-def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels):
-    """Returns (status, headers, body) of the editable home page. `draft` is the REAL draft (embedded for the overlay to patch and save)."""
+def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels, page="home"):
+    """Returns (status, headers, body) of an editable page. `draft` is the REAL draft (embedded for the overlay to patch and save).
+    page="home": the home page as the build renders it; the overlay edits the site's own texts and only SELECTS portfolio items (show/hide, order on the home page).
+    page="portfolio": /portfolio/; the overlay edits the portfolio's own content (items, pictures, order, on/off, the page's texts)."""
     lang = lang if lang in LANGS else "uk"
+    page = "portfolio" if page == "portfolio" else "home"
     view = view_draft(draft)
     assets = EditAssets(ctx)
-    html = build.transform_home(build.read_text(os.path.join(paths.src, "index.html")), view, ctx, assets, view["forms"])
-    site = build.merged_site(view, ctx, assets)
-    products = build.merged_products(view, ctx, assets)
-    gallery = build.merged_portfolio(draft, ctx, keep_disabled=True)                   # the REAL draft: a project switched off stays, flagged, and is shown dimmed
-    gallery_images = build.merged_portfolio_images(draft, ctx, assets, keep_disabled=True)
+    if page == "home":
+        html = build.transform_home(build.read_text(os.path.join(paths.src, "index.html")), view, ctx, assets, view["forms"])
+        site = build.merged_site(view, ctx, assets)
+        products = build.merged_products(view, ctx, assets)
+        gallery = {"projects": build.merged_portfolio(draft, ctx), "home": build.home_gallery(draft, ctx, include_hidden=True)}      # items hidden on the home page stay, dimmed by the overlay
+    else:
+        html = build.read_text(os.path.join(paths.src, "portfolio", "index.html"))
+        site = build.merged_site(view, ctx, assets, all_portfolio_sections=True)                  # every section is shown (switched-off ones are dimmed by the overlay)
+        products = []
+        gallery = {"projects": build.merged_portfolio(draft, ctx, keep_disabled=True)}
+    gallery_images = build.merged_portfolio_images(draft, ctx, assets, keep_disabled=(page == "portfolio"))
     for m in gallery_images:                                                            # uploads must pass the public script's file-name check; the overlay points them at the file action
         if m.get("file", "").startswith(FILE_ACTION.lstrip("/")):
             m["file"] = "assets/u/%s.jpg" % m["file"].split("id=")[1]
-    factory_gallery = dict((p["slug"], {"title": p.get("title"), "summary": p.get("summary"), "years": p.get("years", ""), "tags": p.get("tags", []), "category": p.get("category"), "slots": ["%s/%s" % (p["slug"], s) for s in p.get("slots", [])]}) for p in ctx.portfolio_projects)
+    factory_gallery = dict((p["slug"], {"title": p.get("title"), "summary": p.get("summary"), "years": p.get("years", ""), "tags": p.get("tags", []), "category": p.get("category"),
+                                        "portfolioOnly": bool(p.get("portfolioOnly")), "slots": ["%s/%s" % (p["slug"], sl) for sl in p.get("slots", [])]}) for p in ctx.portfolio_projects)
     boot = {
-        "rev": draft["rev"], "draft": draft, "lang": lang, "api": "/cgi-bin/vadmin-api", "adminUrl": "/",
+        "page": page, "rev": draft["rev"], "draft": draft, "lang": lang, "api": "/cgi-bin/vadmin-api", "adminUrl": "/",
         "editable": schema.editable_texts(ctx.site), "order": list(schema.MOVABLE_IDS), "labels": section_labels,
         "factory": {"services": len(ctx.site.get("services", {}).get("items", [])), "projects": [p.get("id") for p in ctx.products]},
         "uploads": uploads, "factoryImages": factory_images, "gallery": bool(draft["widgets"].get("gallery3d", True)),
         "factoryGallery": factory_gallery, "editablePlain": schema.editable_plain(ctx.site),
         "factoryProducts": dict((p["id"], {"title": p.get("title"), "summary": p.get("summary"), "status": p.get("status"), "tags": p.get("tags", []), "category": p.get("category")}) for p in ctx.products),
         "categories": [{"id": c.get("id"), "label": c.get("label")} for c in ctx.site.get("work", {}).get("categories", [])],
-        "archiveCategories": [c.get("id") for c in ctx.site.get("work", {}).get("archive", {}).get("categories", [])], "galleryOrder": [p["slug"] for p in ctx.portfolio_projects], "galleryVisible": [p["slug"] for p in ctx.portfolio_projects if not p.get("portfolioOnly")],
+        "archiveCategories": [c.get("id") for c in ctx.site.get("work", {}).get("archive", {}).get("categories", [])],
+        "galleryOrder": [p["slug"] for p in ctx.portfolio_projects],                                  # every portfolio item in factory order (portfolio page)
+        "homeBase": [p["slug"] for p in build.merged_portfolio(draft, ctx) if not p.get("portfolioOnly")],        # what the home page can pick from, in the portfolio's order
+        "portfolioSections": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
     }
-    html = html.replace('<html lang="en" data-page="home">', '<html lang="%s" data-page="home">' % esc(lang), 1)
+    marker = '<html lang="en" data-page="home">' if page == "home" else '<html lang="en" data-page="portfolio">'
+    if marker not in html:
+        raise core.ApiError("src_changed", "У файлах сайту на Radxa не знайдено очікуваної розмітки сторінки", 500)
+    html = html.replace(marker, marker.replace('lang="en"', 'lang="%s"' % esc(lang)).replace(">", ' data-ve="1">' if page == "portfolio" else ">", 1), 1)
     head = ('  <base href="/">\n  <meta name="robots" content="noindex, nofollow">\n  %s\n  %s\n  %s\n  %s\n  %s\n  <script>%s</script>\n'
-            % (json_script("ve-site", site), json_script("ve-products", products), json_script("ve-portfolio", {"projects": gallery}), json_script("ve-portfolio-images", gallery_images), json_script("ve-boot", boot), FETCH_STUB))
+            % (json_script("ve-site", site), json_script("ve-products", products), json_script("ve-portfolio", gallery), json_script("ve-portfolio-images", gallery_images), json_script("ve-boot", boot), FETCH_STUB))
     html = html.replace('<meta charset="utf-8">\n', '<meta charset="utf-8">\n' + head, 1)
     v = overlay_version()
     html = html.replace("</head>", '  <link rel="stylesheet" href="edit-overlay.css?v=%s">\n  <link rel="stylesheet" href="preview-tip.css?v=%s">\n</head>' % (v, v), 1)

@@ -86,7 +86,8 @@ def catalog(paths, ctx):
                         for x in ctx.portfolio_projects],
             "portfolioSlots": [{"key": "%s/%s" % (m.get("slug"), m.get("slot")), "alt": m.get("alt"), "status": m.get("status"), "ratio": m.get("ratio"), "hint": m.get("source_hint")} for m in ctx.portfolio_images],
         },
-        "texts": groups,
+        "texts": dict((k, v) for k, v in groups.items() if not k.startswith("portfolioPage")),
+        "portfolioTexts": dict((k, v) for k, v in groups.items() if k.startswith("portfolioPage")),
         "plain": schema.editable_plain(ctx.site),
     }
 
@@ -151,7 +152,7 @@ def _handle(paths, method, action, headers, body, query, client):
                                "uploads": uploads.listing(paths), "builds": build.list_builds(paths)})
         if action == "edit-page":
             lang = str((query.get("lang") or [""])[0])
-            return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS)
+            return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS, str((query.get("page") or [""])[0]))
         if action == "status":
             return _json(200, {"ok": True, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
         if action == "file":

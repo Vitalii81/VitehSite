@@ -165,16 +165,17 @@ def transform_home(html, draft, ctx, assets, forms):
 def merged_site(draft, ctx, assets, all_portfolio_sections=False):
     site = copy.deepcopy(ctx.site)
     gallery = draft["widgets"].get("gallery3d", True)
-    for path, value in draft["texts"].items():
-        parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
-        last = path.rsplit(".", 1)[-1]
-        if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
-            parent[int(last)] = value
-        elif isinstance(parent, dict) and last in parent:
-            parent[last] = value
+    for mapping in (draft["texts"], draft["portfolio"]["texts"]):          # the home page's own texts, then the portfolio page's (kept in draft.portfolio)
+        for path, value in mapping.items():
+            parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
+            last = path.rsplit(".", 1)[-1]
+            if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
+                parent[int(last)] = value
+            elif isinstance(parent, dict) and last in parent:
+                parent[last] = value
     apply_plain(site, draft["plain"])
     if "portfolioPage" in site and not all_portfolio_sections:   # sections of the web portfolio switched off in the admin are removed from the data, not hidden
-        site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["disabled"]["portfolio"]]
+        site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["portfolio"]["disabledSections"]]
     items = site["services"]["items"]
     kept = []
     for i, it in enumerate(items):
@@ -281,6 +282,19 @@ def merged_portfolio(draft, ctx, keep_disabled=False):
     return out
 
 
+def home_gallery(draft, ctx, include_hidden=False):
+    """Slugs of the portfolio items the HOME page shows, in order. The home page only SELECTS (draft.site.gallery: hidden, order); an item switched off in the
+    portfolio is not offered, and items that belong to the portfolio page alone (portfolioOnly) never are. Texts and pictures come from draft.portfolio."""
+    base = [p["slug"] for p in merged_portfolio(draft, ctx) if not p.get("portfolioOnly")]
+    g = draft["site"]["gallery"]
+    ordered = [x for x in g["order"] if x in base] + [x for x in base if x not in g["order"]]
+    return [x for x in ordered if include_hidden or x not in g["hidden"]]
+
+
+def home_is_explicit(draft):
+    return bool(draft["site"]["gallery"]["hidden"] or draft["site"]["gallery"]["order"])
+
+
 def merged_portfolio_images(draft, ctx, assets, keep_disabled=False):
     """The image manifest of the project archive. A slot filled in the admin (an uploaded image) becomes "final" and points at the upload;
     every other slot keeps its factory status. Placeholder files never exist in the package, so a placeholder slot shows nothing to visitors.
@@ -291,10 +305,10 @@ def merged_portfolio_images(draft, ctx, assets, keep_disabled=False):
         if m.get("slug") in off:
             continue
         key = "%s/%s" % (m.get("slug"), m.get("slot"))
-        alt = draft["images"].get("portfolioAlt", {}).get(key)
+        alt = draft["portfolio"]["alts"].get(key)
         if alt:                                              # an alt text typed in the admin replaces the factory one, language by language
             m["alt"] = {lang: alt.get(lang) or m["alt"].get(lang, "") for lang in LANGS}
-        ref = draft["images"].get("portfolio", {}).get(key)
+        ref = draft["portfolio"]["images"].get(key)
         if ref:
             m["file"] = assets.url(ref).lstrip("/")
             m["status"] = "final"
@@ -303,12 +317,9 @@ def merged_portfolio_images(draft, ctx, assets, keep_disabled=False):
 
 
 def pdf_inputs(draft, ctx, assets):
-    """Everything the portfolio PDF shows, from the draft. The web portfolio (the /portfolio/ page, switched with the "portfolioLink" widget) and the PDF
-    are one thing: while it is on, the PDF has exactly what the web shows (enabled projects and sections, current texts and pictures).
-    While it is off there is no web portfolio to follow, so the PDF is made from the admin's data as it is: every project and section, with the owner's texts and pictures."""
-    web = draft["widgets"].get("portfolioLink", True)
-    site = merged_site(draft, ctx, assets, all_portfolio_sections=not web)
-    return {"web": web, "site": site, "projects": merged_portfolio(draft, ctx, keep_disabled=not web), "manifest": merged_portfolio_images(draft, ctx, assets, keep_disabled=not web)}
+    """Everything the portfolio PDF shows. It comes from draft.portfolio ONLY (enabled items in the portfolio's order, enabled sections, the portfolio's texts and pictures),
+    exactly like the page /portfolio/, and does not depend on which items the home page selects or on the "portfolioLink" widget."""
+    return {"site": merged_site(draft, ctx, assets), "projects": merged_portfolio(draft, ctx), "manifest": merged_portfolio_images(draft, ctx, assets)}
 
 
 def make_portfolio_pdfs(paths, draft, ctx, assets, site_dir):
@@ -519,14 +530,21 @@ def build(paths, ctx=None):
         html = transform_home(read_text(os.path.join(paths.src, "index.html")), draft, ctx, assets, forms)
         site = merged_site(draft, ctx, assets)
         products = merged_products(draft, ctx, assets)
-        write_json(os.path.join(site_dir, "data", "site.json"), site)
-        write_json(os.path.join(site_dir, "data", "products.json"), products)
+        for name, merged_data, factory_data in (("site.json", site, ctx.site), ("products.json", products, ctx.products)):
+            if merged_data == factory_data:                      # nothing changed: the factory file as it is, byte for byte
+                os.makedirs(os.path.join(site_dir, "data"), exist_ok=True)
+                shutil.copyfile(os.path.join(paths.src, "data", name), os.path.join(site_dir, "data", name))
+            else:
+                write_json(os.path.join(site_dir, "data", name), merged_data)
         if ctx.portfolio_images and os.path.isfile(os.path.join(paths.src, "data", "portfolio.json")):
             merged = merged_portfolio(draft, ctx)
-            if merged == ctx.portfolio_projects:                 # untouched gallery: the factory file as it is, byte for byte
+            if merged == ctx.portfolio_projects and not home_is_explicit(draft):         # untouched: the factory file as it is, byte for byte
                 shutil.copyfile(os.path.join(paths.src, "data", "portfolio.json"), os.path.join(site_dir, "data", "portfolio.json"))
             else:
-                write_json(os.path.join(site_dir, "data", "portfolio.json"), {"projects": merged})
+                data = {"projects": merged}
+                if home_is_explicit(draft):                       # the home page's own selection and order (ids only); /portfolio/ and the PDF ignore it
+                    data["home"] = home_gallery(draft, ctx)
+                write_json(os.path.join(site_dir, "data", "portfolio.json"), data)
                 for slug in draft["portfolio"]["disabled"]:       # the pictures of a removed project do not ship either
                     shutil.rmtree(os.path.join(site_dir, "assets", "portfolio", slug), ignore_errors=True)
             images = merged_portfolio_images(draft, ctx, assets)

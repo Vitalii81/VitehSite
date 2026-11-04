@@ -59,7 +59,7 @@ test("a touch that moves is a scroll, not a long press", () => {
 test("the shipped manifest only holds keys of the form kind:id and relative picture paths", () => {
   const manifest = JSON.parse(readFileSync(join(root, "radxa-admin/web/previews/manifest.json"), "utf8"));
   for (const [key, entry] of Object.entries(manifest)) {
-    assert.match(key, /^(section|service|project|block|effect|widget|gallery):[A-Za-z0-9_-]+$/);
+    assert.match(key, /^(section|service|project|block|effect|widget|portfolio|site):[A-Za-z0-9_-]+$/);
     if (entry.image) assert.match(entry.image, /^previews\/[A-Za-z0-9_-]+\.webp$/);
   }
 });
