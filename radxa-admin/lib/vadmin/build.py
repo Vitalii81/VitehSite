@@ -13,6 +13,7 @@ from .core import ApiError, LANGS, read_json, sha256_file, stamp, write_json
 from .richtext import esc
 from .schema import SECTION_IDS
 
+BUILD_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$")
 PUBLIC_FILES = ("index.html", "impressum.html", "datenschutz.html", "robots.txt")
 GALLERY_ASSETS = ("vendor", "models", "gallery3d.js")
 # Lists that the public JS renders from site.json; a disabled section gets empty lists (the heading texts stay).
@@ -190,7 +191,7 @@ def prepare_shell(parts, draft):
     header = insert_nav_pages(header, draft["pages"])
     header = re.sub(r'href="#([a-z]+)"', r'href="/#\1"', header)
     header = header.replace('href="/#top"', 'href="/"').replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
-    footer = parts["footer"].replace('href="impressum.html"', 'href="/impressum.html"').replace('href="datenschutz.html"', 'href="/datenschutz.html"').replace('src="assets/', 'src="/assets/').replace('href="assets/', 'href="/assets/')
+    footer = parts["footer"].replace('href="#top"', 'href="/"').replace('href="impressum.html"', 'href="/impressum.html"').replace('href="datenschutz.html"', 'href="/datenschutz.html"').replace('src="assets/', 'src="/assets/').replace('href="assets/', 'href="/assets/')
     return header, footer
 
 
@@ -382,13 +383,20 @@ def set_current(paths, bid):
 
 
 def list_builds(paths):
+    """Newest first. The id carries only a one-second timestamp, so ties (two builds in one second) are ordered by the manifest's mtime."""
     state = read_state(paths)
-    out = []
-    for name in sorted(os.listdir(paths.builds) if os.path.isdir(paths.builds) else [], reverse=True):
-        manifest = read_json(os.path.join(paths.builds, name, "manifest.json"), None)
+    found = []
+    for name in os.listdir(paths.builds) if os.path.isdir(paths.builds) else []:
+        if not BUILD_ID.match(name):                       # skips "current", temp directories and anything foreign
+            continue
+        mpath = os.path.join(paths.builds, name, "manifest.json")
+        manifest = read_json(mpath, None)
         if manifest:
-            out.append({"id": name, "created": manifest.get("created"), "files": manifest.get("count"), "bytes": manifest.get("bytes"), "digest": manifest.get("draftDigest"),
-                        "current": state.get("built") == name, "published": state.get("published") == name})
+            found.append((manifest.get("created") or "", os.stat(mpath).st_mtime_ns, name, manifest))
+    out = []
+    for created, _, name, manifest in sorted(found, reverse=True):
+        out.append({"id": name, "created": created, "files": manifest.get("count"), "bytes": manifest.get("bytes"), "digest": manifest.get("draftDigest"),
+                    "current": state.get("built") == name, "published": state.get("published") == name})
     return out
 
 

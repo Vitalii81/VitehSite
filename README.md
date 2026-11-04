@@ -36,6 +36,23 @@ This site is independent from NanoKVM and from the OTA file server.
 | `assets/vendor/` | Local third-party code: `<model-viewer>`; version, SHA-256 and licence in `assets/vendor/README.md` |
 | `tools/make-models.mjs` | Dependency-free generator of the demo GLB models |
 | `tests/gallery3d.test.mjs` | Tests for the gallery logic and the generated models |
+| `radxa-admin/` | Private admin and page builder that runs on the Radxa (see "Admin on the Radxa" below, instructions in `radxa-admin/ADMIN.md`) |
+| `data/blocks.json`, `data/templates.json` | Block library (14 blocks, field schemas, three-language examples) and templates (service, project card, section, pages, forms); used by the admin, **not** published |
+| `worker/forms.mjs` | Validation of submissions from forms made in the admin (`POST /api/form`); `worker/forms.test.mjs` = tests |
+| `assets/blocks.css`, `assets/forms.js` | Styles and script of generated pages (`/s/<slug>/`) and extra home sections |
+
+## Admin on the Radxa
+
+The owner edits the site privately on the Radxa (LAN/Tailscale only, nothing in the public internet), previews the built package on a separate port, and publishes
+from the main PC with the existing `deploy-worker.sh`. Cloudflare credentials never touch the Radxa.
+
+- Switch sections, services, project cards, widgets and effects on or off (removed from the HTML, not hidden by CSS); replace photos and `.glb` models; edit all texts in uk/en/de.
+- Build pages from a block library and templates (`/s/<slug>/`), create forms from templates; a pre-build check lists every problem and builds nothing until it is fixed.
+- Backend: nginx + a short-lived `python3` CGI (standard library only, about 17 MB per request, no daemons). History of the last 20 builds with draft rollback.
+- If no draft exists (or it is damaged) the build reproduces the factory site exactly.
+
+Start with `radxa-admin/ADMIN.md` (install, login, daily work, publish, rollback, what could not be verified without a real Radxa, owner checklist).
+Try it locally: `python3 radxa-admin/dev-server.py`.
 
 ## Design
 
@@ -87,7 +104,8 @@ products that have a builder in `tools/make-models.mjs`. For a real model: expor
 name the brand-coloured material `accent`), compress it with `gltfpack -cc` (Meshopt) or Draco, aim for 1–2 MB, put it in
 `assets/models/<id>.glb` and add the `model` field. Draco/KTX2 need their decoder files in `assets/vendor/` (see `assets/vendor/README.md`).
 
-Tests (no browser needed): `node --test` from the repository root.
+Tests (no browser needed): `node --test` from the repository root. It also runs the Python tests of the admin library (`python3 -m unittest discover -s radxa-admin/tests`),
+the installer tests (fake nginx and curl, needs `sh`) and the deploy script tests.
 
 ## Local Preview
 
