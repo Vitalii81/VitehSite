@@ -54,7 +54,8 @@ function paint() {
       h("div", { class: "product-body" },
         h("div", { class: "product-meta" }, h("span", { class: "tag" }, tr(cat?.label ?? p.category, lang)), p.years ? h("span", { class: "tag status" }, p.years) : null),
         h("h3", {}, tr(p.title, lang)), h("p", {}, tr(p.summary, lang)),
-        h("div", { class: "chips" }, (p.tags || []).map((t) => h("span", { class: "chip" }, t)))));
+        h("div", { class: "chips" }, (p.tags || []).map((t) => h("span", { class: "chip" }, t))),
+        h("a", { class: "product-link", href: "#contact" }, tr(site.work.request, lang))));
   }));
 }
 
