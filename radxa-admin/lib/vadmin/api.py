@@ -75,6 +75,7 @@ def catalog(paths, ctx):
             "projects": [{"id": p["id"], "title": p.get("title"), "image": p.get("image"), "model": bool(p.get("model"))} for p in ctx.products],
             "categories": [{"id": c["id"], "label": c["label"]} for c in ctx.site.get("work", {}).get("categories", [])],
             "portfolio": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
+            "portfolioSlots": [{"key": "%s/%s" % (m.get("slug"), m.get("slot")), "alt": m.get("alt"), "status": m.get("status"), "ratio": m.get("ratio"), "hint": m.get("source_hint")} for m in ctx.portfolio_images],
         },
         "texts": groups,
     }

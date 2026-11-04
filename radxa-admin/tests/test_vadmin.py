@@ -438,6 +438,22 @@ class BuildTests(unittest.TestCase):
         self.assertIn("android", [x["id"] for x in secs])
         self.assertEqual(schema.sanitize(d, ctx)["disabled"]["portfolio"], ["web"], "unknown ids are dropped by the sanitiser")
 
+    def test_archive_slot_alt_texts_are_editable(self):
+        ctx = self.w.ctx()
+        self.assertEqual(len(api.catalog(self.w.paths, ctx)["factory"]["portfolioSlots"]), len(ctx.portfolio_images))
+        d = self.w.draft()
+        d["images"]["portfolioAlt"] = {"can-helper/window": {"uk": "Вікно CanHelper", "en": "", "de": ""}, "no-such/slot": {"en": "x"}, "can-helper/device": {"uk": "", "en": "", "de": ""}}
+        self.w.save(d)
+        clean = schema.sanitize(d, ctx)["images"]["portfolioAlt"]
+        self.assertEqual(list(clean), ["can-helper/window"], "unknown slots and empty texts are dropped")
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        by = {"%s/%s" % (m["slug"], m["slot"]): m for m in json.loads(self.w.read(r["id"], "data/portfolio-images.json"))}
+        alt = by["can-helper/window"]["alt"]
+        self.assertEqual(alt["uk"], "Вікно CanHelper")
+        self.assertTrue(alt["en"] and alt["de"], "languages left empty keep the factory text")
+        self.assertEqual(by["can-helper/window"]["status"], "placeholder", "an alt text alone does not publish a picture")
+
     def test_uploads_replace_images_and_models(self):
         ctx, d = self.w.ctx(), self.w.draft()
         img = uploads.store(self.w.paths, png(), "hero photo.png")

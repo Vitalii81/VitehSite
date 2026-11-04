@@ -191,3 +191,5 @@ The page and the PDF share one content source, `portfolioPage` in `data/site.jso
 - **Портфоліо (сторінка)**: switch single sections off; the build removes them from the data (not hidden by CSS).
 - **Віджети й ефекти → «Портфоліо»**: ships or removes the page and its two links («Проєкти», «Контакти») together.
 Adding a brand-new section or picture still means editing `site.json` / `assets/portfolio/img/` in the repository.
+
+The tab **«Зображення проєктів 2022–2025»** lists every slot (`<project>/<slot>`) with its ratio and the expected source: pick an uploaded image (the slot becomes `final` in the build) and, if needed, type its alt text in uk/en/de (empty languages keep the factory text). An alt text alone never publishes a picture.

@@ -95,7 +95,7 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["portfolio", "Портфоліо (сторінка)"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["portfolio", "Портфоліо (сторінка)"], ["archive-images", "Зображення проєктів 2022–2025"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
@@ -365,6 +365,18 @@ const VIEWS = {
       const on = !S.draft.disabled.portfolio.includes(s.id);
       const card = h("div", { class: `card${on ? "" : " off"}` }, toggle(`${uk(s.title)} (${s.id})`, on, (v) => { setDisabled("portfolio", s.id, !v); card.classList.toggle("off", !v); }));
       main.append(card);
+    }
+  },
+
+  "archive-images"(main) {
+    main.append(...head("Зображення проєктів 2022–2025", "Для кожного слоту оберіть зображення з файлів (воно стає «фінальним» і з'являється на сайті) та за потреби змініть alt-текст трьома мовами. Порожній слот відвідувачі не бачать. Пропорція слоту вказана поруч: обріжте фото по пристрою заздалегідь, без імен, адрес, IP/MAC, паролів і договорів."));
+    S.draft.images.portfolio ||= {}; S.draft.images.portfolioAlt ||= {};
+    for (const s of S.catalog.factory.portfolioSlots) {
+      const filled = !!S.draft.images.portfolio[s.key];
+      main.append(h("div", { class: "card" }, h("div", { class: "row between" }, h("strong", {}, s.key), h("span", { class: "muted" }, `${s.ratio} · ${filled ? "заповнено в адмінці" : (s.status === "final" ? "фінальне" : "очікує зображення")}`)),
+        h("p", { class: "muted mono" }, s.hint || ""),
+        imageField(S.draft.images.portfolio, s.key, "Зображення слоту", "image"),
+        i18nField(S.draft.images.portfolioAlt, s.key, { max: 200, label: "Alt-текст" })));
     }
   },
 
