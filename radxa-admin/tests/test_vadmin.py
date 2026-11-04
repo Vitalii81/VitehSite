@@ -389,7 +389,9 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(factory, json.load(open(os.path.join(REPO, "data/portfolio-images.json"), encoding="utf-8")), "an empty draft keeps the factory manifest")
         self.assertTrue(self.w.read(r["id"], "data/portfolio.json"))
         pub = self.w.site(r["id"])
-        self.assertFalse([f for rt, _, fs in os.walk(os.path.join(pub, "assets/portfolio")) for f in fs if not f.endswith(".pdf") and not rt.endswith("/img")], "no placeholder or slot files in the package")
+        final = {"assets/portfolio/%s/%s.%s" % (m["slug"], m["slot"], ext) for m in factory if m["status"] == "final" for ext in ("webp", "jpg")}
+        shipped = {os.path.relpath(os.path.join(rt, f), pub) for rt, _, fs in os.walk(os.path.join(pub, "assets/portfolio")) for f in fs if not f.endswith(".pdf") and not rt.endswith("/img")}
+        self.assertEqual(shipped - final, set(), "no placeholder files in the package, only the slots that are final in the factory manifest")
         self.assertFalse(os.path.exists(os.path.join(pub, "tools")))
         img = uploads.store(self.w.paths, png(), "board.png")
         d = self.w.draft()
