@@ -245,74 +245,70 @@ const quatBetween = (a, b) => {                              // rotation taking 
 };
 
 export function serviceAi(scene) {
+  // One calm composition: a glowing core with two rings, six nodes on a single orbit, one straight link per node, a base plate.
   const core = scene.part("core");
-  sphere(core.geo("glow"), { r: 0.62, seg: 40, rings: 20 });
-  const ring = scene.part("core-ring");
-  torus(ring.geo("chrome"), { R: 1.0, t: 0.045, seg: 56, tube: 12 });
-  for (const [rx, rz] of [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]]) scene.inst(ring, { rot: [rx, 0, rz] });
+  sphere(core.geo("glow"), { r: 0.72, seg: 40, rings: 20 });
   scene.inst(core);
+  const ring = scene.part("core-ring");
+  torus(ring.geo("chrome"), { R: 1.12, t: 0.045, seg: 56, tube: 12 });
+  scene.inst(ring, { rot: [0.0, 0, 0] });
+  scene.inst(ring, { rot: [Math.PI / 2, 0, 0.0], s: 1.0 });
   const orbit = scene.part("orbit");
-  torus(orbit.geo("steel"), { R: 2.65, t: 0.022, seg: 96, tube: 8 });
-  scene.inst(orbit, { rot: [0.0, 0, 0] });
-  scene.inst(orbit, { rot: [1.05, 0, 0.35], s: 1 });
-  scene.inst(orbit, { rot: [-0.9, 0, -0.6], s: 1 });
+  torus(orbit.geo("steel"), { R: 2.5, t: 0.026, seg: 96, tube: 8 });
+  scene.inst(orbit);
   const link = scene.part("link");
-  cylinder(link.geo("steel"), { r: 0.035, h: 1, seg: 10, at: [0, 0.5, 0] });
-  const mats = ["accent", "indigo", "amber", "glow", "chrome", "accent", "glowIndigo", "amber", "indigo", "accent"];
-  const sat = (m, r) => { const p = scene.part(`sat-${m}-${r}`); sphere(p.geo(m), { r, seg: 32, rings: 16 }); return p; };
-  const N = 10, pts = [];
-  for (let i = 0; i < N; i++) {                              // Fibonacci sphere: evenly spread satellites
-    const y = 1 - (i / (N - 1)) * 2, rad = Math.sqrt(1 - y * y), th = i * 2.399963;
-    const p = [Math.cos(th) * rad * 2.65, y * 2.2, Math.sin(th) * rad * 2.65];
-    pts.push(p);
-    scene.inst(sat(mats[i], 0.3 + (i % 3) * 0.07), { at: p });
-    const len = Math.hypot(...p), dir = p.map((v) => v / len);
-    scene.inst(link, { at: [dir[0] * 0.62, dir[1] * 0.62, dir[2] * 0.62], quat: quatBetween([0, 1, 0], dir), s: [1, len - 1.1, 1] });
-    const packet = scene.part("packet"); if (!packet.geos.size) sphere(packet.geo("glow"), { r: 0.075, seg: 12, rings: 6 });
-    scene.inst(packet, { at: dir.map((v) => v * (len * (0.38 + (i % 3) * 0.13))) });
-  }
-  for (let i = 0; i < N; i += 2) {                           // a few satellite-to-satellite links
-    const a = pts[i], b = pts[(i + 3) % N];
-    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], len = Math.hypot(...d), dir = d.map((v) => v / len);
-    const thin = scene.part("link-glow"); if (!thin.geos.size) cylinder(thin.geo("glowIndigo"), { r: 0.022, h: 1, seg: 8, at: [0, 0.5, 0] });
-    scene.inst(thin, { at: a, quat: quatBetween([0, 1, 0], dir), s: [1, len, 1] });
+  cylinder(link.geo("steel"), { r: 0.04, h: 1, seg: 10, at: [0, 0.5, 0] });
+  const mats = ["accent", "indigo", "amber", "glow", "accent", "indigo"];
+  const sat = (m) => { const p = scene.part(`sat-${m}`); sphere(p.geo(m), { r: 0.36, seg: 32, rings: 16 }); return p; };
+  for (let i = 0; i < 6; i++) {
+    const th = (i * Math.PI) / 3 + 0.3, p = [Math.cos(th) * 2.5, 0, Math.sin(th) * 2.5];
+    scene.inst(sat(mats[i]), { at: p });
+    const dir = [Math.cos(th), 0, Math.sin(th)], from = 1.12, len = 2.5 - from - 0.36;
+    scene.inst(link, { at: dir.map((v) => v * from), quat: quatBetween([0, 1, 0], dir), s: [1, len, 1] });
   }
   const base = scene.part("base");
-  cylinder(base.geo("graphite"), { r: 2.5, h: 0.18, bevel: 0.05, seg: 64, at: [0, -2.45, 0] });
-  torus(base.geo("glow"), { R: 2.25, t: 0.025, seg: 64, tube: 8, at: [0, -2.35, 0] });
+  cylinder(base.geo("graphite"), { r: 3.1, h: 0.18, bevel: 0.05, seg: 64, at: [0, -0.9, 0] });
+  torus(base.geo("glow"), { R: 2.85, t: 0.025, seg: 64, tube: 8, at: [0, -0.8, 0] });
   scene.inst(base);
 }
 
-/* ---------- 6. project: IoT module (wireless module with a shielded radio, antenna trace, pads and LEDs) ---------- */
+/* ---------- 6. project: IoT module (a development board: carrier PCB, radio module with a PCB antenna, headers, USB-C, buttons, LEDs) ---------- */
 export function iotModule(scene) {
   const P = makeParts(scene);
-  const pcb = scene.part("module-pcb");
-  roundedBox(pcb.geo("accent"), { size: [4.6, 0.14, 2.8], r: 0.12, n: 2, at: [0, 0.07, 0] });
-  roundedBox(pcb.geo("graphite"), { size: [1.5, 0.012, 0.85], r: 0.02, n: 1, at: [1.55, 0.146, 0.0] });          // antenna keep-out
-  for (const [x, z] of [[-2.05, -1.15], [2.05, -1.15], [-2.05, 1.15], [2.05, 1.15]]) disc(pcb.geo("gold"), { rOut: 0.1, y: 0.148, seg: 18, at: [x, 0, z] });
+  const pcb = scene.part("carrier-pcb");                                                                      // carrier board, x from -2.4 to 2.4
+  roundedBox(pcb.geo("accent"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
+  for (const [x, z] of [[-2.15, -1.12], [-2.15, 1.12], [2.15, -1.12], [2.15, 1.12]]) { disc(pcb.geo("gold"), { rOut: 0.1, y: 0.146, seg: 18, at: [x, 0, z] }); }
   scene.inst(pcb);
-  const can = scene.part("shield-can");                                                                       // RF shield: frame, lid and a stamped dimple
-  roundedBox(can.geo("steel"), { size: [1.7, 0.3, 1.5], r: 0.05, n: 2, at: [0, 0.29, 0] });
-  roundedBox(can.geo("alu"), { size: [1.58, 0.02, 1.38], r: 0.03, n: 1, at: [0, 0.445, 0] });
-  disc(can.geo("steel"), { rOut: 0.2, y: 0.458, seg: 28, at: [0, 0, 0] });
-  scene.inst(can, { at: [-1.0, 0.14, 0.05] });
-  const pad = scene.part("pad");
-  roundedBox(pad.geo("gold"), { size: [0.14, 0.02, 0.26], r: 0.02, n: 1, at: [0, 0.01, 0] });
-  for (let i = 0; i < 11; i++) for (const z of [-1.24, 1.24]) scene.inst(pad, { at: [-2.0 + i * 0.4, 0.14, z] });
+  const hdr = scene.part("header"), pin = scene.part("header-pin");                                           // two rows of pin headers along the long edges
+  roundedBox(hdr.geo("plastic"), { size: [3.3, 0.26, 0.26], r: 0.02, n: 1, at: [0, 0.13, 0] });
+  cylinder(pin.geo("gold"), { r: 0.035, h: 0.34, seg: 8, at: [0, 0.17, 0] });
+  for (const z of [-1.1, 1.1]) {
+    scene.inst(hdr, { at: [-0.45, 0.14, z] });
+    for (let i = 0; i < 13; i++) scene.inst(pin, { at: [-1.95 + i * 0.25, 0.4, z] });
+  }
+  const mod = scene.part("radio-module");                                                                     // module PCB, shield can and the meander antenna that overhangs the board
+  roundedBox(mod.geo("graphite"), { size: [2.6, 0.08, 1.9], r: 0.04, n: 1, at: [0, 0.04, 0] });
+  roundedBox(mod.geo("steel"), { size: [1.65, 0.26, 1.9], r: 0.03, n: 2, at: [-0.47, 0.21, 0] });
+  roundedBox(mod.geo("alu"), { size: [1.55, 0.02, 1.8], r: 0.02, n: 1, at: [-0.47, 0.345, 0] });
   const bar = scene.part("antenna-bar"), link = scene.part("antenna-link");
-  roundedBox(bar.geo("gold"), { size: [0.07, 0.016, 0.62], r: 0.012, n: 1, at: [0, 0.008, 0] });
-  roundedBox(link.geo("gold"), { size: [0.3, 0.016, 0.07], r: 0.012, n: 1, at: [0, 0.008, 0] });
-  for (let i = 0; i < 5; i++) scene.inst(bar, { at: [0.95 + i * 0.3, 0.147, 0.0 + (i % 2 ? 0.16 : -0.16)] });
-  for (let i = 0; i < 4; i++) scene.inst(link, { at: [1.1 + i * 0.3, 0.147, i % 2 ? -0.47 : 0.47] });
-  const usb = scene.part("usb-c");
-  roundedBox(usb.geo("steel"), { size: [0.85, 0.3, 0.78], r: 0.09, n: 2, at: [0, 0.15, 0] });
-  roundedBox(usb.geo("graphite"), { size: [0.06, 0.1, 0.5], r: 0.03, n: 1, at: [-0.4, 0.15, 0] });
-  scene.inst(usb, { at: [-2.1, 0.14, 0] });
-  scene.inst(P.soicBody, { at: [0.55, 0.14, -0.7] });
-  scene.inst(P.led("ledGreen"), { at: [0.45, 0.14, 0.95] });
-  scene.inst(P.led("ledAmber"), { at: [0.8, 0.14, 0.95] });
-  for (const [x, z] of [[0.25, -1.0], [0.25, -0.45], [0.95, -0.2], [0.55, 0.3]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, x > 0.5 ? Math.PI / 2 : 0, 0] });
-  for (const [x, z] of [[0.15, 0.4], [-0.3, 1.0]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
+  roundedBox(bar.geo("gold"), { size: [0.06, 0.012, 1.1], r: 0.01, n: 1, at: [0, 0.006, 0] });
+  roundedBox(link.geo("gold"), { size: [0.24, 0.012, 0.06], r: 0.01, n: 1, at: [0, 0.006, 0] });
+  scene.inst(mod, { at: [1.15, 0.14, 0] });
+  for (let i = 0; i < 4; i++) scene.inst(bar, { at: [1.15 + 0.85 + i * 0.12 * 2 - 0.04, 0.234, 0.0] , s: [1, 1, 0.82] });
+  for (let i = 0; i < 3; i++) scene.inst(link, { at: [1.15 + 0.85 + 0.12 + i * 0.24 - 0.04, 0.234, i % 2 ? -0.5 : 0.5] });
+  const usb = scene.part("usb-c");                                                                            // receptacle sits on the board; only the shell lip overhangs the edge
+  roundedBox(usb.geo("steel"), { size: [0.85, 0.3, 0.8], r: 0.09, n: 2, at: [0, 0.15, 0] });
+  roundedBox(usb.geo("graphite"), { size: [0.05, 0.1, 0.5], r: 0.025, n: 1, at: [-0.4, 0.15, 0] });
+  scene.inst(usb, { at: [-2.325, 0.14, 0] });
+  const btn = scene.part("button");
+  roundedBox(btn.geo("graphite"), { size: [0.34, 0.1, 0.34], r: 0.03, n: 1, at: [0, 0.05, 0] });
+  cylinder(btn.geo("chrome"), { r: 0.09, h: 0.07, bevel: 0.015, seg: 20, at: [0, 0.135, 0] });
+  for (const z of [-0.55, 0.55]) scene.inst(btn, { at: [-1.5, 0.14, z] });
+  scene.inst(P.soicBody, { at: [-0.62, 0.14, 0.0], s: 0.7 });
+  scene.inst(P.led("ledGreen"), { at: [-0.85, 0.14, -0.55] });
+  scene.inst(P.led("ledAmber"), { at: [-0.85, 0.14, 0.55] });
+  for (const [x, z, r] of [[-1.05, -0.35, 0], [-1.05, 0.35, 0], [-0.3, -0.5, 1.57], [-0.3, 0.5, 1.57]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, r, 0] });
+  for (const [x, z] of [[-0.3, 0.0], [0.0, -0.5]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
 }
 
 /* ---------- 7. project: device monitoring panel (a display with trends, tiles and a status bar) ---------- */
