@@ -803,6 +803,13 @@ class ApiTests(Base):
         self.assertNotIn("Secure", hd["Set-Cookie"], "the private http ports keep a plain cookie")
         self.assertEqual(self.call("POST", "login", {"passphrase": self.PHRASE}, headers={"cf-visitor": '{"scheme": "https"}'})[1]["Set-Cookie"].count("; Secure"), 1)
 
+    def test_cgi_status_line_has_the_reason_phrase(self):
+        """uhttpd on the Radxa turns "Status: 401" without the text into a 200, which would show the login error as a success."""
+        import subprocess, sys
+        env = dict(os.environ, REQUEST_METHOD="GET", QUERY_STRING="action=status", VADMIN_ROOT=self.w.paths.root, VADMIN_SECRET=self.w.paths.secret)
+        out = subprocess.run([sys.executable, os.path.join(REPO, "radxa-admin/cgi/vadmin.py")], env=env, input=b"", capture_output=True).stdout.decode()
+        self.assertEqual(out.split("\r\n", 1)[0], "Status: 401 Unauthorized")
+
     def test_save_uses_revisions_and_reports_conflicts(self):
         cookie = self.login()
         _, _, boot = self.call("GET", "bootstrap", cookie=cookie)
