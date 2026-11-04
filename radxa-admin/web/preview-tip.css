@@ -5,8 +5,8 @@
 .vpv-img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: cover; object-position: top; border-radius: 8px; background: #e8efeb; margin-bottom: 8px; }
 .vpv-title { display: block; font-size: 14px; margin-bottom: 3px; }
 .vpv-text { margin: 0; color: #46564e; }
-.vpv-eye { font: inherit; line-height: 1; min-width: 32px; min-height: 32px; padding: 4px 6px; border: 1px solid #aebfb6; border-radius: 7px; background: #eef4f1; color: inherit; cursor: pointer; }
-.vpv-eye:hover { background: #dcebe4; }
+.vpv-eye { font: inherit; line-height: 1; min-width: 32px; min-height: 32px; padding: 4px 6px; border: 1px solid var(--line, #aebfb6); border-radius: 7px; background: var(--panel, #eef4f1); color: var(--ink, inherit); cursor: pointer; }
+.vpv-eye:hover { background: var(--soft, #dcebe4); border-color: var(--accent, #aebfb6); }
 .vpv-eye:focus-visible { outline: 2px solid #1d6fd1; outline-offset: 2px; }
 @media (prefers-color-scheme: dark) {
   .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }

@@ -600,7 +600,6 @@ function publishBox(id) {
 }
 
 async function publish(id) {
-  if (!confirm(`Опублікувати версію ${id} на viteh.org?`)) return;
   try { const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender(); } catch (e) { fail(e); }
 }
 
