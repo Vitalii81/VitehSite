@@ -33,16 +33,18 @@ test("Projects and Contact link to the PDF, and the link texts exist in three la
   for (const k of [site.work.portfolio, site.contact.portfolio]) for (const l of LANGS) assert.ok(k[l]);
 });
 
-test("experience is counted from 2014 everywhere and workplaces are named in the hero", () => {
+test("experience is counted from 2014 everywhere and workplaces stay out of the site (they belong to the portfolio)", () => {
   const all = JSON.stringify(site);
   assert.ok(!/9\+|9 років|9 Jahre|9 years/.test(all), "old 9+ years wording");
-  for (const l of LANGS) { assert.match(site.hero.experience[l], /2014/); assert.match(site.hero.experience[l], /Adventx/); assert.match(site.hero.experience[l], /Tesla-service/); }
+  for (const l of LANGS) { assert.match(site.hero.experience[l], /2014/); }
+  assert.ok(!/Adventx|Tesla-service/.test(all), "workplace names are for the PDF portfolio only");
+  assert.match(readFileSync(join(root, "tools/make-portfolio.mjs"), "utf8"), /Adventx and Tesla-service/);
   assert.match(site.meta.description.en, /2014/);
 });
 
 test("the new services exist, are complete in three languages and use the same names as the portfolio", () => {
   const titles = site.services.items.map((s) => s.title.en);
-  for (const t of ["Website development", "Android apps", "Custom apps built together with AI agents", "Local AI and voice", "Linux, networks and diagnostics"]) assert.ok(titles.includes(t), t);
+  for (const t of ["Website development", "Android apps", "Custom apps built together with AI agents", "Local AI and voice", "Linux, networks and diagnostics", "AI server: mail, website, documents"]) assert.ok(titles.includes(t), t);
   const pdfSource = read("tools/make-portfolio.mjs");
   assert.match(pdfSource, /site\.services\.items/, "the PDF reads the service names from data/site.json");
 });

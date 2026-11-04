@@ -13,7 +13,7 @@ SECTION_LABELS = {
     "work": "Проєкти", "stack": "Технології", "pricing": "Формати співпраці", "faq": "Запитання й відповіді", "contact": "Контакти й форма",
 }
 EFFECT_LABELS = {"floating": "Плавне погойдування картинки на першому екрані", "reveal": "Поява блоків під час прокрутки"}
-WIDGET_LABELS = {"gallery3d": "3D-галерея проєктів"}
+WIDGET_LABELS = {"gallery3d": "3D-галерея проєктів", "portfolioLink": "Посилання на портфоліо (PDF) у «Проєктах» і «Контактах»"}
 MAX_UPLOAD_BODY = uploads.MODEL_MAX + 1024
 
 

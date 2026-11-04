@@ -402,6 +402,19 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(by["can-helper/window"]["status"], "placeholder", "only uploaded images may fill a slot")
         self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "assets/u", img["file"])))
 
+    def test_portfolio_link_can_be_switched_off(self):
+        r = build.build(self.w.paths)
+        self.assertEqual(self.w.read(r["id"], "index.html").count("Vitalii_Krutikov_Engineering_Portfolio_2026.pdf"), 2)
+        d = self.w.draft()
+        d["widgets"]["portfolioLink"] = False
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        html = self.w.read(r["id"], "index.html")
+        self.assertNotIn("Engineering_Portfolio_2026.pdf", html)
+        self.assertNotIn("portfolio-link", html)
+        self.assertIn('id="contact"', html)
+
     def test_uploads_replace_images_and_models(self):
         ctx, d = self.w.ctx(), self.w.draft()
         img = uploads.store(self.w.paths, png(), "hero photo.png")

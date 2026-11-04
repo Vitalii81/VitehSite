@@ -100,6 +100,8 @@ def transform_home(html, draft, ctx, assets, forms):
         html = html.replace('src="assets/hero-illustration.svg"', 'src="%s"' % esc(url.lstrip("/")), 1)
     if not draft["widgets"].get("gallery3d", True):
         html = re.sub(r'[ \t]*<script type="module" src="assets/gallery3d.js"></script>\n?', "", html)
+    if not draft["widgets"].get("portfolioLink", True):          # the link to the portfolio PDF is removed from the HTML, not hidden by CSS
+        html = re.sub(r'[ \t]*<p class="portfolio-link">.*?</p>\n?', "", html, flags=re.S)
     head_add = ""
     if not (draft["effects"].get("floating", True) and draft["effects"].get("reveal", True)):
         head_add += '  <link rel="stylesheet" href="assets/fx.css">\n'

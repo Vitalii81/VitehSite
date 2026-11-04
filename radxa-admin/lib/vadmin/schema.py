@@ -9,7 +9,7 @@ from .core import ApiError, LANGS, new_id, read_json, valid_slug
 
 SECTION_IDS = ("hero", "trust", "services", "ai", "process", "work", "stack", "pricing", "faq", "contact")
 EFFECTS = ("floating", "reveal")
-WIDGETS = ("gallery3d",)
+WIDGETS = ("gallery3d", "portfolioLink")
 FORM_TYPES = ("text", "email", "tel", "textarea", "select", "checkbox")
 RESERVED_FIELD_KEYS = {"hp", "t", "consent", "lang", "form"}
 LIMITS = {"pages": 30, "blocks": 40, "forms": 10, "fields": 20, "extra": 30, "texts": 600, "list": 20, "options": 20}
