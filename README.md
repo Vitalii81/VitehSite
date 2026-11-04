@@ -112,7 +112,7 @@ Each card supports translated `title`, `summary`, `status`, plus `category`, `im
 ### Procedural models, environment and posters
 
 Models are generated, not drawn (`node tools/make-models.mjs`): rounded boxes and lathe solids with smooth normals on the bevels, instanced components,
-PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Seven models: Cronos controller v1 and v2 (real GLB exported from Blender, with an optional per-card `orbit` start camera in `data/products.json`), custom board, sensor node (projects) and
+PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Seven models: process controller v1 and v2 (real GLB exported from Blender, with an optional per-card `orbit` start camera in `data/products.json`), custom board, sensor node (projects) and
 software laptop, electronics in an enclosure, AI network (services). Each is below 400 KB (budget 600 KB; a test enforces it) and byte-for-byte reproducible
 (a test fails when a committed file is stale, so run the generator after changing `tools/models/`).
 

@@ -100,3 +100,8 @@ test("portfolio images are small and the PDF build input folder only holds JPEGs
   for (const f of files) assert.ok(statSync(join(dir, f)).size < 400 * 1024, f);
 });
 import * as fs from "node:fs";
+
+test("the public texts do not call the controller by its internal name", () => {
+  const visible = JSON.stringify([site, JSON.parse(read("data/products.json")).map(({ title, summary, tags }) => ({ title, summary, tags }))]);
+  assert.ok(!/cronos/i.test(visible.replace(/"img":"[^"]*"/g, "")), "Cronos is an internal file name only");
+});

@@ -1,6 +1,8 @@
 /* ViTeh — calm teal/indigo palette, light + dark, no external requests. */
 :root {
   color-scheme: light;
+  --stage-a: #fbfdfc;
+  --stage-b: #cfdcd6;
   --bg: #f3f6f4;
   --bg-alt: #e9efec;
   --surface: #ffffff;
@@ -27,6 +29,8 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --stage-a: #1d312b;
+  --stage-b: #0e1816;
   --bg: #0c1311;
   --bg-alt: #101a17;
   --surface: #15201d;
@@ -48,7 +52,9 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0c1311;
+    --stage-a: #1d312b;
+    --stage-b: #0e1816;
+  --bg: #0c1311;
     --bg-alt: #101a17;
     --surface: #15201d;
     --surface-2: #121c19;
@@ -413,10 +419,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 }
 
 /* ===== 3D gallery (assets/gallery3d.js) — progressive enhancement of .product-card ===== */
-.g3d-media { position: relative; line-height: 0; background: #0e1816; }
+.g3d-media { position: relative; line-height: 0; background: var(--stage-b); }
 .g3d-live {
   position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity .4s;
-  --poster-color: transparent; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%);
+  --poster-color: transparent; background: radial-gradient(ellipse at 50% 40%, var(--stage-a), var(--stage-b) 75%);
 }
 .g3d-live.ready { opacity: 1; }
 .g3d-open { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: pointer; font: inherit; }
@@ -439,7 +445,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .g3d-head h3 { font-size: 19px; font-weight: 720; }
 .g3d-close { width: 44px; height: 44px; padding: 0; font-size: 26px; line-height: 1; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--ink); cursor: pointer; }
 .g3d-close:hover { border-color: var(--accent); }
-.g3d-stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%); }
+.g3d-stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 40%, var(--stage-a), var(--stage-b) 75%); }
 .g3d-stage .g3d-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: .45; }
 .g3d-stage .g3d-live { pointer-events: auto; background: transparent; }
 .g3d-stage:has(.g3d-live.ready) .g3d-poster { opacity: 0; }

@@ -5,14 +5,14 @@
     "image": "assets/product-controller.svg",
     "model": "assets/models/cronos-controller-v2.glb",
     "title": {
-      "uk": "Cronos Controller, остання версія",
-      "en": "Cronos Controller, latest version",
-      "de": "Cronos Controller, aktuelle Version"
+      "uk": "Контролер для автоматизації виробничих процесів, остання версія",
+      "en": "Production-automation controller, latest version",
+      "de": "Controller zur Automatisierung von Produktionsprozessen, aktuelle Version"
     },
     "summary": {
-      "uk": "Корпус контролера з великим сенсорним екраном без кнопок, логотипом ViTeh на нижній кришці та круглим роз'ємом. 3D-модель зі збереженого проєкту Blender; екран із фото реального пристрою.",
-      "en": "Controller enclosure with a large touchscreen, no buttons, the ViTeh mark on the lower cover and a round connector. 3D model from the original Blender project; the screen is taken from a photo of the real unit.",
-      "de": "Controller-Gehäuse mit großem Touchscreen ohne Tasten, ViTeh-Logo auf der unteren Abdeckung und rundem Steckverbinder. 3D-Modell aus dem Blender-Originalprojekt; der Bildschirm stammt aus einem Foto des echten Geräts."
+      "uk": "Контролер для автоматизації виробничих процесів: керування змішувачами, конвеєрами, дозаторами, подрібнювачами, насосами й вентиляцією, двигуни, датчики, пресети й таймінги. Розробляється під замовлення клієнта, без обмежень за типом процесу. Великий сенсорний екран без кнопок, логотип ViTeh на нижній кришці, круглий роз'єм. 3D-модель зі збереженого проєкту Blender; екран із фото реального пристрою.",
+      "en": "A controller for automating production processes: control of mixers, conveyors, dosing units, grinders, pumps and ventilation, with motors, sensors, presets and timings. Developed to order for the client, with no limit on the type of process. Large touchscreen with no buttons, the ViTeh mark on the lower cover and a round connector. 3D model from the original Blender project; the screen is taken from a photo of the real unit.",
+      "de": "Ein Controller zur Automatisierung von Produktionsprozessen: Steuerung von Mischern, Förderbändern, Dosieranlagen, Zerkleinerern, Pumpen und Lüftung, mit Motoren, Sensoren, Presets und Zeitabläufen. Wird im Kundenauftrag entwickelt, ohne Einschränkung auf eine Prozessart. Großer Touchscreen ohne Tasten, ViTeh-Logo auf der unteren Abdeckung und runder Steckverbinder. 3D-Modell aus dem Blender-Originalprojekt; der Bildschirm stammt aus einem Foto des echten Geräts."
     },
     "status": {
       "uk": "Прототип",
@@ -34,14 +34,14 @@
     "model": "assets/models/cronos-controller-v1.glb",
     "poster": "assets/posters/cronos-controller-v1",
     "title": {
-      "uk": "Cronos Controller, перша версія",
-      "en": "Cronos Controller, first version",
-      "de": "Cronos Controller, erste Version"
+      "uk": "Контролер для автоматизації виробничих процесів, перша версія",
+      "en": "Production-automation controller, first version",
+      "de": "Controller zur Automatisierung von Produktionsprozessen, erste Version"
     },
     "summary": {
-      "uk": "Перша версія корпусу: невеликий дисплей, кнопки керування, чорна кришка та металевий роз'єм збоку. 3D-модель зі збереженого проєкту Blender.",
-      "en": "The first enclosure version: a small display, control buttons, a black cover and a metal connector on the side. 3D model from the original Blender project.",
-      "de": "Die erste Gehäuseversion: kleines Display, Bedientasten, schwarze Abdeckung und ein Metallsteckverbinder an der Seite. 3D-Modell aus dem Blender-Originalprojekt."
+      "uk": "Перша версія корпусу контролера для автоматизації виробничих процесів (змішувачі, конвеєри та інше, під замовлення клієнта): невеликий дисплей, кнопки керування, чорна кришка та металевий роз'єм збоку. 3D-модель зі збереженого проєкту Blender.",
+      "en": "The first enclosure version of the production-automation controller (mixers, conveyors and more, developed to order): a small display, control buttons, a black cover and a metal connector on the side. 3D model from the original Blender project.",
+      "de": "Die erste Gehäuseversion des Controllers zur Produktionsautomatisierung (Mischer, Förderbänder und mehr, im Kundenauftrag): kleines Display, Bedientasten, schwarze Abdeckung und ein Metallsteckverbinder an der Seite. 3D-Modell aus dem Blender-Originalprojekt."
     },
     "status": {
       "uk": "Прототип",
@@ -78,7 +78,10 @@
       "BLE",
       "Wi-Fi",
       "MQTT"
-    ]
+    ],
+    "model": "assets/models/iot-module.glb",
+    "poster": "assets/posters/iot-module",
+    "orbit": "-28deg 52deg 98%"
   },
   {
     "id": "custom-electronics",
@@ -130,7 +133,9 @@
       "RAG",
       "Claude",
       "API"
-    ]
+    ],
+    "model": "assets/models/agent-assistant.glb",
+    "poster": "assets/posters/agent-assistant"
   },
   {
     "id": "device-monitor",
@@ -155,7 +160,9 @@
       "TypeScript",
       "PostgreSQL",
       "MQTT"
-    ]
+    ],
+    "model": "assets/models/device-monitor.glb",
+    "poster": "assets/posters/device-monitor"
   },
   {
     "id": "sensor-node",

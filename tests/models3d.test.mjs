@@ -88,11 +88,60 @@ for (const name of IMPORTED) {
       const pos = json.accessors[prim.attributes.POSITION];
       assert.ok(pos.min.every(Number.isFinite) && pos.max.every(Number.isFinite), "finite bounds");
     }
-    for (const n of json.nodes) if (n.scale) assert.ok(n.scale.every((v) => Math.abs(Math.abs(v) - 0.001) < 1e-6), "millimetres to metres");
+    for (const n of json.nodes) if (n.scale && n.name !== "connector-housing") assert.ok(n.scale.every((v) => Math.abs(Math.abs(v) - 0.001) < 1e-6), "millimetres to metres");
     for (const x of [...(json.buffers || []), ...(json.images || [])]) assert.ok(!x.uri || x.uri.startsWith("data:"), "no external file references");
     for (const x of json.extensionsUsed || []) assert.ok(["EXT_texture_webp"].includes(x), `extension ${x} not in the allow-list`);
   });
 }
+
+test("cronos v1: the display carries a generated seven-segment texture, the original export is kept, and the build is reproducible", async () => {
+  const glb = readFileSync(join(root, "assets/models/cronos-controller-v1.glb"));
+  const { json, bin } = parse(new Uint8Array(glb));
+  const screen = json.materials.find((m) => m.name === "screen");
+  assert.ok(screen.pbrMetallicRoughness.baseColorTexture && screen.emissiveTexture, "textured and emissive screen");
+  const img = json.images[json.textures[screen.emissiveTexture.index].source];
+  assert.equal(img.mimeType, "image/png");
+  const bv = json.bufferViews[img.bufferView];
+  assert.equal(Buffer.from(bin.subarray(bv.byteOffset, bv.byteOffset + 8)).toString("hex"), "89504e470d0a1a0a");
+  const original = readFileSync(join(root, "tools/sources/cronos-controller-v1.original.glb"));
+  assert.ok(original.length < glb.length && original.subarray(0, 4).toString() === "glTF", "the untouched export is kept as the source");
+  const { execFileSync } = await import("node:child_process");
+  const before = Buffer.from(glb);
+  execFileSync(process.execPath, [join(root, "tools/make-cronos-v1-display.mjs")]);
+  assert.ok(readFileSync(join(root, "assets/models/cronos-controller-v1.glb")).equals(before), "regenerating gives the same bytes");
+});
+
+test("cronos v2: rectangular 3 x 4 connector at the lower right instead of the round one, original kept, reproducible", async () => {
+  const glb = readFileSync(join(root, "assets/models/cronos-controller-v2.glb"));
+  const { json } = parse(new Uint8Array(glb));
+  const byName = (n) => json.nodes.find((x) => x.name === n);
+  const inScene = new Set(json.scenes[0].nodes.map((i) => json.nodes[i].name));
+  assert.ok(!inScene.has("core"), "the round connector body is gone");
+  assert.ok(inScene.has("connector-housing"));
+  const pins = Array.from({ length: 12 }, (_, i) => byName(`pin${i}`).translation);
+  const rows = [...new Set(pins.map((p) => p[1].toFixed(4)))], cols = [...new Set(pins.map((p) => p[0].toFixed(4)))];
+  assert.equal(rows.length, 3, "three rows"); assert.equal(cols.length, 4, "four contacts per row");
+  assert.ok(pins.every((p) => p[0] > 0), "right of the centre line");
+  const original = readFileSync(join(root, "tools/sources/cronos-controller-v2.original.glb"));
+  assert.ok(original.subarray(0, 4).toString() === "glTF");
+  const { execFileSync } = await import("node:child_process");
+  const before = Buffer.from(glb);
+  execFileSync(process.execPath, [join(root, "tools/make-cronos-v2-connector.mjs")]);
+  assert.ok(readFileSync(join(root, "assets/models/cronos-controller-v2.glb")).equals(before), "regenerating gives the same bytes");
+});
+
+test("cronos v1: yellow buttons", () => {
+  const { json } = parse(new Uint8Array(readFileSync(join(root, "assets/models/cronos-controller-v1.glb"))));
+  const [r, g, b] = json.materials.find((m) => m.name === "btn").pbrMetallicRoughness.baseColorFactor;
+  assert.ok(r > 0.8 && g > 0.55 && b < 0.2);
+});
+
+test("3D stages follow the site theme: light and dark tokens in the stylesheet, themed poster tool", () => {
+  const css = readFileSync(join(root, "assets/styles.css"), "utf8");
+  assert.equal((css.match(/--stage-a:/g) || []).length, 3, "light, dark (data-theme) and dark (system)");
+  assert.ok(!/radial-gradient\(ellipse at 50% 40%, #1d312b/.test(css), "no hard-coded dark stage left");
+  assert.match(readFileSync(join(root, "tools/poster.html"), "utf8"), /data-theme="dark"/);
+});
 
 test("models are deterministic: the same code always writes byte-identical files", () => {
   for (const name of ["custom-electronics", "service-ai"]) {
