@@ -5,7 +5,8 @@ import { Part } from "./geo.mjs";
 const pad4 = (n) => (n + 3) & ~3;
 const hexToLinear = (hex) => {
   const n = parseInt(hex.replace("#", ""), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { const c = v / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  // Rounded to 6 decimals: Math.pow differs in the last digits between platforms, and the committed GLBs must be byte-identical everywhere.
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { const c = v / 255; return +(c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4).toFixed(6); });
 };
 const rgb = (hex) => hexToLinear(hex);
 
@@ -42,6 +43,7 @@ export const materialDefs = (accent) => ({
   screenDash: { tex: "screenDash", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   paperDoc: { tex: "paperDoc", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
   screenToyota: { tex: "screenToyota", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.18 } },
+  screenWatch: { tex: "screenWatch", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.16 } },
   wireYellow: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#e6c229"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
   wireGreen: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#2f9e4f"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
   wireRed: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#c9382c"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },

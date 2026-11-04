@@ -111,6 +111,12 @@
  "project:sensor-node": {
   "image": "previews/project-sensor-node.webp"
  },
+ "project:toyota-hv-monitor": {
+  "image": "previews/project-toyota-hv-monitor.webp"
+ },
+ "project:lvgl-smartwatch": {
+  "image": "previews/project-lvgl-smartwatch.webp"
+ },
  "project:custom": {
   "title": "Власна картка проєкту",
   "text": "Картка з фото або 3D-моделлю, назвою, описом, статусом і тегами. Потрапляє у фільтр за обраною категорією.",

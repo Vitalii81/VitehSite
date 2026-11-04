@@ -1,23 +1,35 @@
-/* Hover preview pop-up (preview-tip.js). Used by the admin and by the on-page editor; it carries its own colours so it looks the same in both. */
-.vpv-tip { position: fixed; z-index: 2147483200; width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: hidden; box-sizing: border-box; padding: 10px; border-radius: 12px;
-  background: #fff; color: #122019; border: 1px solid #8fa89c; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); pointer-events: none; font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: left; }
-.vpv-tip[hidden] { display: none; }
-.vpv-img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: cover; object-position: top; border-radius: 8px; background: #e8efeb; margin-bottom: 8px; }
-.vpv-title { display: block; font-size: 14px; margin-bottom: 3px; }
-.vpv-text { margin: 0; color: #46564e; }
-.vpv-eye { font: inherit; line-height: 1; min-width: 32px; min-height: 32px; padding: 4px 6px; border: 1px solid var(--line, #aebfb6); border-radius: 7px; background: var(--panel, #eef4f1); color: var(--ink, inherit); cursor: pointer; }
-.vpv-eye:hover { background: var(--soft, #dcebe4); border-color: var(--accent, #aebfb6); }
-.vpv-eye:focus-visible { outline: 2px solid #1d6fd1; outline-offset: 2px; }
+/* Hover preview pop-up (preview-tip.js). Used by the admin and by the on-page editor; it carries its own colours so it looks the same in both.
+   Theme: the admin follows prefers-color-scheme; the site (and so the on-page editor) also has a manual toggle, html[data-theme="light|dark"], which wins. */
+.vpv-tip, .vpv-eye, .vpv-demo {
+  --vpv-bg: #fff; --vpv-ink: #122019; --vpv-text: #46564e; --vpv-line: #8fa89c; --vpv-well: #e8efeb; --vpv-shadow: rgba(0, 0, 0, .28);
+  --vpv-btn: #eef4f1; --vpv-btn-line: #aebfb6; --vpv-btn-hover: #dcebe4; --vpv-card-a: #2f8f6b; --vpv-card-b: #1c8a74; --vpv-card-shadow: rgba(0, 0, 0, .2);
+}
+:root[data-theme="dark"] .vpv-tip, :root[data-theme="dark"] .vpv-eye, :root[data-theme="dark"] .vpv-demo {
+  --vpv-bg: #15201d; --vpv-ink: #e7efeb; --vpv-text: #a9bbb4; --vpv-line: #3b514a; --vpv-well: #0c1311; --vpv-shadow: rgba(0, 0, 0, .6);
+  --vpv-btn: #1f322a; --vpv-btn-line: #3d5b4f; --vpv-btn-hover: #2a4439; --vpv-card-a: #4cc9ad; --vpv-card-b: #2f8f6b; --vpv-card-shadow: rgba(0, 0, 0, .55);
+}
 @media (prefers-color-scheme: dark) {
-  .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }
-  .vpv-text { color: #a9bbb4; }
-  .vpv-img { background: #0c1311; }
+  :root:not([data-theme="light"]) .vpv-tip, :root:not([data-theme="light"]) .vpv-eye, :root:not([data-theme="light"]) .vpv-demo {
+    --vpv-bg: #15201d; --vpv-ink: #e7efeb; --vpv-text: #a9bbb4; --vpv-line: #3b514a; --vpv-well: #0c1311; --vpv-shadow: rgba(0, 0, 0, .6);
+    --vpv-btn: #1f322a; --vpv-btn-line: #3d5b4f; --vpv-btn-hover: #2a4439; --vpv-card-a: #4cc9ad; --vpv-card-b: #2f8f6b; --vpv-card-shadow: rgba(0, 0, 0, .55);
+  }
 }
 
-/* live demonstrations of effects */
-.vpv-demo { height: 110px; margin-bottom: 8px; border-radius: 8px; background: #e8efeb; display: grid; place-items: center; overflow: hidden; }
+.vpv-tip { position: fixed; z-index: 2147483200; width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: hidden; box-sizing: border-box; padding: 10px; border-radius: 12px;
+  background: var(--vpv-bg); color: var(--vpv-ink); border: 1px solid var(--vpv-line); box-shadow: 0 8px 28px var(--vpv-shadow); pointer-events: none; font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: left; }
+.vpv-tip[hidden] { display: none; }
+.vpv-img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: cover; object-position: top; border-radius: 8px; background: var(--vpv-well); margin-bottom: 8px; }
+.vpv-img-missing { display: grid; place-items: center; height: 72px; margin-bottom: 8px; border-radius: 8px; background: var(--vpv-well); color: var(--vpv-text); font-size: 12px; }
+.vpv-title { display: block; font-size: 14px; margin-bottom: 3px; }
+.vpv-text { margin: 0; color: var(--vpv-text); }
+.vpv-eye { font: inherit; line-height: 1; min-width: 32px; min-height: 32px; padding: 4px 6px; border: 1px solid var(--vpv-btn-line); border-radius: 7px; background: var(--vpv-btn); color: var(--vpv-ink); cursor: pointer; }
+.vpv-eye:hover { background: var(--vpv-btn-hover); border-color: var(--accent, var(--vpv-btn-line)); }
+.vpv-eye:focus-visible { outline: 2px solid #1d6fd1; outline-offset: 2px; }
+
+/* live demonstrations of effects: the palette follows the theme like the pictures do */
+.vpv-demo { height: 110px; margin-bottom: 8px; border-radius: 8px; background: var(--vpv-well); display: grid; place-items: center; overflow: hidden; }
 .vpv-demo-reveal { display: flex; gap: 10px; align-items: center; justify-content: center; }
-.vpv-d-card { width: 74px; height: 62px; border-radius: 10px; background: linear-gradient(135deg, #2f8f6b, #1c8a74); box-shadow: 0 6px 14px rgba(0, 0, 0, .2); }
+.vpv-d-card { width: 74px; height: 62px; border-radius: 10px; background: linear-gradient(135deg, var(--vpv-card-a), var(--vpv-card-b)); box-shadow: 0 6px 14px var(--vpv-card-shadow); }
 .vpv-d-float { animation: vpv-float 3.2s ease-in-out infinite; }
 .vpv-d-reveal { animation: vpv-reveal 3s ease-out infinite; opacity: 0; }
 .vpv-d-reveal:nth-child(2) { animation-delay: .35s; }

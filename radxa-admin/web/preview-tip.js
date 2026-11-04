@@ -40,7 +40,18 @@
   /** Where the pointer of a touch-and-hold counts as "still holding": moving further than this cancels the long press (the user is scrolling). */
   const holdMoved = (dx, dy, slop = 10) => Math.hypot(dx, dy) > slop;
 
-  const pure = { keyOf, describe, place, holdMoved, GAP, MARGIN, HOVER_DELAY, LONG_PRESS };
+  /** The picture of the other theme lives next to the light one: previews/x.webp (light) and previews/x-dark.webp (dark). */
+  const themedImage = (src, dark) => (dark && src ? src.replace(/(-dark)?\.webp$/, "-dark.webp") : src ? src.replace(/-dark\.webp$/, ".webp") : "");
+
+  /** Dark when the page says so (html[data-theme], the site's manual toggle) or, without such a choice, when the system does. */
+  function isDark(doc = root.document, mql = root.matchMedia) {
+    const chosen = doc && doc.documentElement && doc.documentElement.dataset ? doc.documentElement.dataset.theme : "";
+    if (chosen === "dark") return true;
+    if (chosen === "light") return false;
+    try { return !!(mql && mql.call(root, "(prefers-color-scheme: dark)").matches); } catch { return false; }
+  }
+
+  const pure = { keyOf, describe, place, holdMoved, themedImage, isDark, GAP, MARGIN, HOVER_DELAY, LONG_PRESS };
   if (typeof document === "undefined") return pure;
 
   /* ---------- the pop-up ---------- */
@@ -68,10 +79,27 @@
     return box;
   }
 
+  /** The picture, in the theme's version. A load that fails (a cold or busy server) is retried once with a cache-buster, then tried in the other theme's
+   *  version, and only then replaced by a short note, so the pop-up never shows a broken-image icon and keeps its words. */
+  function picture(info) {
+    const dark = isDark(), tries = [themedImage(info.image, dark), themedImage(info.image, dark) + "?r=1", themedImage(info.image, !dark)];
+    const img = Object.assign(el("img", "vpv-img"), { alt: "", width: 480, decoding: "async", loading: "eager" });
+    let n = 0;
+    img.addEventListener("error", () => {
+      n++;
+      if (n < tries.length) setTimeout(() => { img.src = tries[n]; }, n === 1 ? 150 : 0);
+      else { img.replaceWith(el("div", "vpv-img-missing", "Картинка недоступна")); layout(); }
+    });
+    img.src = tries[0];
+    return img;
+  }
+
+  let lastInfo = null;
   function fill(info, key) {
+    lastInfo = info;
     const t = ensureTip();
     t.dataset.key = key;
-    const media = info.demo ? demo(info.demo) : info.image ? Object.assign(el("img", "vpv-img"), { src: info.image, alt: "", width: 480, decoding: "async" }) : null;
+    const media = info.demo ? demo(info.demo) : info.image ? picture(info) : null;
     t.replaceChildren(...[media, el("strong", "vpv-title", info.title), info.text ? el("p", "vpv-text", info.text) : null].filter(Boolean));
     t.hidden = false;
     t.style.visibility = "hidden";
@@ -153,6 +181,10 @@
   document.addEventListener("pointerdown", (e) => { if (pinned && shown && !shown.contains(e.target) && !tip.contains(e.target)) hide(); }, true);
   window.addEventListener("scroll", layout, { passive: true, capture: true });
   window.addEventListener("resize", layout);
+  // The theme can change while a pop-up is open (the site's toggle, or the system): redraw it with the matching picture.
+  const retheme = () => { if (shown && tip && !tip.hidden && lastInfo) fill(lastInfo, tip.dataset.key); };
+  try { root.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme); } catch { /* old browsers */ }
+  try { new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch { /* no MutationObserver */ }
 
   return { ...pure, attach, eyeButton, show, hide, loadManifest, isOpen: () => !!shown && !!tip && !tip.hidden };
 });

@@ -114,9 +114,9 @@ Each card supports translated `title`, `summary`, `status`, plus `category`, `im
 ### Procedural models, environment and posters
 
 Models are generated, not drawn (`node tools/make-models.mjs`): rounded boxes and lathe solids with smooth normals on the bevels, instanced components,
-PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Seven models: process controller v1 and v2 (real GLB exported from Blender, with an optional per-card `orbit` start camera in `data/products.json`), custom board, sensor node (projects) and
+PBR materials, and small generated PNG textures (solder mask, silkscreen, screens). Eleven models, two of them the IoT/automation cards **Toyota Prius HV-battery monitor** (`toyota-hv-display`) and **LVGL smartwatch** (`lvgl-smartwatch`: rounded case with glass over a home-menu screen, crown in the theme `accent`, strap loop, charging dock; the screen texture is drawn in `tools/models/models.mjs`, the photos in `assets/portfolio/lvgl-smartwatch/` are only the reference). Both cards live in the filter "IoT & automation" (`category: "automation"`, next to the service "IoT та автоматизація"). Earlier models: process controller v1 and v2 (real GLB exported from Blender, with an optional per-card `orbit` start camera in `data/products.json`), custom board, sensor node (projects) and
 software laptop, electronics in an enclosure, AI network (services). Each is below 400 KB (budget 600 KB; a test enforces it) and byte-for-byte reproducible
-(a test fails when a committed file is stale, so run the generator after changing `tools/models/`).
+(a test fails when a committed file is stale, so run the generator after changing `tools/models/`). Material colours are rounded to 6 decimals, so the files are identical on every platform (before, `Math.pow` noise in the last digit made one GLB "stale" on another machine).
 
 | Command | Writes |
 | --- | --- |
