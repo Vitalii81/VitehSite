@@ -825,9 +825,9 @@
       {
         "id": "automation",
         "label": {
-          "uk": "Автоматизація",
-          "en": "Automation",
-          "de": "Automatisierung"
+          "uk": "IoT та автоматизація",
+          "en": "IoT & automation",
+          "de": "IoT & Automatisierung"
         }
       }
     ],

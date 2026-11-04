@@ -63,3 +63,21 @@ test("the shipped manifest only holds keys of the form kind:id and relative pict
     if (entry.image) assert.match(entry.image, /^previews\/[A-Za-z0-9_-]+\.webp$/);
   }
 });
+
+test("themedImage: the dark picture is the light one with a -dark suffix, and back", () => {
+  assert.equal(P.themedImage("previews/service-s10.webp", false), "previews/service-s10.webp");
+  assert.equal(P.themedImage("previews/service-s10.webp", true), "previews/service-s10-dark.webp");
+  assert.equal(P.themedImage("previews/service-s10-dark.webp", true), "previews/service-s10-dark.webp");
+  assert.equal(P.themedImage("previews/service-s10-dark.webp", false), "previews/service-s10.webp");
+  assert.equal(P.themedImage("", true), "");
+});
+
+test("isDark: the page's own choice (html[data-theme]) wins over the system", () => {
+  const doc = (theme) => ({ documentElement: { dataset: theme ? { theme } : {} } });
+  const system = (dark) => function () { return { matches: dark }; };
+  assert.equal(P.isDark(doc("dark"), system(false)), true);
+  assert.equal(P.isDark(doc("light"), system(true)), false);
+  assert.equal(P.isDark(doc(""), system(true)), true);
+  assert.equal(P.isDark(doc(""), system(false)), false);
+  assert.equal(P.isDark(doc(""), undefined), false);
+});

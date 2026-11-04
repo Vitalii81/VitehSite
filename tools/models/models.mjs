@@ -434,6 +434,81 @@ export function toyotaDisplay(scene) {
   scene.inst(grommet);
 }
 
+/* ---------- 9. project: LVGL smartwatch (square rounded case, glass over a home-menu screen, crown, strap loop on a dock) ---------- */
+function watchTextures(scene) {
+  const W = 288, H = 352, s = new Raster(W, H, [0, 0, 0, 255]);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x += 4) {            // diagonal violet-to-blue wallpaper in the spirit of the real firmware
+    const t = (x / W) * 0.55 + (y / H) * 0.45, band = Math.sin(t * 9) * 0.5 + 0.5;
+    s.rect(x, y, 4, 1, [Math.round(40 + 120 * (1 - t) * band), Math.round(18 + 30 * band), Math.round(110 + 110 * t), 255]);
+  }
+  const green = [92, 232, 120, 255], yellow = [236, 236, 96, 255], orange = [250, 170, 70, 255], white = [244, 246, 250, 255], blue = [60, 130, 240, 255];
+  s.text("BAT 60 DCHG 00:38", 22, 12, 2, green);
+  s.text("01:41:28", 24, 40, 5, yellow);
+  s.rect(40, 92, 208, 30, [40, 20, 20, 190]); s.text("2026-05-14", 54, 98, 3, orange);
+  const tile = (col, row) => { const x = 22 + col * 88, y = 148 + row * 92; s.rect(x, y, 80, 80, [28, 36, 120, 255]); s.frame(x, y, 80, 80, 3, blue); return [x, y]; };
+  let [x, y] = tile(0, 0);                                                 // volume
+  s.rect(x + 14, y + 30, 14, 20, blue); s.line(x + 28, y + 30, x + 46, y + 18, 5, blue); s.line(x + 28, y + 50, x + 46, y + 62, 5, blue); s.rect(x + 40, y + 20, 8, 40, blue); s.ring(x + 54, y + 40, 14, 3, white);
+  [x, y] = tile(1, 0);                                                     // lock
+  s.ring(x + 40, y + 28, 15, 5, white); s.rect(x + 14, y + 38, 52, 32, green); s.disc(x + 40, y + 52, 5, [20, 50, 40, 255]);
+  [x, y] = tile(2, 0);                                                     // calendar
+  s.rect(x + 12, y + 14, 56, 54, white); s.rect(x + 12, y + 14, 56, 14, [230, 70, 60, 255]);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) s.rect(x + 18 + i * 17, y + 34 + j * 11, 11, 6, [60, 70, 140, 255]);
+  [x, y] = tile(0, 1);                                                     // workout
+  s.rect(x + 14, y + 26, 10, 28, green); s.rect(x + 56, y + 26, 10, 28, green); s.rect(x + 24, y + 38, 32, 5, white); s.rect(x + 8, y + 32, 6, 16, green); s.rect(x + 66, y + 32, 6, 16, green);
+  [x, y] = tile(1, 1);                                                     // chat / network
+  s.ring(x + 36, y + 42, 22, 3, blue); s.rect(x + 14, y + 42, 44, 3, blue); s.rect(x + 34, y + 20, 3, 44, blue); s.rect(x + 40, y + 12, 32, 22, [236, 190, 70, 255]); s.disc(x + 50, y + 23, 3, [60, 50, 30, 255]); s.disc(x + 58, y + 23, 3, [60, 50, 30, 255]);
+  [x, y] = tile(2, 1);                                                     // settings gear
+  for (let a = 0; a < 8; a++) s.disc(x + 40 + Math.cos(a * Math.PI / 4) * 22, y + 40 + Math.sin(a * Math.PI / 4) * 22, 7, [190, 200, 235, 255]);
+  s.disc(x + 40, y + 40, 20, white); s.disc(x + 40, y + 40, 9, [28, 36, 120, 255]);
+  scene.texture("screenWatch", s, { opaque: true });
+}
+
+export function smartwatch(scene) {
+  watchTextures(scene);
+  const bw = 4.2, bh = 5.0, bd = 1.0, y0 = 3.55, tilt = -0.1;           // case width / height / depth, height of its centre, backward lean
+  const watch = scene.part("watch-case");
+  roundedBox(watch.geo("graphite"), { size: [bw, bh, bd], r: 0.8, n: 5, at: [0, 0, 0] });
+  roundedBox(watch.geo("plastic"), { size: [bw - 0.14, bh - 0.14, 0.1], r: 0.74, n: 4, at: [0, 0, bd / 2 - 0.02] });                // bezel step
+  roundedBox(watch.geo("glass"), { size: [bw - 0.3, bh - 0.3, 0.1], r: 0.66, n: 5, at: [0, 0, bd / 2 + 0.02] });                      // domed cover glass
+  roundedBox(watch.geo("rubber"), { size: [bw - 0.55, bh - 0.55, 0.02], r: 0.5, n: 3, at: [0, 0, bd / 2 + 0.078] });                   // black border of the panel
+  quadUV(watch.geo("screenWatch", true), [[-1.67, -2.05, bd / 2 + 0.092], [1.67, -2.05, bd / 2 + 0.092], [1.67, 2.05, bd / 2 + 0.092], [-1.67, 2.05, bd / 2 + 0.092]], [0, 0, 1], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  cylinder(watch.geo("graphite"), { r: 0.78, h: 0.1, bevel: 0.03, seg: 36, axis: "z", at: [0, 0, -bd / 2 - 0.04] });                    // sensor window on the back
+  torus(watch.geo("steel"), { R: 0.62, t: 0.03, seg: 36, tube: 8, axis: "z", at: [0, 0, -bd / 2 - 0.09] });
+  cylinder(watch.geo("accent"), { r: 0.24, h: 0.42, bevel: 0.05, seg: 24, axis: "x", at: [bw / 2 + 0.16, 0.85, 0] });                    // crown (recoloured by the theme)
+  cylinder(watch.geo("steel"), { r: 0.15, h: 0.12, seg: 20, axis: "x", at: [bw / 2 + 0.02, 0.85, 0] });
+  roundedBox(watch.geo("graphite"), { size: [0.18, 0.9, 0.34], r: 0.07, n: 2, at: [bw / 2 + 0.04, -0.5, 0] });                          // side key
+  for (const sy of [-1, 1]) roundedBox(watch.geo("alu"), { size: [bw - 1.0, 0.14, 0.34], r: 0.05, n: 1, at: [0, sy * (bh / 2 + 0.02), -0.1] });   // strap lugs
+  scene.inst(watch, { at: [0, y0, 0.2], rot: [tilt, 0, 0] });
+
+  // strap: a chain of curved segments that runs from the lugs round the back, so the watch stands in its own loop
+  const strapW = 3.3, th = 0.16;
+  const seg = (name, mat, len) => { const p = scene.part(name); roundedBox(p.geo(mat), { size: [strapW, len, th], r: 0.05, n: 1 }); return p; };
+  const chain = (pts, name, mat) => {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1], dy = b[1] - a[1], dz = b[2] - a[2], len = Math.hypot(dy, dz);
+      scene.inst(seg(`${name}-${i}`, mat, len * 1.04), { at: [0, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], rot: [Math.atan2(dz, dy), 0, 0] });
+    }
+  };
+  const c = Math.cos(tilt), sn = Math.sin(tilt);
+  const lug = (sy) => [y0 + sy * (bh / 2 + 0.05) * c, 0.2 + sy * (bh / 2 + 0.05) * sn - 0.06];         // [y, z] of a lug in world space
+  const [yt, zt] = lug(1), [yb, zb] = lug(-1);
+  chain(bezier([0, yt, zt], [0, yt + 1.4, zt - 0.2], [0, yt + 1.5, zt - 2.0], [0, yt - 0.9, zt - 2.9], 7), "strap-top", "rubber");
+  chain(bezier([0, yb, zb], [0, yb - 0.5, zb - 0.1], [0, 0.7, zb - 1.4], [0, 1.1, zb - 2.7], 7), "strap-bottom", "graphite");
+  const buckle = scene.part("buckle");
+  roundedBox(buckle.geo("steel"), { size: [strapW + 0.12, 0.34, 0.26], r: 0.07, n: 2 });
+  scene.inst(buckle, { at: [0, yt - 0.9, zt - 2.9], rot: [0.9, 0, 0] });
+  const keeper = scene.part("keeper");
+  roundedBox(keeper.geo("accent"), { size: [strapW + 0.1, 0.22, th + 0.08], r: 0.05, n: 2 });
+  scene.inst(keeper, { at: [0, yt + 0.85, zt - 0.35], rot: [-0.5, 0, 0] });
+
+  const dock = scene.part("dock");                                      // charging dock the watch leans on
+  roundedBox(dock.geo("alu"), { size: [5.4, 0.3, 3.8], r: 0.14, n: 2, at: [0, 0.15, -0.7] });
+  roundedBox(dock.geo("accent"), { size: [4.6, 0.04, 0.12], r: 0.02, n: 1, at: [0, 0.31, 0.95] });
+  roundedBox(dock.geo("rubber"), { size: [5.1, 0.04, 3.5], r: 0.05, n: 1, at: [0, 0.01, -0.7] });
+  roundedBox(dock.geo("graphite"), { size: [2.2, 1.0, 0.7], r: 0.2, n: 3, at: [0, 0.75, -0.55] });
+  scene.inst(dock);
+}
+
 export const MODEL_BUILDERS = {
   "custom-electronics": customElectronics,
   "sensor-node": sensorNode,
@@ -444,4 +519,5 @@ export const MODEL_BUILDERS = {
   "device-monitor": deviceMonitor,
   "agent-assistant": agentAssistant,
   "toyota-hv-display": toyotaDisplay,
+  "lvgl-smartwatch": smartwatch,
 };

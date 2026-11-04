@@ -300,6 +300,22 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(r["ok"], r)
         self.assertEqual(self.w.read(r["id"], "index.html"), read_file(os.path.join(self.w.src, "index.html")))
 
+    def test_the_iot_cards_toyota_and_smartwatch_can_be_switched_off(self):
+        ids = ("toyota-hv-monitor", "lvgl-smartwatch")
+        factory = [p["id"] for p in read_json_file(os.path.join(self.w.src, "data/products.json"))]
+        for pid in ids:
+            self.assertIn(pid, factory)
+        r = build.build(self.w.paths)                                                       # empty draft: the factory site, both cards in
+        for pid in ids:
+            self.assertIn(pid, [p["id"] for p in json.loads(self.w.read(r["id"], "data/products.json"))])
+        d = self.w.draft()
+        d["disabled"]["projects"] = list(ids)
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        built = json.loads(self.w.read(r["id"], "data/products.json"))
+        self.assertEqual([p["id"] for p in built if p["id"] in ids], [])
+        self.assertEqual(len(built), len(factory) - 2)
+
     def test_disabled_things_are_removed_not_hidden(self):
         d = self.w.draft()
         d["sections"].update({"faq": False, "stack": False, "trust": False, "ai": False})
@@ -1032,20 +1048,57 @@ class PreviewTests(unittest.TestCase):
         for p in self.catalog["factory"]["projects"]:
             self.assertTrue(p["title"] and p["summary"], p["id"])
 
+    @staticmethod
+    def dark_of(image):
+        return re.sub(r"\.webp$", "-dark.webp", image)
+
     def test_pictures_exist_are_webp_and_small(self):
         for key, entry in self.manifest.items():
             if not entry.get("image"):
                 continue
-            path = os.path.normpath(os.path.join(self.WEB, entry["image"]))
-            self.assertTrue(path.startswith(os.path.join(self.WEB, "previews") + os.sep), "%s points outside previews/" % key)
-            self.assertTrue(os.path.isfile(path), "%s: %s is missing (node tools/make-admin-previews.mjs)" % (key, entry["image"]))
-            with open(path, "rb") as fh:
-                head = fh.read(12)
-            self.assertTrue(head[:4] == b"RIFF" and head[8:12] == b"WEBP", "%s is not a WebP" % entry["image"])
-            self.assertLessEqual(os.path.getsize(path), self.MAX_BYTES, entry["image"])
+            for image in (entry["image"], self.dark_of(entry["image"])):          # light and dark theme: preview-tip.js picks one by convention
+                self.check_picture(key, image)
+
+    def check_picture(self, key, image):
+        path = os.path.normpath(os.path.join(self.WEB, image))
+        self.assertTrue(path.startswith(os.path.join(self.WEB, "previews") + os.sep), "%s points outside previews/" % key)
+        self.assertTrue(os.path.isfile(path), "%s: %s is missing (node tools/make-admin-previews.mjs)" % (key, image))
+        with open(path, "rb") as fh:
+            head = fh.read(12)
+        self.assertTrue(head[:4] == b"RIFF" and head[8:12] == b"WEBP", "%s is not a WebP" % image)
+        self.assertLessEqual(os.path.getsize(path), self.MAX_BYTES, image)
+
+    def test_every_picture_has_a_dark_twin_that_really_is_darker(self):
+        # a light picture in the dark popup was defect 3: the two versions must exist AND differ in brightness, or the theme switch is a no-op
+        try:
+            from PIL import Image
+        except ImportError:
+            Image = None
+        for key, entry in self.manifest.items():
+            if not entry.get("image"):
+                continue
+            self.assertFalse(entry["image"].endswith("-dark.webp"), "%s: the manifest names the light picture, the dark one is found by the -dark suffix" % key)
+            light, dark = (os.path.join(self.WEB, i) for i in (entry["image"], self.dark_of(entry["image"])))
+            self.assertTrue(os.path.isfile(dark), "%s has no dark picture (node tools/make-admin-previews.mjs --theme dark)" % key)
+            if Image:
+                mean = lambda f: Image.open(f).convert("L").resize((1, 1)).getpixel((0, 0))
+                self.assertLess(mean(dark), mean(light), "%s: the dark picture is not darker than the light one" % key)
+
+    def test_popup_and_editor_colours_follow_the_theme_and_the_manual_toggle(self):
+        tip = read_file(os.path.join(self.WEB, "preview-tip.css"))
+        overlay = read_file(os.path.join(self.WEB, "edit-overlay.css"))
+        for name, css in (("preview-tip.css", tip), ("edit-overlay.css", overlay)):
+            self.assertIn(':root[data-theme="dark"]', css, "%s: the site's manual dark toggle must be honoured" % name)
+            self.assertIn(':root:not([data-theme="light"])', css, "%s: a manual light choice must beat a dark system" % name)
+            self.assertIn("prefers-color-scheme: dark", css, name)
+        # the live demos and the picture well used to have a hard-coded light background (#e8efeb) that stayed light in the dark theme
+        for rule in re.findall(r"^\.vpv-(?:demo|img|d-card)[^{]*\{[^}]*\}", tip, re.M):
+            self.assertIsNone(re.search(r"background:\s*(?:linear-gradient\()?[^;]*#[0-9a-fA-F]{3,6}", rule), "a literal colour in a themed rule: " + rule)
+        self.assertIn("themedImage", read_file(os.path.join(self.WEB, "preview-tip.js")))
 
     def test_every_picture_in_the_folder_is_used(self):
         used = {os.path.basename(e["image"]) for e in self.manifest.values() if e.get("image")}
+        used |= {self.dark_of(n) for n in used}
         have = {n for n in os.listdir(os.path.join(self.WEB, "previews")) if n.endswith(".webp")}
         self.assertEqual(have - used, set(), "unused previews: delete them or add them to the manifest")
 
