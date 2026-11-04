@@ -78,7 +78,10 @@
       "BLE",
       "Wi-Fi",
       "MQTT"
-    ]
+    ],
+    "model": "assets/models/iot-module.glb",
+    "poster": "assets/posters/iot-module",
+    "orbit": "-28deg 52deg 98%"
   },
   {
     "id": "custom-electronics",
@@ -130,7 +133,9 @@
       "RAG",
       "Claude",
       "API"
-    ]
+    ],
+    "model": "assets/models/agent-assistant.glb",
+    "poster": "assets/posters/agent-assistant"
   },
   {
     "id": "device-monitor",
@@ -155,7 +160,9 @@
       "TypeScript",
       "PostgreSQL",
       "MQTT"
-    ]
+    ],
+    "model": "assets/models/device-monitor.glb",
+    "poster": "assets/posters/device-monitor"
   },
   {
     "id": "sensor-node",

@@ -245,42 +245,135 @@ const quatBetween = (a, b) => {                              // rotation taking 
 };
 
 export function serviceAi(scene) {
+  // One calm composition: a glowing core with two rings, six nodes on a single orbit, one straight link per node, a base plate.
   const core = scene.part("core");
-  sphere(core.geo("glow"), { r: 0.62, seg: 40, rings: 20 });
-  const ring = scene.part("core-ring");
-  torus(ring.geo("chrome"), { R: 1.0, t: 0.045, seg: 56, tube: 12 });
-  for (const [rx, rz] of [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]]) scene.inst(ring, { rot: [rx, 0, rz] });
+  sphere(core.geo("glow"), { r: 0.72, seg: 40, rings: 20 });
   scene.inst(core);
+  const ring = scene.part("core-ring");
+  torus(ring.geo("chrome"), { R: 1.12, t: 0.045, seg: 56, tube: 12 });
+  scene.inst(ring, { rot: [0.0, 0, 0] });
+  scene.inst(ring, { rot: [Math.PI / 2, 0, 0.0], s: 1.0 });
   const orbit = scene.part("orbit");
-  torus(orbit.geo("steel"), { R: 2.65, t: 0.022, seg: 96, tube: 8 });
-  scene.inst(orbit, { rot: [0.0, 0, 0] });
-  scene.inst(orbit, { rot: [1.05, 0, 0.35], s: 1 });
-  scene.inst(orbit, { rot: [-0.9, 0, -0.6], s: 1 });
+  torus(orbit.geo("steel"), { R: 2.5, t: 0.026, seg: 96, tube: 8 });
+  scene.inst(orbit);
   const link = scene.part("link");
-  cylinder(link.geo("steel"), { r: 0.035, h: 1, seg: 10, at: [0, 0.5, 0] });
-  const mats = ["accent", "indigo", "amber", "glow", "chrome", "accent", "glowIndigo", "amber", "indigo", "accent"];
-  const sat = (m, r) => { const p = scene.part(`sat-${m}-${r}`); sphere(p.geo(m), { r, seg: 32, rings: 16 }); return p; };
-  const N = 10, pts = [];
-  for (let i = 0; i < N; i++) {                              // Fibonacci sphere: evenly spread satellites
-    const y = 1 - (i / (N - 1)) * 2, rad = Math.sqrt(1 - y * y), th = i * 2.399963;
-    const p = [Math.cos(th) * rad * 2.65, y * 2.2, Math.sin(th) * rad * 2.65];
-    pts.push(p);
-    scene.inst(sat(mats[i], 0.3 + (i % 3) * 0.07), { at: p });
-    const len = Math.hypot(...p), dir = p.map((v) => v / len);
-    scene.inst(link, { at: [dir[0] * 0.62, dir[1] * 0.62, dir[2] * 0.62], quat: quatBetween([0, 1, 0], dir), s: [1, len - 1.1, 1] });
-    const packet = scene.part("packet"); if (!packet.geos.size) sphere(packet.geo("glow"), { r: 0.075, seg: 12, rings: 6 });
-    scene.inst(packet, { at: dir.map((v) => v * (len * (0.38 + (i % 3) * 0.13))) });
-  }
-  for (let i = 0; i < N; i += 2) {                           // a few satellite-to-satellite links
-    const a = pts[i], b = pts[(i + 3) % N];
-    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], len = Math.hypot(...d), dir = d.map((v) => v / len);
-    const thin = scene.part("link-glow"); if (!thin.geos.size) cylinder(thin.geo("glowIndigo"), { r: 0.022, h: 1, seg: 8, at: [0, 0.5, 0] });
-    scene.inst(thin, { at: a, quat: quatBetween([0, 1, 0], dir), s: [1, len, 1] });
+  cylinder(link.geo("steel"), { r: 0.04, h: 1, seg: 10, at: [0, 0.5, 0] });
+  const mats = ["accent", "indigo", "amber", "glow", "accent", "indigo"];
+  const sat = (m) => { const p = scene.part(`sat-${m}`); sphere(p.geo(m), { r: 0.36, seg: 32, rings: 16 }); return p; };
+  for (let i = 0; i < 6; i++) {
+    const th = (i * Math.PI) / 3 + 0.3, p = [Math.cos(th) * 2.5, 0, Math.sin(th) * 2.5];
+    scene.inst(sat(mats[i]), { at: p });
+    const dir = [Math.cos(th), 0, Math.sin(th)], from = 1.12, len = 2.5 - from - 0.36;
+    scene.inst(link, { at: dir.map((v) => v * from), quat: quatBetween([0, 1, 0], dir), s: [1, len, 1] });
   }
   const base = scene.part("base");
-  cylinder(base.geo("graphite"), { r: 2.5, h: 0.18, bevel: 0.05, seg: 64, at: [0, -2.45, 0] });
-  torus(base.geo("glow"), { R: 2.25, t: 0.025, seg: 64, tube: 8, at: [0, -2.35, 0] });
+  cylinder(base.geo("graphite"), { r: 3.1, h: 0.18, bevel: 0.05, seg: 64, at: [0, -0.9, 0] });
+  torus(base.geo("glow"), { R: 2.85, t: 0.025, seg: 64, tube: 8, at: [0, -0.8, 0] });
   scene.inst(base);
+}
+
+/* ---------- 6. project: IoT module (a development board: carrier PCB, radio module with a PCB antenna, headers, USB-C, buttons, LEDs) ---------- */
+export function iotModule(scene) {
+  const P = makeParts(scene);
+  const pcb = scene.part("carrier-pcb");                                                                      // carrier board, x from -2.4 to 2.4
+  roundedBox(pcb.geo("accent"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
+  for (const [x, z] of [[-2.15, -1.12], [-2.15, 1.12], [2.15, -1.12], [2.15, 1.12]]) { disc(pcb.geo("gold"), { rOut: 0.1, y: 0.146, seg: 18, at: [x, 0, z] }); }
+  scene.inst(pcb);
+  const hdr = scene.part("header"), pin = scene.part("header-pin");                                           // two rows of pin headers along the long edges
+  roundedBox(hdr.geo("plastic"), { size: [3.3, 0.26, 0.26], r: 0.02, n: 1, at: [0, 0.13, 0] });
+  cylinder(pin.geo("gold"), { r: 0.035, h: 0.34, seg: 8, at: [0, 0.17, 0] });
+  for (const z of [-1.1, 1.1]) {
+    scene.inst(hdr, { at: [-0.45, 0.14, z] });
+    for (let i = 0; i < 13; i++) scene.inst(pin, { at: [-1.95 + i * 0.25, 0.4, z] });
+  }
+  const mod = scene.part("radio-module");                                                                     // module PCB, shield can and the meander antenna that overhangs the board
+  roundedBox(mod.geo("graphite"), { size: [2.6, 0.08, 1.9], r: 0.04, n: 1, at: [0, 0.04, 0] });
+  roundedBox(mod.geo("steel"), { size: [1.65, 0.26, 1.9], r: 0.03, n: 2, at: [-0.47, 0.21, 0] });
+  roundedBox(mod.geo("alu"), { size: [1.55, 0.02, 1.8], r: 0.02, n: 1, at: [-0.47, 0.345, 0] });
+  const bar = scene.part("antenna-bar"), link = scene.part("antenna-link");
+  roundedBox(bar.geo("gold"), { size: [0.06, 0.012, 1.1], r: 0.01, n: 1, at: [0, 0.006, 0] });
+  roundedBox(link.geo("gold"), { size: [0.24, 0.012, 0.06], r: 0.01, n: 1, at: [0, 0.006, 0] });
+  scene.inst(mod, { at: [1.15, 0.14, 0] });
+  for (let i = 0; i < 4; i++) scene.inst(bar, { at: [1.15 + 0.85 + i * 0.12 * 2 - 0.04, 0.234, 0.0] , s: [1, 1, 0.82] });
+  for (let i = 0; i < 3; i++) scene.inst(link, { at: [1.15 + 0.85 + 0.12 + i * 0.24 - 0.04, 0.234, i % 2 ? -0.5 : 0.5] });
+  const usb = scene.part("usb-c");                                                                            // receptacle sits on the board; only the shell lip overhangs the edge
+  roundedBox(usb.geo("steel"), { size: [0.85, 0.3, 0.8], r: 0.09, n: 2, at: [0, 0.15, 0] });
+  roundedBox(usb.geo("graphite"), { size: [0.05, 0.1, 0.5], r: 0.025, n: 1, at: [-0.4, 0.15, 0] });
+  scene.inst(usb, { at: [-2.325, 0.14, 0] });
+  const btn = scene.part("button");
+  roundedBox(btn.geo("graphite"), { size: [0.34, 0.1, 0.34], r: 0.03, n: 1, at: [0, 0.05, 0] });
+  cylinder(btn.geo("chrome"), { r: 0.09, h: 0.07, bevel: 0.015, seg: 20, at: [0, 0.135, 0] });
+  for (const z of [-0.55, 0.55]) scene.inst(btn, { at: [-1.5, 0.14, z] });
+  scene.inst(P.soicBody, { at: [-0.62, 0.14, 0.0], s: 0.7 });
+  scene.inst(P.led("ledGreen"), { at: [-0.85, 0.14, -0.55] });
+  scene.inst(P.led("ledAmber"), { at: [-0.85, 0.14, 0.55] });
+  for (const [x, z, r] of [[-1.05, -0.35, 0], [-1.05, 0.35, 0], [-0.3, -0.5, 1.57], [-0.3, 0.5, 1.57]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, r, 0] });
+  for (const [x, z] of [[-0.3, 0.0], [0.0, -0.5]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
+}
+
+/* ---------- 7. project: device monitoring panel (a display with trends, tiles and a status bar) ---------- */
+function dashboardTextures(scene) {
+  const s = new Raster(512, 320, [13, 21, 24, 255]);
+  const rand = rng(7);
+  s.rect(0, 0, 512, 26, [20, 32, 36, 255]); s.text("DEVICES  ONLINE 24", 12, 8, 1.4, [190, 215, 210, 255]); s.disc(488, 13, 5, [76, 201, 173, 255]);
+  [[76, 201, 173], [240, 166, 90], [140, 156, 255]].forEach((c, i) => { const x = 14 + i * 108; s.rect(x, 38, 98, 46, [22, 36, 40, 255]); s.disc(x + 14, 53, 5, [...c, 255]); s.rect(x + 28, 49, 56, 6, [150, 170, 166, 255]); s.rect(x + 12, 68, 74, 8, [...c, 255]); });
+  s.rect(338, 38, 160, 46, [22, 36, 40, 255]); s.rect(352, 49, 50, 6, [150, 170, 166, 255]); s.text("OK", 352, 62, 2.4, [76, 201, 173, 255]);
+  s.rect(14, 96, 336, 200, [18, 29, 33, 255]); for (let i = 1; i < 5; i++) s.rect(14, 96 + i * 40, 336, 1, [36, 54, 58, 255]);
+  let px = 24, py = 240; for (let i = 1; i <= 16; i++) { const x = 24 + i * 20, y = 250 - Math.sin(i * 0.7) * 38 - i * 5 - rand() * 22; s.line(px, py, x, y, 3, [76, 201, 173, 255]); px = x; py = y; }
+  s.disc(px, py, 6, [255, 255, 255, 255]);
+  s.rect(362, 96, 136, 200, [18, 29, 33, 255]); [90, 140, 70, 170, 120].forEach((h, i) => s.rect(374 + i * 24, 286 - h, 16, h, [i === 3 ? 240 : 140, i === 3 ? 166 : 156, i === 3 ? 90 : 255, 255]));
+  s.rect(0, 304, 512, 16, [18, 86, 76, 255]); s.text("MQTT  OTA  ALERTS 0", 10, 308, 1, [210, 245, 238, 255]);
+  scene.texture("screenDash", s, { opaque: true });
+}
+
+export function deviceMonitor(scene) {
+  dashboardTextures(scene);
+  const stand = scene.part("stand");
+  roundedBox(stand.geo("alu"), { size: [2.6, 0.16, 1.7], r: 0.08, n: 2, at: [0, 0.08, 0.1] });
+  roundedBox(stand.geo("graphite"), { size: [0.55, 1.4, 0.3], r: 0.12, n: 2, at: [0, 0.86, -0.25] });
+  roundedBox(stand.geo("accent"), { size: [0.9, 0.025, 0.05], r: 0.012, n: 1, at: [0, 0.17, 0.85] });
+  scene.inst(stand);
+  const panel = scene.part("panel");
+  roundedBox(panel.geo("graphite"), { size: [5.8, 3.6, 0.24], r: 0.15, n: 3, at: [0, 0, 0] });
+  quadUV(panel.geo("screenDash", true), [[-2.7, -1.69, 0.126], [2.7, -1.69, 0.126], [2.7, 1.69, 0.126], [-2.7, 1.69, 0.126]], [0, 0, 1], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  roundedBox(panel.geo("accent"), { size: [0.5, 0.045, 0.02], r: 0.01, n: 1, at: [0, -1.74, 0.125] });
+  scene.inst(panel, { at: [0, 3.0, 0.0], rot: [-0.1, 0, 0] });
+  for (const [x, y, m] of [[-3.3, 1.4, "glow"], [3.3, 2.3, "amber"], [3.5, 0.6, "indigo"]]) { const node = scene.part(`node-${m}`); sphere(node.geo(m), { r: 0.22, seg: 24, rings: 12 }); scene.inst(node, { at: [x, y + 0.8, 0.6] }); }
+}
+
+/* ---------- 8. project: document AI assistant (a stack of documents read by a glowing assistant core) ---------- */
+function paperTextures(scene) {
+  const s = new Raster(256, 340, [244, 246, 244, 255]);
+  const rand = rng(11);
+  s.rect(20, 22, 110, 12, [27, 60, 100, 255]);
+  for (let i = 0; i < 17; i++) { const y = 54 + i * 16, w = 140 + Math.floor(rand() * 90); s.rect(20, y, Math.min(w, 216), 5, [110, 124, 130, 255]); }
+  s.rect(20, 150, 216, 14, [140, 156, 255, 90]);
+  scene.texture("paperDoc", s, { opaque: true });
+}
+
+export function agentAssistant(scene) {
+  paperTextures(scene);
+  const sheet = scene.part("sheet");
+  roundedBox(sheet.geo("plasticLight"), { size: [3.1, 0.06, 4.0], r: 0.04, n: 2, at: [0, 0.03, 0] });
+  const top = scene.part("sheet-top");
+  roundedBox(top.geo("plasticLight"), { size: [3.1, 0.06, 4.0], r: 0.04, n: 2, at: [0, 0.03, 0] });
+  quadUV(top.geo("paperDoc", true), [[-1.5, 0.0615, -1.95], [1.5, 0.0615, -1.95], [1.5, 0.0615, 1.95], [-1.5, 0.0615, 1.95]], [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  roundedBox(top.geo("accent"), { size: [0.5, 0.012, 0.16], r: 0.01, n: 1, at: [-0.95, 0.07, 1.62] });
+  [[0, 0, 0, 0], [0.14, 0.07, 0.05, 0.06], [-0.1, 0.14, -0.04, -0.05]].forEach(([x, y, z, r]) => scene.inst(sheet, { at: [x, y, z], rot: [0, r, 0] }));
+  scene.inst(top, { at: [0.05, 0.21, 0.02], rot: [0, 0.04, 0] });
+  const core = scene.part("assistant-core");
+  sphere(core.geo("glowIndigo"), { r: 0.55, seg: 40, rings: 20 });
+  const ring = scene.part("assistant-ring");
+  torus(ring.geo("chrome"), { R: 0.88, t: 0.04, seg: 56, tube: 12 });
+  scene.inst(core, { at: [1.55, 1.9, -0.2] });
+  scene.inst(ring, { at: [1.55, 1.9, -0.2], rot: [0.5, 0, 0.3] });
+  scene.inst(ring, { at: [1.55, 1.9, -0.2], rot: [-0.7, 0, -0.5], s: 1.12 });
+  const beam = scene.part("beam");
+  cylinder(beam.geo("glowIndigo"), { r: 0.03, h: 1, seg: 10, at: [0, 0.5, 0] });
+  const sat = (m, r) => { const p = scene.part(`sat-${m}`); sphere(p.geo(m), { r, seg: 28, rings: 14 }); return p; };
+  [[-0.9, 1.5, 0.9, "accent", 0.26], [0.3, 2.6, 0.7, "amber", 0.22], [2.5, 1.0, 0.9, "glow", 0.2]].forEach(([x, y, z, m, r]) => scene.inst(sat(m, r), { at: [x, y, z] }));
+  const a = [1.55, 1.9, -0.2], b = [0.05, 0.3, 0.02], d = b.map((v, i) => v - a[i]), len = Math.hypot(...d);
+  scene.inst(beam, { at: a, quat: quatBetween([0, 1, 0], d.map((v) => v / len)), s: [1, len, 1] });
 }
 
 export const MODEL_BUILDERS = {
@@ -289,4 +382,7 @@ export const MODEL_BUILDERS = {
   "service-software": serviceSoftware,
   "service-electronics": serviceElectronics,
   "service-ai": serviceAi,
+  "iot-module": iotModule,
+  "device-monitor": deviceMonitor,
+  "agent-assistant": agentAssistant,
 };

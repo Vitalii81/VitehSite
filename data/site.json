@@ -357,7 +357,8 @@
           }
         ],
         "model": "assets/models/service-ai.glb",
-        "poster": "assets/posters/service-ai"
+        "poster": "assets/posters/service-ai",
+        "orbit": "30deg 60deg 80%"
       },
       {
         "icon": "iot",
