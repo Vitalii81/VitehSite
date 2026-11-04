@@ -94,7 +94,7 @@ t("installer: the CGI wrapper runs the admin API (401/503 without a login) with 
   const r = spawnSync(local, [], {
     env: { PATH: process.env.PATH, REQUEST_METHOD: "GET", QUERY_STRING: "action=status", HTTP_HOST: "radxa:18082" }, encoding: "utf8", timeout: 20000,
   });
-  assert.match(r.stdout, /^Status: (401|503)\r\n/, r.stdout + r.stderr);
+  assert.match(r.stdout, /^Status: (401 Unauthorized|503 Service Unavailable)\r\n/, r.stdout + r.stderr);
   const wrapper = readFileSync(ADMIN(w, "docroot/cgi-bin/vadmin-api"), "utf8");
   assert.ok(wrapper.includes("VADMIN_ROOT='/srv/fwportal/staging/viteh-site'") && wrapper.includes("VADMIN_PREVIEW_PORT='18083'"));
   done(w);

@@ -293,8 +293,8 @@ if [ "$DRY" = 0 ]; then
   [ "$code" = 401 ] || [ "$code" = 503 ] || die "admin API: HTTP $code (expected 401 without a login, or 503 before the password is set)"
   ok "admin API answers $code without a login (the CGI runs)"
   code=$(fetch_status "http://$first:$PREVIEW_PORT/")
-  [ "$code" = 404 ] || [ "$code" = 200 ] || die "preview port: HTTP $code"
-  ok "preview port http://$first:$PREVIEW_PORT/ (404 until the first build is normal)"
+  [ "$code" = 404 ] || [ "$code" = 403 ] || [ "$code" = 200 ] || die "preview port: HTTP $code"
+  ok "preview port http://$first:$PREVIEW_PORT/ answers $code (404 or 403 until the first build is normal: empty folder, no directory listing)"
 fi
 CHANGED=0
 
