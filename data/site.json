@@ -212,9 +212,9 @@
       "de": "Illustration: Code-Fenster, Leiterplatte und miteinander verbundene KI-Agenten-Knoten"
     },
     "experience": {
-      "uk": "Інженерний досвід з 2014 року (12+ років): електроніка, прошивки, програмне забезпечення. Працював IT-інженером в Adventx і Tesla-service, а також над фріланс-проєктами.",
-      "en": "Engineering experience since 2014 (12+ years): electronics, firmware, software. Worked as an IT engineer at Adventx and Tesla-service, plus freelance projects.",
-      "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Elektronik, Firmware, Software. IT-Ingenieur bei Adventx und Tesla-service sowie Freelance-Projekte."
+      "uk": "Інженерний досвід з 2014 року (12+ років): електроніка, прошивки, програмне забезпечення, сайти й застосунки.",
+      "en": "Engineering experience since 2014 (12+ years): electronics, firmware, software, websites and apps.",
+      "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Elektronik, Firmware, Software, Webseiten und Apps."
     }
   },
   "trust": {
@@ -596,6 +596,36 @@
             "uk": "Аналіз логів і налагодження",
             "en": "Log analysis and debugging",
             "de": "Log-Analyse und Fehlersuche"
+          }
+        ]
+      },
+      {
+        "icon": "agent",
+        "title": {
+          "uk": "AI-сервер: пошта, сайт, документи",
+          "en": "AI server: mail, website, documents",
+          "de": "KI-Server: Mail, Webseite, Dokumente"
+        },
+        "text": {
+          "uk": "Приватний AI-сервер під ваші задачі. Його частини підключаються окремими опціями: власна пошта з SMTP та AI-агенти для пошти, сайту й документів.",
+          "en": "A private AI server for your tasks. Its parts are added as separate options: your own mail with SMTP and AI agents for mail, website and documents.",
+          "de": "Ein privater KI-Server für Ihre Aufgaben. Seine Teile lassen sich als einzelne Optionen hinzufügen: eigene Mail mit SMTP sowie KI-Agenten für Mail, Webseite und Dokumente."
+        },
+        "points": [
+          {
+            "uk": "Опція: власна пошта й SMTP",
+            "en": "Option: own mail and SMTP",
+            "de": "Option: eigene Mail und SMTP"
+          },
+          {
+            "uk": "Опція: AI-агент для пошти",
+            "en": "Option: AI agent for mail",
+            "de": "Option: KI-Agent für Mail"
+          },
+          {
+            "uk": "Опція: AI-агенти для сайту й документів",
+            "en": "Option: AI agents for website and documents",
+            "de": "Option: KI-Agenten für Webseite und Dokumente"
           }
         ]
       }
@@ -1100,9 +1130,9 @@
           "de": "Wie viel Erfahrung haben Sie?"
         },
         "a": {
-          "uk": "Інженерний досвід з 2014 року (12+ років): вбудовані системи, електроніка, ПЗ. Працював IT-інженером в Adventx і Tesla-service, а також над фріланс-проєктами. Видима частина робіт зібрана в портфоліо; були й внутрішні та інструментальні проєкти, які ми не показуємо.",
-          "en": "Engineering experience since 2014 (12+ years): embedded systems, electronics, software. Worked as an IT engineer at Adventx and Tesla-service, plus freelance projects. The visible part of the work is in the portfolio; there were also internal and tooling projects that we do not show.",
-          "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Embedded-Systeme, Elektronik, Software. IT-Ingenieur bei Adventx und Tesla-service sowie Freelance-Projekte. Der sichtbare Teil der Arbeit steht im Portfolio; dazu kamen interne Projekte und Werkzeuge, die wir nicht zeigen."
+          "uk": "Інженерний досвід з 2014 року (12+ років): вбудовані системи, електроніка, ПЗ, а також фріланс-проєкти. Видима частина робіт зібрана в портфоліо; були й внутрішні та інструментальні проєкти, які ми не показуємо.",
+          "en": "Engineering experience since 2014 (12+ years): embedded systems, electronics, software, plus freelance projects. The visible part of the work is in the portfolio; there were also internal and tooling projects that we do not show.",
+          "de": "Ingenieurpraxis seit 2014 (12+ Jahre): Embedded-Systeme, Elektronik, Software sowie Freelance-Projekte. Der sichtbare Teil der Arbeit steht im Portfolio; dazu kamen interne Projekte und Werkzeuge, die wir nicht zeigen."
         }
       },
       {
