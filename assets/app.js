@@ -142,7 +142,7 @@ const renderTrust = () => {
 };
 
 const renderServices = () => {
-  mount("#serviceGrid", state.site.services.items.map((item) => h("article", { class: "card reveal" },
+  mount("#serviceGrid", state.site.services.items.map((item, index) => h("article", { class: "card reveal", "data-s": String(index) },
     h("div", { class: "card-icon" }, svgIcon(item.icon)),
     h("h3", {}, tr(item.title)),
     h("p", {}, tr(item.text)),
@@ -174,7 +174,7 @@ const renderFilters = () => {
     type: "button",
     class: `filter${state.category === category.id ? " active" : ""}`,
     "aria-pressed": String(state.category === category.id),
-    onclick: () => { state.category = category.id; renderFilters(); renderProducts(); },
+    onclick: () => { state.category = category.id; renderFilters(); renderProducts(); announceGallery(); },
   }, tr(category.label))));
 };
 
@@ -199,8 +199,11 @@ const renderProducts = () => {
       ),
     );
   }));
-  // Hook for assets/gallery3d.js (optional enhancement); the data is also kept for a module that loads later.
-  const detail = { products: state.products, lang: state.lang, ui: state.site.ui };
+};
+
+/** Hook for assets/gallery3d.js (optional enhancement): announces products and services after the cards are in the DOM. */
+const announceGallery = () => {
+  const detail = { products: state.products, services: state.site.services?.items || [], lang: state.lang, ui: state.site.ui };
   window.vitehGalleryData = detail;
   document.dispatchEvent(new CustomEvent("viteh:products", { detail }));
 };
@@ -453,8 +456,10 @@ function render() {
     renderHero(); renderTrust(); renderServices(); renderAi(); renderProcess();
     renderFilters(); renderProducts(); renderStack(); renderPricing(); renderFaq(); renderContact();
     observeReveals();
+    announceGallery();
   } else if ($("#productGrid")) {
     renderFilters(); renderProducts();
+    announceGallery();
   }
   if (document.documentElement.dataset.page === "page") observeReveals();
   renderLegal();

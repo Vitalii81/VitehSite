@@ -340,7 +340,10 @@ const VIEWS = {
   services(main) {
     main.append(...head("Послуги", "Вмикайте й вимикайте послуги, додавайте власні з шаблону. Тексти заводських послуг редагуються в розділі «Тексти»."));
     for (const s of S.catalog.factory.services) {
-      main.append(h("div", { class: "card" }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v))));
+      S.draft.images.serviceModels ||= {};
+      S.draft.images.serviceModels[s.id] ??= "";
+      main.append(h("div", { class: "card" }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
+        h("div", { style: "margin-top:10px" }, imageField(S.draft.images.serviceModels, s.id, s.model ? "Замінити 3D-модель послуги (.glb)" : "Додати 3D-модель послуги (.glb)", "model"))));
     }
     S.draft.extra.services.forEach((s, i) => {
       main.append(h("div", { class: "card" }, h("div", { class: "row between" },
@@ -349,6 +352,7 @@ const VIEWS = {
       h("div", { class: "block-body", style: "margin-top:12px" },
         h("div", { class: "field" }, h("label", {}, "Іконка"), h("select", { onchange: (e) => { s.icon = e.target.value; touch(); } }, S.catalog.icons.map((x) => h("option", { value: x, selected: s.icon === x }, x)))),
         i18nField(s, "title", { max: 80, label: "Назва" }), i18nField(s, "text", { multiline: true, max: 300, label: "Опис" }),
+        imageField(s, "model", "3D-модель послуги (.glb)", "model"),
         h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` }))))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));

@@ -108,6 +108,11 @@
         "uk": "3D-перегляд недоступний на цьому пристрої.",
         "en": "3D view is not available on this device.",
         "de": "Die 3D-Ansicht ist auf diesem Gerät nicht verfügbar."
+      },
+      "noWebgl": {
+        "uk": "3D-перегляд недоступний у цьому браузері.",
+        "en": "3D view is not available in this browser.",
+        "de": "Die 3D-Ansicht ist in diesem Browser nicht verfügbar."
       }
     }
   },
@@ -281,7 +286,9 @@
             "en": "Documentation and code handover",
             "de": "Dokumentation und Code-Übergabe"
           }
-        ]
+        ],
+        "model": "assets/models/service-software.glb",
+        "poster": "assets/posters/service-software"
       },
       {
         "icon": "chip",
@@ -311,7 +318,9 @@
             "en": "Enclosures and 3D printing",
             "de": "Gehäuse und 3D-Druck"
           }
-        ]
+        ],
+        "model": "assets/models/service-electronics.glb",
+        "poster": "assets/posters/service-electronics"
       },
       {
         "icon": "agent",
@@ -341,7 +350,9 @@
             "en": "Cloud or local models",
             "de": "Cloud- oder lokale Modelle"
           }
-        ]
+        ],
+        "model": "assets/models/service-ai.glb",
+        "poster": "assets/posters/service-ai"
       },
       {
         "icon": "iot",

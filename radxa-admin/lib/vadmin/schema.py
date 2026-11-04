@@ -188,6 +188,7 @@ def clean_service(raw, ctx):
         "icon": raw.get("icon") if raw.get("icon") in ctx.icons else "code",
         "title": i18n(raw.get("title"), 80), "text": i18n(raw.get("text"), 300, True),
         "points": [i18n(p, 80) for p in points[:6]],
+        "model": upload_model_ref(raw.get("model"), ctx),
     }
 
 
@@ -253,7 +254,7 @@ def editable_texts(site):
 
 def empty_draft():
     return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": []}, "widgets": {}, "effects": {}, "texts": {},
-            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}},
+            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
             "pages": [], "forms": {}}
 
 
@@ -288,9 +289,9 @@ def sanitize(raw, ctx):
 
     imgs = raw.get("images") if isinstance(raw.get("images"), dict) else {}
     d["images"]["hero"] = image_ref(imgs.get("hero"), ctx)
-    for key, check in (("projects", image_ref), ("models", upload_model_ref)):
+    for key, check, known in (("projects", image_ref, known_p), ("models", upload_model_ref, known_p), ("serviceModels", upload_model_ref, known_s)):
         src = imgs.get(key) if isinstance(imgs.get(key), dict) else {}
-        d["images"][key] = {pid: check(v, ctx) for pid, v in src.items() if pid in known_p and check(v, ctx)}
+        d["images"][key] = {pid: check(v, ctx) for pid, v in src.items() if pid in known and check(v, ctx)}
 
     pages, seen = [], set()
     for p in (raw.get("pages") if isinstance(raw.get("pages"), list) else [])[:LIMITS["pages"]]:

@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>poster</title>
+<style>
+  html, body { margin: 0; width: 720px; height: 480px; overflow: hidden; background: #0e1816; }
+  model-viewer { width: 720px; height: 480px; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%); --poster-color: transparent; }
+</style>
+<script type="module">
+  // Development page for tools/make-posters.mjs: renders one model exactly as the live gallery does.
+  import { ModelViewerElement } from "/assets/vendor/model-viewer.min.js";
+  import { applyViewerSettings, isAccent } from "/assets/viewer-settings.js";
+  ModelViewerElement.meshoptDecoderLocation = "/assets/vendor/meshopt_decoder.js";
+  const q = new URLSearchParams(location.search);
+  const accent = q.get("theme") === "dark" ? "#4cc9ad" : "#1c8a74";          // the --accent tokens of assets/styles.css
+  const v = document.createElement("model-viewer");
+  applyViewerSettings(v, { full: false, calm: true });
+  v.removeAttribute("auto-rotate");
+  v.setAttribute("src", q.get("src"));
+  v.setAttribute("camera-orbit", q.get("orbit") || "30deg 70deg 94%");
+  document.body.append(v);
+  v.addEventListener("load", () => {
+    for (const m of v.model.materials) if (isAccent(m.name)) m.pbrMetallicRoughness.setBaseColorFactor(accent);
+    setTimeout(() => { window.__posterReady = true; }, 1800);                  // environment, shadows and tone mapping settle
+  });
+  v.addEventListener("error", (e) => { window.__posterError = String(e.detail || "load error"); });
+</script>

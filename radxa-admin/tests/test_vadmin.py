@@ -509,6 +509,90 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(snap["sections"]["stack"])
 
 
+class ServiceModelTests(unittest.TestCase):
+    """3D models on service cards: replace, add, strip when the widget is off, and the checks for missing factory files."""
+
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def test_factory_services_carry_models_and_posters_and_empty_draft_keeps_them(self):
+        r = build.build(self.w.paths)
+        site = json.loads(self.w.read(r["id"], "data/site.json"))
+        with_model = [it for it in site["services"]["items"] if it.get("model")]
+        self.assertGreaterEqual(len(with_model), 3)
+        for it in with_model:
+            self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), it["model"])))
+            for theme in ("light", "dark"):
+                self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "%s-%s.webp" % (it["poster"], theme))))
+        for rel in ("assets/env/studio.hdr", "assets/viewer-settings.js", "assets/gallery3d.js"):
+            self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), rel)), rel)
+
+    def test_replacing_a_service_model_uses_the_upload_and_drops_the_factory_poster(self):
+        model = uploads.store(self.w.paths, glb(), "mine.glb")
+        d = self.w.draft()
+        d["images"]["serviceModels"]["s0"] = model["ref"]
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        first = json.loads(self.w.read(r["id"], "data/site.json"))["services"]["items"][0]
+        self.assertEqual(first["model"], "assets/models/u-" + model["file"])
+        self.assertNotIn("poster", first)
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), first["model"])))
+
+    def test_a_new_service_can_have_a_model_and_unknown_service_ids_are_dropped(self):
+        ctx, d = self.w.ctx(), self.w.draft()
+        schema.add_from_template(d, "service", "", ctx)
+        model = uploads.store(self.w.paths, glb(), "new.glb")
+        d["extra"]["services"][0]["model"] = model["ref"]
+        d["extra"]["services"][0]["title"] = {"uk": "Нова", "en": "New", "de": "Neu"}
+        d["images"]["serviceModels"]["s999"] = model["ref"]
+        d["images"]["serviceModels"]["s1"] = "u:ffffffffffffffff"        # not an upload we know
+        clean = schema.sanitize(d, self.w.ctx())               # a fresh context sees the new upload
+        self.assertEqual(clean["images"]["serviceModels"], {})
+        self.assertEqual(clean["extra"]["services"][0]["model"], model["ref"])
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        last = json.loads(self.w.read(r["id"], "data/site.json"))["services"]["items"][-1]
+        self.assertEqual(last["model"], "assets/models/u-" + model["file"])
+
+    def test_widget_off_strips_models_posters_and_every_3d_file(self):
+        d = self.w.draft()
+        d["widgets"]["gallery3d"] = False
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        site = json.loads(self.w.read(r["id"], "data/site.json"))
+        self.assertTrue(all("model" not in it and "poster" not in it for it in site["services"]["items"]))
+        products = json.loads(self.w.read(r["id"], "data/products.json"))
+        self.assertTrue(all("model" not in p and "poster" not in p for p in products))
+        pub = self.w.site(r["id"])
+        for rel in ("assets/models", "assets/posters", "assets/env", "assets/vendor", "assets/gallery3d.js", "assets/viewer-settings.js"):
+            self.assertFalse(os.path.exists(os.path.join(pub, rel)), rel)
+        self.assertNotIn("gallery3d.js", self.w.read(r["id"], "index.html"))
+
+    def test_a_missing_factory_model_or_poster_blocks_the_build(self):
+        os.remove(os.path.join(self.w.src, "assets/models/service-ai.glb"))
+        r = build.build(self.w.paths)
+        self.assertFalse(r["ok"])
+        self.assertIn("model_missing", {p["code"] for p in r["problems"]})
+        shutil.copy(os.path.join(REPO, "assets/models/service-ai.glb"), os.path.join(self.w.src, "assets/models/service-ai.glb"))
+        os.remove(os.path.join(self.w.src, "assets/posters/service-ai-dark.webp"))
+        r = build.build(self.w.paths)
+        self.assertIn("poster_missing", {p["code"] for p in r["problems"]})
+
+    def test_disabling_the_service_or_replacing_its_model_silences_the_check(self):
+        os.remove(os.path.join(self.w.src, "assets/models/service-ai.glb"))
+        d = self.w.draft()
+        d["disabled"]["services"] = ["s2"]
+        self.w.save(d)
+        self.assertTrue(build.build(self.w.paths)["ok"])
+        model = uploads.store(self.w.paths, glb(), "m.glb")
+        d = self.w.draft()
+        d["images"]["serviceModels"]["s2"] = model["ref"]
+        self.w.save(d)
+        self.assertTrue(build.build(self.w.paths)["ok"])
+
+
 class UploadTests(Base):
     def test_accepts_the_four_image_types_and_glb_and_names_are_random(self):
         names = set()

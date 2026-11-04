@@ -65,7 +65,7 @@ def catalog(paths, ctx):
             "forms": {k: v["label"] for k, v in ctx.templates.get("forms", {}).items()},
         },
         "factory": {
-            "services": [{"id": "s%d" % i, "title": it.get("title"), "icon": it.get("icon")} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
+            "services": [{"id": "s%d" % i, "title": it.get("title"), "icon": it.get("icon"), "model": bool(it.get("model"))} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
             "projects": [{"id": p["id"], "title": p.get("title"), "image": p.get("image"), "model": bool(p.get("model"))} for p in ctx.products],
             "categories": [{"id": c["id"], "label": c["label"]} for c in ctx.site.get("work", {}).get("categories", [])],
         },

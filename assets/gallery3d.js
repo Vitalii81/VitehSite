@@ -1,10 +1,12 @@
-// 3D gallery: progressive enhancement of the product cards rendered by app.js.
-// Cards whose product has a "model" field get a "3D" button; the flat SVG stays the poster.
+// 3D gallery: progressive enhancement of the product cards and service cards rendered by app.js.
+// Cards whose item has a "model" field get a "3D" button; a rendered poster (item.poster) or the flat picture stays until the 3D scene is shown.
 // The <model-viewer> library (assets/vendor/) is imported lazily, and ONE shared viewer element
 // moves between the most visible card and the dialog, so at most one WebGL scene exists at a time.
 
 const MIN_RATIO = 0.55;     // a card must be this visible to host the live scene
 const KEEP_MARGIN = 0.2;    // hysteresis: keep the current card unless another is clearly more visible
+import { applyViewerSettings, isAccent, posterUrl } from "./viewer-settings.js";
+
 const MODEL_RE = /^assets\/models\/[\w.-]+\.glb$/;
 
 /** Only same-origin files below assets/models/ are accepted, never arbitrary URLs from JSON. */
@@ -66,17 +68,12 @@ function boot() {
   const recolor = () => {
     const color = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
     if (!viewer?.model || !color) return;
-    for (const m of viewer.model.materials) if (m.name === "accent") m.pbrMetallicRoughness.setBaseColorFactor(color);
+    for (const m of viewer.model.materials) if (isAccent(m.name)) m.pbrMetallicRoughness.setBaseColorFactor(color);
   };
 
   const makeViewer = () => {
     const v = document.createElement("model-viewer");
     v.className = "g3d-live";
-    v.setAttribute("environment-image", "neutral");
-    v.setAttribute("shadow-intensity", "0.7");
-    v.setAttribute("interaction-prompt", "none");
-    v.setAttribute("field-of-view", "30deg");           // narrower than the default: less perspective distortion
-    v.setAttribute("camera-orbit", "28deg 72deg auto");
     v.addEventListener("load", finish);
     v.addEventListener("error", () => {
       v.remove(); v.classList.remove("ready");
@@ -93,10 +90,7 @@ function boot() {
   const show = (host, product, full) => {
     viewer ??= makeViewer();
     viewer.classList.remove("ready");
-    viewer.toggleAttribute("camera-controls", full);
-    viewer.toggleAttribute("disable-zoom", !full);
-    viewer.toggleAttribute("auto-rotate", !calm());
-    viewer.setAttribute("touch-action", full ? "none" : "pan-y");
+    applyViewerSettings(viewer, { full, calm: calm() });
     viewer.setAttribute("alt", text(product.title));
     const plan = planShow({ src: viewer.getAttribute("src"), loaded: viewer.loaded }, product.model);
     if (plan.setSrc) viewer.setAttribute("src", product.model);
@@ -139,7 +133,7 @@ function boot() {
     hint.textContent = t("hint");
     closeBtn.setAttribute("aria-label", t("close"));
     status.textContent = t("loading");
-    const poster = el("img", "g3d-poster"); poster.src = product.image; poster.alt = "";
+    const poster = el("img", "g3d-poster"); poster.src = (product.poster && posterUrl(product.poster, dark())) || product.image; poster.alt = "";
     stage.replaceChildren(poster);
     viewer?.remove(); active = null;
     dlg.showModal();
@@ -152,36 +146,65 @@ function boot() {
     apply();
   }, { threshold: [0, 0.2, 0.4, 0.55, 0.7, 0.85, 1] }) : null;
 
+  const dark = () => (document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+  const posters = [];                                      // [{ img, base }] repainted when the theme changes
+  const paintPosters = () => posters.forEach(({ img, base }) => { const url = posterUrl(base, dark()); if (url) img.src = url; });
+
+  /** Collects every card that carries a model: product cards and service cards. */
+  const collect = (detail) => {
+    const list = [];
+    const products = new Map((detail.products || []).map((p) => [p.id, p]));
+    document.querySelectorAll("#productGrid .product-card[data-id]").forEach((card) => {
+      const item = products.get(card.dataset.id);
+      if (item) list.push({ id: item.id, card, item, img: card.querySelector("img") });
+    });
+    const services = detail.services || [];
+    document.querySelectorAll("#serviceGrid .card[data-s]").forEach((card) => {
+      const item = services[Number(card.dataset.s)];
+      if (item) list.push({ id: `s:${card.dataset.s}`, card, item: { ...item, id: `s:${card.dataset.s}`, image: item.image || "" }, img: null });
+    });
+    return list;
+  };
+
   const enhance = (detail) => {
     ({ ui, lang } = detail);
-    io?.disconnect(); cards.clear(); active = null; prefer = null;
+    io?.disconnect(); cards.clear(); posters.length = 0; active = null; prefer = null;
     if (!dlg?.open) viewer?.remove();
-    if (!webgl) return;                                   // no WebGL: the flat poster stays, no 3D buttons
-    const byId = new Map(detail.products.map((p) => [p.id, p]));
-    document.querySelectorAll("#productGrid .product-card[data-id]").forEach((card, order) => {
-      const product = byId.get(card.dataset.id);
-      if (!modelFor(product)) return;
-      const img = card.querySelector("img");
+    document.getElementById("g3dNote")?.remove();
+    document.querySelectorAll("#serviceGrid .g3d-media").forEach((m) => m.remove());      // service cards are not re-rendered by a product filter: start clean
+    const found = collect(detail).filter((c) => modelFor(c.item));
+    found.forEach(({ id, card, item, img }, order) => {
+      // a rendered poster of the model replaces the flat picture right away (also without WebGL)
+      let picture = img;
       const media = el("div", "g3d-media");
-      img.replaceWith(media); media.append(img);
+      if (picture) { picture.replaceWith(media); media.append(picture); }
+      else { card.prepend(media); picture = el("img"); picture.alt = ""; picture.width = 480; picture.height = 320; media.append(picture); }
+      if (item.poster && posterUrl(item.poster, false)) { posters.push({ img: picture, base: item.poster }); picture.src = posterUrl(item.poster, dark()); }
+      else if (item.image) picture.src = item.image;
+      if (!webgl) return;                                 // no WebGL: poster only, no buttons
       const button = el("button", "g3d-open"); button.type = "button";
-      button.setAttribute("aria-label", `${text(product.title)} — ${t("open")}`);
+      button.setAttribute("aria-label", `${text(item.title)} — ${t("open")}`);
       button.append(el("span", "g3d-badge", "3D"), el("span", "g3d-cap", t("open")));
-      button.addEventListener("click", () => open(product.id));
+      button.addEventListener("click", () => open(id));
       media.append(button);
-      const entry = { id: product.id, card, media, product, order, ratio: 0 };
-      cards.set(product.id, entry);
-      card.addEventListener("pointerenter", () => { prefer = product.id; apply(); });
-      card.addEventListener("focusin", () => { prefer = product.id; apply(); });
-      for (const type of ["pointerleave", "focusout"]) card.addEventListener(type, () => { if (prefer === product.id) { prefer = null; apply(); } });
+      cards.set(id, { id, card, media, product: item, order, ratio: 0 });
+      card.addEventListener("pointerenter", () => { prefer = id; apply(); });
+      card.addEventListener("focusin", () => { prefer = id; apply(); });
+      for (const type of ["pointerleave", "focusout"]) card.addEventListener(type, () => { if (prefer === id) { prefer = null; apply(); } });
       io?.observe(media);
     });
+    if (!webgl && found.length) {                         // one neutral note under the first grid, not on every card
+      const grid = found[0].card.parentElement;
+      const note = el("p", "g3d-note", t("noWebgl")); note.id = "g3dNote";
+      grid.after(note);
+    }
   };
 
   document.addEventListener("viteh:products", (event) => enhance(event.detail));
   if (window.vitehGalleryData) enhance(window.vitehGalleryData);     // app.js rendered before this module ran
-  new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", recolor);
+  const onTheme = () => { recolor(); paintPosters(); };
+  new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", onTheme);
 }
 
 if (typeof document !== "undefined") boot();
