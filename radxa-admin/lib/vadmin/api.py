@@ -4,7 +4,7 @@ import os
 import re
 from http.cookies import SimpleCookie
 
-from . import auth, build, core, schema, uploads
+from . import auth, build, core, deploy, schema, uploads
 from .core import ApiError, LANGS, locked, read_json, write_json
 
 COOKIE = "vadmin"
@@ -24,21 +24,14 @@ def _json(status, value, headers=None):
 
 
 def _https(headers):
-    """True when the browser reached us over https (Cloudflare tunnel); the private http ports never set these."""
-    return headers.get("x-forwarded-proto", "").lower() == "https" or '"scheme":"https"' in headers.get("cf-visitor", "").replace(" ", "")
+    """True when the browser reached us over https (Cloudflare tunnel). uhttpd passes CGI only a fixed set of headers (Origin, Referer,
+    Cookie, Host, ...), not X-Forwarded-Proto or CF-*, so the page's own Origin/Referer scheme is the signal; the private http ports never match."""
+    return (headers.get("origin") or headers.get("referer") or "").lower().startswith("https://")
 
 
 def _session_cookie(value, clear=False, secure=False):
     c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS, "; Secure" if secure else "")
     return [("Set-Cookie", c)]
-
-
-def _require_access(headers):
-    """A request that came through Cloudflare (it carries CF-Connecting-IP) must have passed Cloudflare Access, which adds a signed
-    Cf-Access-Jwt-Assertion header. Missing means the Access application is absent or misconfigured: fail closed. Only presence is checked;
-    the origin is reachable solely through the tunnel, loopback and the tailnet, so the header cannot be forged from the internet."""
-    if headers.get("cf-connecting-ip") and not headers.get("cf-access-jwt-assertion"):
-        raise ApiError("access_required", "Потрібен вхід через Cloudflare Access", 403)
 
 
 def _same_origin(headers):
@@ -101,7 +94,7 @@ def status(paths, host, ctx=None):
     manifest = read_json(os.path.join(paths.builds, state["built"], "manifest.json"), {}) if state.get("built") else {}
     changed = (manifest or {}).get("draftDigest") != build.draft_digest(read_draft(paths, ctx))
     return {"built": state.get("built"), "builtAt": state.get("builtAt"), "published": state.get("published"), "changedSinceBuild": changed,
-            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or "http://%s:%s/" % (name, os.environ.get("VADMIN_PREVIEW_PORT", "8083")), "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
+            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or ("https://preview." + name.split(".", 1)[1] + "/" if name.startswith("admin.") else "http://%s:%s/" % (name, os.environ.get("VADMIN_PREVIEW_PORT", "8083"))), "deploy": deploy.view(paths), "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
 
 
 def handle(paths, method, action, headers, body=b"", query=None, client="local"):
@@ -119,9 +112,8 @@ def handle(paths, method, action, headers, body=b"", query=None, client="local")
 def _handle(paths, method, action, headers, body, query, client):
     if method not in ("GET", "POST"):
         raise ApiError("method", "Метод не підтримується", 405)
-    _require_access(headers)
     if method == "POST":
-        if headers.get("x-vadmin") != "1":
+        if headers.get("x-vadmin") != "1" and not headers.get("origin"):                 # uhttpd drops X-Vadmin; a browser POST always carries Origin
             raise ApiError("csrf", "Відхилено: немає службового заголовка", 403)
         if not _same_origin(headers):
             raise ApiError("origin", "Відхилено: запит з іншого походження", 403)
@@ -210,6 +202,10 @@ def _handle(paths, method, action, headers, body, query, client):
             state["built"] = bid
             write_json(paths.state, state)
             return _json(200, {"ok": True, "draft": clean, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
+        if action == "deploy":
+            data = _body_json(body)
+            deploy.request(paths, str(data.get("id", "")))
+            return _json(200, {"ok": True, "status": status(paths, host, ctx)})
         if action == "preview":
             data = _body_json(body)
             bid = str(data.get("id", ""))

@@ -493,7 +493,7 @@ const VIEWS = {
   },
 
   builds(main) {
-    main.append(...head("Версії й публікація", "Зберігаються 20 останніх збірок. «Відкотити чернетку» повертає редактор до стану цієї збірки; публікація виконується з основного ПК."));
+    main.append(...head("Версії й публікація", "Зберігаються 20 останніх збірок. «Відкотити чернетку» повертає редактор до стану цієї збірки; публікацію виконує агент на основному ПК."));
     const st = S.status;
     if (st.built) main.append(publishBox(st.built));
     const table = h("table", {}, h("thead", {}, h("tr", {}, ["Версія", "Файлів", "Розмір", "Стан", ""].map((t) => h("th", {}, t)))));
@@ -503,7 +503,7 @@ const VIEWS = {
       h("td", { class: "row" },
         h("button", { class: "btn small", type: "button", onclick: async () => { try { const r = await api("preview", { method: "POST", body: { id: b.id } }); S.status = r.status; window.open(r.status.previewUrl, "_blank", "noopener"); await refreshStatus(); rerender(); } catch (e) { fail(e); } } }, "Перегляд"),
         h("button", { class: "btn small", type: "button", onclick: () => rollback(b.id) }, "Відкотити чернетку"),
-        h("button", { class: "btn small", type: "button", onclick: () => main.prepend(publishBox(b.id)) }, "Команда публікації"))));
+        h("button", { class: "btn small", type: "button", onclick: () => main.prepend(publishBox(b.id)) }, "Опублікувати…"))));
     table.append(tb);
     main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
   },
@@ -569,11 +569,32 @@ function problemsDialog(problems) {
 }
 
 function publishBox(id) {
-  const cmd = `./deploy-from-radxa.sh ${id}`;
-  const input = h("input", { type: "text", readonly: true, value: cmd, "aria-label": "Команда публікації", onfocus: (e) => e.target.select() });
-  return h("div", { class: "card" }, h("strong", {}, "Опублікувати цю версію"),
-    h("p", { class: "muted" }, "Адмінка сама не публікує: на основному ПК виконайте команду нижче (ключі Cloudflare лишаються там)."),
-    h("div", { class: "copybox" }, input, h("button", { class: "btn", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(cmd); toast("Скопійовано"); } catch { input.select(); toast("Виділіть і скопіюйте вручну", "warn"); } } }, "Копіювати")));
+  const d = S.status?.deploy || { state: "idle" };
+  const mine = d.id === id;
+  const busy = mine && (d.state === "queued" || d.state === "running");
+  const label = { queued: "У черзі…", running: "Публікується…", ok: "Опубліковано", failed: "Помилка публікації" }[mine ? d.state : ""] || "";
+  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: async () => {
+    try { const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender(); } catch (e) { fail(e); }
+  } }, busy ? "Публікується…" : "Опублікувати цю версію");
+  const note = !d.agentOnline && !busy ? h("p", { class: "muted" }, "Агент публікації на основному ПК зараз не на зв'язку: запит дочекається, поки його запустять (deploy-agent.sh).") : null;
+  return h("div", { class: "card" }, h("strong", {}, `Опублікувати ${id}`),
+    h("p", { class: "muted" }, "Кнопка ставить публікацію в чергу; ключі Cloudflare лишаються на основному ПК, де її виконує агент."),
+    h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), note,
+    mine && d.log ? h("pre", { class: "mono", style: "white-space:pre-wrap;max-height:240px;overflow:auto" }, d.log) : null);
+}
+
+let deployTimer = null;
+function watchDeploy() {
+  clearInterval(deployTimer);
+  deployTimer = setInterval(async () => {
+    try { await refreshStatus(); } catch { return; }
+    const st = S.status?.deploy?.state;
+    if (st !== "queued" && st !== "running") {
+      clearInterval(deployTimer);
+      toast(st === "ok" ? "Опубліковано" : "Публікація не вдалася, дивіться журнал", st === "ok" ? undefined : "err", 8000);
+      rerender();
+    }
+  }, 4000);
 }
 
 async function buildNow() {
@@ -582,7 +603,7 @@ async function buildNow() {
   try {
     const r = await api("build", { method: "POST", body: {} });
     S.status = r.status; S.builds = r.builds; updateChips();
-    toast(`Збірку ${r.result.id} готово (${r.result.files} файлів). Перегляньте й опублікуйте з основного ПК.`);
+    toast(`Збірку ${r.result.id} готово (${r.result.files} файлів). Перегляньте й натисніть «Опублікувати».`);
     go("builds");
   } catch (e) {
     if (e.data?.problems) problemsDialog(e.data.problems); else fail(e);

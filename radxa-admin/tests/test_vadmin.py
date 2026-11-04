@@ -780,7 +780,7 @@ class ApiTests(Base):
     def test_everything_needs_a_session_and_the_csrf_headers(self):
         self.assertEqual(self.call("GET", "bootstrap")[0], 401)
         self.assertEqual(self.call("POST", "build", {})[0], 401)
-        self.assertEqual(self.call("POST", "login", {"passphrase": self.PHRASE}, headers={"x-vadmin": ""})[0], 403)
+        self.assertEqual(self.call("POST", "login", {"passphrase": self.PHRASE}, headers={"x-vadmin": "", "origin": ""})[0], 403)
         self.assertEqual(self.call("POST", "login", {"passphrase": self.PHRASE}, headers={"origin": "http://evil.example"})[0], 403)
         self.assertEqual(self.call("DELETE", "bootstrap")[0], 405)
 
@@ -790,18 +790,33 @@ class ApiTests(Base):
         for needle in ("HttpOnly", "SameSite=Strict", "Path=/", "Max-Age="):
             self.assertIn(needle, flags)
 
-    def test_public_host_needs_access_and_sets_a_secure_cookie(self):
-        pub = {"host": "admin.viteh.org", "origin": "https://admin.viteh.org", "x-forwarded-proto": "https", "cf-connecting-ip": "203.0.113.9"}
-        st, _, r = self.call("POST", "login", {"passphrase": self.PHRASE}, headers=pub)
-        self.assertEqual((st, r["error"]), (403, "access_required"), "a request through Cloudflare without the Access header is refused")
-        self.assertEqual(self.call("GET", "bootstrap", headers=pub)[0], 403)
-        ok = dict(pub, **{"cf-access-jwt-assertion": "x.y.z"})
-        st, hd, _ = self.call("POST", "login", {"passphrase": self.PHRASE}, headers=ok)
+    def test_origin_alone_is_enough_because_uhttpd_drops_x_vadmin(self):
+        h = {"host": "admin.viteh.org", "origin": "https://admin.viteh.org"}
+        st, hd, _ = self.call("POST", "login", {"passphrase": self.PHRASE}, headers=dict(h, **{"x-vadmin": ""}))
         self.assertEqual(st, 200)
-        self.assertIn("; Secure", hd["Set-Cookie"])
+        self.assertIn("; Secure", hd["Set-Cookie"], "https origin gives a Secure cookie")
         _, hd, _ = self.call("POST", "login", {"passphrase": self.PHRASE})
         self.assertNotIn("Secure", hd["Set-Cookie"], "the private http ports keep a plain cookie")
-        self.assertEqual(self.call("POST", "login", {"passphrase": self.PHRASE}, headers={"cf-visitor": '{"scheme": "https"}'})[1]["Set-Cookie"].count("; Secure"), 1)
+
+    def test_deploy_button_queues_and_the_agent_reports_back(self):
+        from vadmin import deploy
+        cookie = self.login()
+        self.assertEqual(self.call("POST", "deploy", {"id": "20260101-000000-deadbeef"}, cookie=cookie)[0], 404)
+        self.assertEqual(self.call("POST", "deploy", {"id": "../x"}, cookie=cookie)[0], 404)
+        self.assertEqual(self.call("POST", "deploy", {"id": "20260101-000000-deadbeef"})[0], 401)
+        st, _, r = self.call("POST", "build", {}, cookie=cookie)
+        bid = r["result"]["id"]
+        st, _, r = self.call("POST", "deploy", {"id": bid}, cookie=cookie)
+        self.assertEqual((st, r["status"]["deploy"]["state"]), (200, "queued"))
+        self.assertFalse(r["status"]["deploy"]["agentOnline"])
+        self.assertEqual(self.call("POST", "deploy", {"id": bid}, cookie=cookie)[0], 409, "one publish at a time")
+        self.assertEqual(deploy.next_request(self.w.paths), bid)
+        self.assertEqual(deploy.next_request(self.w.paths), "", "a running request is not handed out twice")
+        deploy.report(self.w.paths, bid, True, "Published.")
+        d = self.call("GET", "status", cookie=cookie)[2]["status"]["deploy"]
+        self.assertEqual((d["state"], d["log"], d["agentOnline"]), ("ok", "Published.", True))
+        with self.assertRaises(core.ApiError):
+            deploy.report(self.w.paths, "20260101-000000-deadbeef", True, "")
 
     def test_cgi_status_line_has_the_reason_phrase(self):
         """uhttpd on the Radxa turns "Status: 401" without the text into a 200, which would show the login error as a success."""
