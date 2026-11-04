@@ -18,6 +18,16 @@ export function pickActive(items, { prefer = null, current = null } = {}) {
   return keep && seen[0].ratio - keep.ratio < KEEP_MARGIN ? keep.id : seen[0]?.id ?? null;
 }
 
+/**
+ * What to do when the shared viewer is moved to a new host.
+ * `el` is the viewer's current state ({ src, loaded }) or null. The "load" event only fires after a src change,
+ * so a viewer that already holds this model must be finished by hand, otherwise the status text never clears.
+ */
+export const planShow = (el, model) => {
+  const same = !!el && el.src === model;
+  return { setSrc: !same, readyNow: same && el.loaded === true };
+};
+
 /** Whether the library may be fetched without an explicit click (WebGL present, no data saver, not 2G). */
 export const canAutoLoad = ({ webgl = true, saveData = false, effectiveType = "4g" } = {}) =>
   webgl && !saveData && !/(^|-)2g$/.test(effectiveType);
@@ -67,10 +77,17 @@ function boot() {
     v.setAttribute("interaction-prompt", "none");
     v.setAttribute("field-of-view", "30deg");           // narrower than the default: less perspective distortion
     v.setAttribute("camera-orbit", "28deg 72deg auto");
-    v.addEventListener("load", () => { recolor(); v.classList.add("ready"); if (status) status.textContent = ""; });
-    v.addEventListener("error", () => { v.remove(); v.classList.remove("ready"); if (status) status.textContent = t("unavailable"); });
+    v.addEventListener("load", finish);
+    v.addEventListener("error", () => {
+      v.remove(); v.classList.remove("ready");
+      v.removeAttribute("src");                           // so the next show() retries instead of waiting for a load that never comes
+      if (status) status.textContent = t("unavailable");
+    });
     return v;
   };
+
+  /** The model is on screen: tint it, reveal it, clear "Loading…". Shared by the load event and by show(). */
+  const finish = () => { recolor(); viewer?.classList.add("ready"); if (status) status.textContent = ""; };
 
   /** card mode: silent auto-rotating preview; dialog mode: full camera controls. */
   const show = (host, product, full) => {
@@ -81,8 +98,10 @@ function boot() {
     viewer.toggleAttribute("auto-rotate", !calm());
     viewer.setAttribute("touch-action", full ? "none" : "pan-y");
     viewer.setAttribute("alt", text(product.title));
-    if (viewer.getAttribute("src") !== product.model) viewer.setAttribute("src", product.model); else viewer.classList.add("ready");
+    const plan = planShow({ src: viewer.getAttribute("src"), loaded: viewer.loaded }, product.model);
+    if (plan.setSrc) viewer.setAttribute("src", product.model);
     host.append(viewer);
+    if (plan.readyNow) finish();                          // same model, already loaded: no "load" event will come
   };
 
   const apply = () => {

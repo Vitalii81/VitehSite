@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { modelFor, pickActive, canAutoLoad, label } from "../assets/gallery3d.js";
+import { modelFor, pickActive, canAutoLoad, label, planShow } from "../assets/gallery3d.js";
 import { buildGlb, MODEL_BUILDERS } from "../tools/make-models.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -108,4 +108,51 @@ test("generated GLB files are valid glTF 2.0 containers with a recolourable acce
     }
     assert.ok(glb.length < 300 * 1024, `${id} < 300 KB`);
   }
+});
+
+test("planShow: a viewer that already holds the model is finished by hand, anything else waits for the load event", () => {
+  assert.deepEqual(planShow(null, "a.glb"), { setSrc: true, readyNow: false });                          // no viewer yet
+  assert.deepEqual(planShow({ src: null, loaded: false }, "a.glb"), { setSrc: true, readyNow: false });  // fresh or after an error
+  assert.deepEqual(planShow({ src: "b.glb", loaded: true }, "a.glb"), { setSrc: true, readyNow: false }); // other model: reload
+  assert.deepEqual(planShow({ src: "a.glb", loaded: true }, "a.glb"), { setSrc: false, readyNow: true });  // moved card -> dialog
+  assert.deepEqual(planShow({ src: "a.glb", loaded: false }, "a.glb"), { setSrc: false, readyNow: false }); // still loading: load event follows
+  assert.deepEqual(planShow({ src: "a.glb" }, "a.glb"), { setSrc: false, readyNow: false });               // `loaded` unknown: never claim ready
+});
+
+// A tiny stand-in for the shared <model-viewer>: setting src starts a load, the load event arrives asynchronously.
+function fakeViewer() {
+  const v = { src: null, loaded: false, status: "", ready: false, loads: 0, pending: null };
+  v.setSrc = (src) => { v.src = src; v.loaded = false; v.ready = false; v.pending = src; };
+  v.fireLoad = () => { if (v.pending) { v.loaded = true; v.pending = null; v.loads++; v.finish(); } };
+  v.finish = () => { v.ready = true; v.status = ""; };
+  v.show = (model) => {                       // mirrors show() in assets/gallery3d.js
+    v.ready = false;
+    const plan = planShow({ src: v.src, loaded: v.loaded }, model);
+    if (plan.setSrc) v.setSrc(model);
+    if (plan.readyNow) v.finish();
+  };
+  return v;
+}
+
+test("shared viewer: the status clears on every path card -> dialog -> close -> reopen -> another card", () => {
+  const v = fakeViewer();
+  const openDialog = (model) => { v.status = "Loading 3D model…"; v.show(model); v.fireLoad(); return { status: v.status, ready: v.ready }; };
+  const closeToCard = (model) => { v.show(model); v.fireLoad(); return v.ready; };
+  v.show("a.glb"); v.fireLoad();                                                    // card A hosts the scene
+  assert.deepEqual(openDialog("a.glb"), { status: "", ready: true });               // the reported bug: same src, no load event
+  assert.equal(closeToCard("a.glb"), true);
+  assert.deepEqual(openDialog("a.glb"), { status: "", ready: true });               // reopen the same card
+  assert.equal(closeToCard("a.glb"), true);
+  assert.deepEqual(openDialog("b.glb"), { status: "", ready: true });               // another card: real load
+  assert.equal(closeToCard("b.glb"), true);
+  assert.deepEqual(openDialog("a.glb"), { status: "", ready: true });               // and back
+  assert.equal(v.loads, 3, "only A, B, A were really loaded; moving the viewer around never reloads");
+});
+
+test("shared viewer: after a failed load the next show() retries instead of hanging", () => {
+  const v = fakeViewer();
+  v.show("a.glb");                                         // load starts, then fails:
+  v.pending = null; v.src = null; v.loaded = false;        // the error handler removes the src attribute
+  v.status = "Loading 3D model…"; v.show("a.glb"); v.fireLoad();
+  assert.deepEqual({ status: v.status, ready: v.ready, loads: v.loads }, { status: "", ready: true, loads: 1 });
 });
