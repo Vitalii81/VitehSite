@@ -45,7 +45,7 @@ test("the publication build holds no placeholder pictures: placeholder slots hav
   }
   const dir = join(root, "assets/portfolio");
   const known = new Set(manifest.flatMap((m) => [`${m.slug}/${m.slot}.webp`, `${m.slug}/${m.slot}.jpg`]));
-  for (const slug of readdirSync(dir).filter((n) => statSync(join(dir, n)).isDirectory())) for (const f of readdirSync(join(dir, slug))) assert.ok(known.has(`${slug}/${f}`), `stray file ${slug}/${f}`);
+  for (const slug of readdirSync(dir).filter((n) => n !== "img" && statSync(join(dir, n)).isDirectory())) for (const f of readdirSync(join(dir, slug))) assert.ok(known.has(`${slug}/${f}`), `stray file ${slug}/${f}`);
 });
 
 test("placeholder files are only generated into tools/ (git-ignored) and the generator and the importer exist", () => {

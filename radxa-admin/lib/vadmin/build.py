@@ -362,6 +362,11 @@ def build(paths, ctx=None):
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copyfile(os.path.join(root, f), dest)
 
+        if draft["widgets"].get("portfolioLink", True):          # the web portfolio ships only while its link is switched on
+            for rel in ("portfolio/index.html", "data/portfolio-page.json"):
+                if os.path.isfile(os.path.join(paths.src, rel)):
+                    os.makedirs(os.path.dirname(os.path.join(site_dir, rel)), exist_ok=True)
+                    shutil.copyfile(os.path.join(paths.src, rel), os.path.join(site_dir, rel))
         html = transform_home(read_text(os.path.join(paths.src, "index.html")), draft, ctx, assets, forms)
         site = merged_site(draft, ctx, assets)
         products = merged_products(draft, ctx, assets)

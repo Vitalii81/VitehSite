@@ -831,9 +831,9 @@
       }
     ],
     "portfolio": {
-      "uk": "Інженерне портфоліо (PDF)",
-      "en": "Engineering portfolio (PDF)",
-      "de": "Engineering-Portfolio (PDF)"
+      "uk": "Інженерне портфоліо",
+      "en": "Engineering portfolio",
+      "de": "Engineering-Portfolio"
     },
     "archive": {
       "title": {
@@ -1384,9 +1384,9 @@
       }
     },
     "portfolio": {
-      "uk": "Інженерне портфоліо (PDF)",
-      "en": "Engineering portfolio (PDF)",
-      "de": "Engineering-Portfolio (PDF)"
+      "uk": "Інженерне портфоліо",
+      "en": "Engineering portfolio",
+      "de": "Engineering-Portfolio"
     }
   },
   "footer": {

@@ -27,9 +27,12 @@ test("the portfolio PDF exists, is a PDF, and stays light", () => {
   assert.ok(bytes.length < 5 * 1024 * 1024, `${bytes.length} bytes`);
 });
 
-test("Projects and Contact link to the PDF, and the link texts exist in three languages", () => {
+test("Projects and Contact link to the web portfolio (which offers the PDF), and the link texts exist in three languages", () => {
   const html = read("index.html");
-  assert.ok((html.match(new RegExp(PDF.replace(/[.]/g, "\\."), "g")) || []).length >= 2);
+  assert.equal((html.match(/href="portfolio\/"/g) || []).length, 2);
+  assert.ok(existsSync(join(root, "portfolio/index.html")));
+  assert.match(read("portfolio/index.html"), new RegExp(PDF.split("/").pop()));
+  assert.ok(JSON.parse(read("data/portfolio-page.json")).pages.length >= 14);
   for (const k of [site.work.portfolio, site.contact.portfolio]) for (const l of LANGS) assert.ok(k[l]);
 });
 
@@ -38,7 +41,7 @@ test("experience is counted from 2014 everywhere and workplaces stay out of the 
   assert.ok(!/9\+|9 років|9 Jahre|9 years/.test(all), "old 9+ years wording");
   for (const l of LANGS) { assert.match(site.hero.experience[l], /2014/); }
   assert.ok(!/Adventx|Tesla-service/.test(all), "workplace names are for the PDF portfolio only");
-  assert.match(readFileSync(join(root, "tools/make-portfolio.mjs"), "utf8"), /Adventx and Tesla-service/);
+  assert.match(read("data/portfolio-page.json"), /Adventx and Tesla-service/);
   assert.match(site.meta.description.en, /2014/);
 });
 
@@ -69,7 +72,7 @@ test("nothing private ships: no personal mail, no source-package paths, no token
 
 test("portfolio images are small and the PDF build input folder only holds JPEGs", () => {
   const { readdirSync } = fs;
-  const dir = join(root, "tools/portfolio/img");
+  const dir = join(root, "assets/portfolio/img");
   const files = readdirSync(dir);
   assert.ok(files.length >= 20 && files.every((f) => f.endsWith(".jpg")));
   for (const f of files) assert.ok(statSync(join(dir, f)).size < 400 * 1024, f);
