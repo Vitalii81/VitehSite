@@ -130,6 +130,8 @@ def merged_site(draft, ctx, assets):
             parent[int(last)] = value
         elif isinstance(parent, dict) and last in parent:
             parent[last] = value
+    if "portfolioPage" in site:                              # sections of the web portfolio switched off in the admin are removed from the data, not hidden
+        site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["disabled"]["portfolio"]]
     items = site["services"]["items"]
     kept = []
     for i, it in enumerate(items):
@@ -363,7 +365,7 @@ def build(paths, ctx=None):
                 shutil.copyfile(os.path.join(root, f), dest)
 
         if draft["widgets"].get("portfolioLink", True):          # the web portfolio ships only while its link is switched on
-            for rel in ("portfolio/index.html", "data/portfolio-page.json"):
+            for rel in ("portfolio/index.html",):
                 if os.path.isfile(os.path.join(paths.src, rel)):
                     os.makedirs(os.path.dirname(os.path.join(site_dir, rel)), exist_ok=True)
                     shutil.copyfile(os.path.join(paths.src, rel), os.path.join(site_dir, rel))

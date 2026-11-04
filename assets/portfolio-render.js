@@ -1,0 +1,67 @@
+// Pure HTML renderer of the engineering portfolio, shared by the web page (assets/portfolio-page.js) and the PDF build (tools/make-portfolio.mjs).
+// Content: site.portfolioPage in data/site.json (every text is {uk, en, de}; editable in the admin). No DOM access here, everything is escaped.
+import { projectSlots } from "./portfolio.js";
+
+export const LANGS = ["uk", "en", "de"];
+const IMG = "/assets/portfolio/img/";
+export const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+/** i18n value in the chosen language; an empty translation falls back to English so a half-translated section never shows holes. */
+export const tr = (v, lang) => (v && typeof v === "object" ? (v[lang] || v.en || Object.values(v).find(Boolean) || "") : v ?? "");
+const IMG_RE = /^[a-z0-9-]+$/;
+
+function block(b, lang, ui) {
+  const t = (v) => esc(tr(v, lang));
+  switch (b.t) {
+    case "p": return `<p>${t(b.text)}</p>`;
+    case "h3": return `<h3>${t(b.text)}</h3>`;
+    case "h4": return `<h4>${t(b.text)}</h4>`;
+    case "note": return `<p class="note">${t(b.text)}</p>`;
+    case "focus": return `<p class="focus"><b>${t(b.label)}</b> ${t(b.text)}</p>`;
+    case "list": return `<ul class="roles">${(b.items || []).map((i) => `<li>${t(i)}</li>`).join("")}</ul>`;
+    case "caps": return `<dl class="caps">${(b.items || []).map((i) => `<dt>${t(i.k)}</dt><dd>${t(i.v)}</dd>`).join("")}</dl>`;
+    case "fig": return IMG_RE.test(b.img || "") ? `<figure class="${b.wide ? "wide" : ""}${b.small ? " small" : ""}"><img src="${IMG}${b.img}.jpg" alt="${t(b.caption)}" loading="lazy"><figcaption>${t(b.caption)}</figcaption></figure>` : "";
+    case "card": return `<div class="card${b.hi ? " hi" : ""}"><h4>${t(b.title)}</h4>${(b.text || []).map((x, i) => `<p${i && b.hi ? ' class="muted"' : ""}>${t(x)}</p>`).join("")}${b.skills ? `<p class="skills">${esc(tr(ui?.skills, lang))} · ${t(b.skills)}</p>` : ""}</div>`;
+    case "two": return `<div class="two"><div>${(b.left || []).map((x) => block(x, lang, ui)).join("")}</div><div>${(b.right || []).map((x) => block(x, lang, ui)).join("")}</div></div>`;
+    case "grid2": return `<div class="grid2">${(b.items || []).map((cell) => `<div>${cell.map((x) => block(x, lang, ui)).join("")}</div>`).join("")}</div>`;
+    case "webrow": return `<div class="webrow">${(b.items || []).map((x) => block(x, lang, ui)).join("")}</div>`;
+    default: return "";
+  }
+}
+export const blocksHtml = (blocks, lang, ui) => (blocks || []).map((b) => block(b, lang, ui)).join("");
+
+export function servicesHtml(section, site, lang) {
+  const cards = site.services.items.map((s) => `<div class="card"><h4>${esc(tr(s.title, lang))}</h4><p>${esc(tr(s.text, lang))}</p><p class="skills">${esc(s.points.map((p) => tr(p, lang)).join(" · "))}</p></div>`).join("");
+  return `<div class="svc">${cards}</div><p class="note">${esc(tr(section.note, lang))}</p>`;
+}
+
+/** Cards of the project archive. `slotUrlOf(entry)` may return a URL (final picture, or a marked placeholder in draft PDFs) or null; `mark` adds the PLACEHOLDER label. */
+export function archiveCards(projects, site, manifest, lang, { preview = false, pending = null } = {}) {
+  const cats = Object.fromEntries(site.work.archive.categories.map((c) => [c.id, tr(c.label, lang)]));
+  return projects.map((p) => {
+    const shots = projectSlots(p, manifest, { preview }).slice(0, 3);
+    if (pending) for (const s of (p.slots || [])) { const m = manifest.find((x) => x.slug === p.slug && x.slot === s); if (m && m.status !== "final") pending.push(`${m.slug}/${m.slot}`); }
+    const figs = shots.map(({ entry, url, placeholder }) => `<figure class="${placeholder ? "ph" : ""}" style="flex:${(entry.ratio.split(":")[0] / entry.ratio.split(":")[1]).toFixed(2)} 1 0"><img src="/${esc(url)}" alt="${esc(tr(entry.alt, lang))}" loading="lazy">${placeholder ? "<figcaption>PLACEHOLDER</figcaption>" : ""}</figure>`).join("");
+    return `<div class="card arch"><p class="skills">${esc([cats[p.category] || p.category, p.years].filter(Boolean).join(" · "))}</p><h4>${esc(tr(p.title, lang))}</h4>${figs ? `<div class="shots">${figs}</div>` : ""}<p>${esc(tr(p.summary, lang))}</p><p class="skills">${esc((p.tags || []).join(" · "))}</p></div>`;
+  });
+}
+
+/** Sections in order as [{id, kicker, title, lead, body}]; the archive is split into groups of `perPage` cards (the PDF needs that, the web page uses one group). */
+export function sectionsFor(page, site, projects, manifest, lang, { perPage = 0, preview = false, pending = null, disabled = [] } = {}) {
+  const out = [];
+  for (const s of page.sections) {
+    if (disabled.includes(s.id)) continue;
+    const head = { id: s.id, kicker: tr(s.kicker, lang), title: tr(s.title, lang), lead: tr(s.lead, lang) };
+    if (s.type === "blocks") out.push({ ...head, body: blocksHtml(s.blocks, lang, page.ui) });
+    else if (s.type === "services") out.push({ ...head, body: servicesHtml(s, site, lang) });
+    else if (s.type === "archive") {
+      const cards = archiveCards(projects, site, manifest, lang, { preview, pending });
+      const lead = head.lead || tr(site.work.archive.lead, lang);
+      const size = perPage || cards.length || 1;
+      for (let i = 0; i < cards.length; i += size) {
+        out.push({ ...head, id: i ? `${s.id}-${i / size + 1}` : s.id, title: i ? `${head.title}, ${tr(s.cont, lang)}` : head.title, lead: i ? tr(s.more, lang) : lead,
+          body: `<div class="svc arch-grid">${cards.slice(i, i + size).join("")}</div>${i + size >= cards.length ? `<p class="note">${esc(tr(s.note, lang))}</p>` : ""}` });
+      }
+    }
+  }
+  return out;
+}

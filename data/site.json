@@ -1553,5 +1553,1475 @@
         }
       ]
     }
+  },
+  "portfolioPage": {
+    "ui": {
+      "back": {
+        "uk": "← viteh.org",
+        "en": "← viteh.org",
+        "de": "← viteh.org"
+      },
+      "print": {
+        "uk": "Друк",
+        "en": "Print",
+        "de": "Drucken"
+      },
+      "pdf": {
+        "uk": "PDF",
+        "en": "PDF",
+        "de": "PDF"
+      },
+      "skills": {
+        "uk": "НАВИЧКИ",
+        "en": "SKILLS",
+        "de": "KOMPETENZEN"
+      },
+      "loadError": {
+        "uk": "Не вдалося завантажити портфоліо. Скористайтеся PDF-версією.",
+        "en": "The portfolio could not be loaded. Please use the PDF version.",
+        "de": "Das Portfolio konnte nicht geladen werden. Bitte nutzen Sie die PDF-Version."
+      },
+      "noscript": {
+        "uk": "Для показу портфоліо потрібен JavaScript. Той самий вміст доступний у PDF.",
+        "en": "JavaScript is required to show the portfolio. The same content is available as a PDF.",
+        "de": "Zum Anzeigen des Portfolios ist JavaScript erforderlich. Derselbe Inhalt steht als PDF bereit."
+      },
+      "title": {
+        "uk": "Інженерне портфоліо — Віталій Крутіков | ViTeh",
+        "en": "Engineering portfolio — Vitalii Krutikov | ViTeh",
+        "de": "Engineering-Portfolio — Vitalii Krutikov | ViTeh"
+      },
+      "description": {
+        "uk": "Інженерне портфоліо: вбудовані системи, розробка плат, десктопне, веб- і Android-ПЗ, локальний AI. Робота з 2014 року.",
+        "en": "Engineering portfolio: embedded systems, PCB design, desktop, web and Android software, local AI. Work since 2014.",
+        "de": "Engineering-Portfolio: Embedded-Systeme, Leiterplattenentwurf, Desktop-, Web- und Android-Software, lokale KI. Tätig seit 2014."
+      },
+      "year": {
+        "uk": "ІНЖЕНЕРНЕ ПОРТФОЛІО / 2026",
+        "en": "ENGINEERING PORTFOLIO / 2026",
+        "de": "ENGINEERING-PORTFOLIO / 2026"
+      },
+      "footer": {
+        "uk": "ВБУДОВАНІ СИСТЕМИ / АПАРАТУРА / ПЗ",
+        "en": "EMBEDDED / HARDWARE / SOFTWARE",
+        "de": "EMBEDDED / HARDWARE / SOFTWARE"
+      }
+    },
+    "cover": {
+      "name": {
+        "uk": "Віталій Крутіков",
+        "en": "Vitalii Krutikov",
+        "de": "Vitalii Krutikov"
+      },
+      "roles": {
+        "uk": "Інженер вбудованих систем · Розробник апаратури й плат · Розробник ПЗ",
+        "en": "Embedded Systems Engineer · Hardware & PCB Designer · Software Developer",
+        "de": "Embedded-Systems-Ingenieur · Hardware- & Leiterplattenentwickler · Software-Entwickler"
+      },
+      "text": {
+        "uk": "Від схемотехніки й прошивок до прототипів, готових до виробництва, десктопних інструментів, сайтів, Android-застосунків і підключених систем.",
+        "en": "From circuit design and firmware to production-oriented prototypes, desktop tools, websites, Android apps and connected systems.",
+        "de": "Von Schaltungsentwurf und Firmware bis zu fertigungsnahen Prototypen, Desktop-Werkzeugen, Webseiten, Android-Apps und vernetzten Systemen."
+      },
+      "tags": {
+        "uk": "STM32 · ESP32 · C/C++ · C# · LINUX · PCB · IoT · AI",
+        "en": "STM32 · ESP32 · C/C++ · C# · LINUX · PCB · IoT · AI",
+        "de": "STM32 · ESP32 · C/C++ · C# · LINUX · PCB · IoT · AI"
+      },
+      "since": {
+        "uk": "ВИБРАНІ РОБОТИ · ВИДИМА ЧАСТИНА РОБІТ З 2014 РОКУ",
+        "en": "SELECTED WORK · VISIBLE PART OF WORK SINCE 2014",
+        "de": "AUSGEWÄHLTE ARBEITEN · SICHTBARER TEIL DER ARBEIT SEIT 2014"
+      }
+    },
+    "sections": [
+      {
+        "id": "profile",
+        "type": "blocks",
+        "kicker": {
+          "uk": "01 / ПРОФІЛЬ",
+          "en": "01 / PROFILE",
+          "de": "01 / PROFIL"
+        },
+        "title": {
+          "uk": "Інженерія від початку до кінця",
+          "en": "Engineering, end to end",
+          "de": "Engineering von A bis Z"
+        },
+        "lead": {
+          "uk": "Розробка виробів: вбудована електроніка, десктопне ПЗ, веб, Android, автоматизація, мережі та прототипування.",
+          "en": "Product development across embedded electronics, desktop software, web, Android, automation, networking and prototyping.",
+          "de": "Produktentwicklung über Embedded-Elektronik, Desktop-Software, Web, Android, Automatisierung, Netzwerke und Prototyping hinweg."
+        },
+        "blocks": [
+          {
+            "t": "card",
+            "title": {
+              "uk": "ПРОФЕСІЙНИЙ ПРОФІЛЬ",
+              "en": "PROFESSIONAL PROFILE",
+              "de": "BERUFSPROFIL"
+            },
+            "text": [
+              {
+                "uk": "Інженер і розробник з 2014 року (12+ років): вбудовані системи, розробка плат, автоматизація та ПЗ для ПК. Роботи: сенсорні вироби, промислові контролери, телеметричні пристрої, електроніка керування двигунами та інженерні утиліти. Останнім часом додалися сайти й Android-застосунки для приватних AI-систем.",
+                "en": "Engineer and developer working since 2014 (12+ years), spanning embedded systems, PCB design, automation and PC software. Work includes sensor products, industrial controllers, telemetry devices, motor-control electronics and engineering utilities. Recent work adds websites and Android applications for private AI systems.",
+                "de": "Ingenieur und Entwickler seit 2014 (12+ Jahre): Embedded-Systeme, Leiterplattenentwurf, Automatisierung und PC-Software. Arbeiten: Sensorprodukte, Industriesteuerungen, Telemetriegeräte, Motorsteuerungselektronik und Engineering-Werkzeuge. Zuletzt kamen Webseiten und Android-Apps für private KI-Systeme hinzu."
+              },
+              {
+                "uk": "Досвід: IT-інженер в Adventx і Tesla-service, а також фріланс-проєкти.",
+                "en": "Experience: IT engineer at Adventx and Tesla-service, plus freelance projects.",
+                "de": "Erfahrung: IT-Ingenieur bei Adventx und Tesla-service sowie Freelance-Projekte."
+              }
+            ],
+            "hi": true
+          },
+          {
+            "t": "h3",
+            "text": {
+              "uk": "ОСНОВНІ КОМПЕТЕНЦІЇ",
+              "en": "CORE CAPABILITIES",
+              "de": "KERNKOMPETENZEN"
+            }
+          },
+          {
+            "t": "caps",
+            "items": [
+              {
+                "k": {
+                  "uk": "01 ВБУДОВАНІ СИСТЕМИ",
+                  "en": "01 EMBEDDED",
+                  "de": "01 EMBEDDED"
+                },
+                "v": {
+                  "uk": "STM32 (F0–F7, G0/G3/G4), ESP32, AVR; C/C++; периферія, драйвери та інтеграція.",
+                  "en": "STM32 (F0–F7, G0/G3/G4), ESP32, AVR; C/C++; peripherals, drivers and integration.",
+                  "de": "STM32 (F0–F7, G0/G3/G4), ESP32, AVR; C/C++; Peripherie, Treiber und Integration."
+                }
+              },
+              {
+                "k": {
+                  "uk": "02 ЕЛЕКТРОНІКА",
+                  "en": "02 ELECTRONICS",
+                  "de": "02 ELEKTRONIK"
+                },
+                "v": {
+                  "uk": "Схеми, багатошарові плати, прототипування, огляди проєктів і CAD корпусів.",
+                  "en": "Schematics, multilayer PCBs, prototyping, design reviews and enclosure CAD.",
+                  "de": "Schaltpläne, mehrlagige Leiterplatten, Prototyping, Design-Reviews und Gehäuse-CAD."
+                }
+              },
+              {
+                "k": {
+                  "uk": "03 ЗВ'ЯЗОК",
+                  "en": "03 CONNECTIVITY",
+                  "de": "03 KONNEKTIVITÄT"
+                },
+                "v": {
+                  "uk": "CAN, Modbus RTU, RS-485, UART, USB, SPI, I²C, Ethernet, TCP/UDP, BLE та GSM.",
+                  "en": "CAN, Modbus RTU, RS-485, UART, USB, SPI, I²C, Ethernet, TCP/UDP, BLE and GSM.",
+                  "de": "CAN, Modbus RTU, RS-485, UART, USB, SPI, I²C, Ethernet, TCP/UDP, BLE und GSM."
+                }
+              },
+              {
+                "k": {
+                  "uk": "04 ПРОГРАМНЕ ЗАБЕЗПЕЧЕННЯ",
+                  "en": "04 SOFTWARE",
+                  "de": "04 SOFTWARE"
+                },
+                "v": {
+                  "uk": "Десктопні застосунки: C# (WinForms, WPF), Qt/C++, GTK, Swift; Python, Bash, діагностика й автоматизація.",
+                  "en": "Desktop apps: C# (WinForms, WPF), Qt/C++, GTK, Swift; Python, Bash, diagnostics and automation.",
+                  "de": "Desktop-Apps: C# (WinForms, WPF), Qt/C++, GTK, Swift; Python, Bash, Diagnose und Automatisierung."
+                }
+              },
+              {
+                "k": {
+                  "uk": "05 ВЕБ І МОБІЛЬНІ",
+                  "en": "05 WEB & MOBILE",
+                  "de": "05 WEB & MOBIL"
+                },
+                "v": {
+                  "uk": "Швидкі статичні сайти, веб-інтерфейси й адмін-панелі (HTML/CSS/JS, Cloudflare); Android-застосунки на Kotlin і Jetpack Compose.",
+                  "en": "Fast static websites, web interfaces and admin panels (HTML/CSS/JS, Cloudflare); Android apps in Kotlin and Jetpack Compose.",
+                  "de": "Schnelle statische Webseiten, Weboberflächen und Admin-Panels (HTML/CSS/JS, Cloudflare); Android-Apps in Kotlin und Jetpack Compose."
+                }
+              },
+              {
+                "k": {
+                  "uk": "06 ПЕРЕДАЧА",
+                  "en": "06 DELIVERY",
+                  "de": "06 ÜBERGABE"
+                },
+                "v": {
+                  "uk": "Налаштування пристроїв, пошук несправностей, тестові інструменти, технічна документація та наочні інструкції.",
+                  "en": "Device configuration, troubleshooting, testing tools, technical documentation and visual instructions.",
+                  "de": "Gerätekonfiguration, Fehlersuche, Testwerkzeuge, technische Dokumentation und bebilderte Anleitungen."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "prototype",
+        "type": "blocks",
+        "kicker": {
+          "uk": "02 / ОСНОВНИЙ ПРОТОТИП",
+          "en": "02 / FEATURED PROTOTYPE",
+          "de": "02 / PROTOTYP IM FOKUS"
+        },
+        "title": {
+          "uk": "Блок керування із сенсорним екраном",
+          "en": "Touchscreen control unit",
+          "de": "Steuergerät mit Touchscreen"
+        },
+        "lead": {
+          "uk": "Нещодавній фізичний прототип, знятий у листопаді 2026 року.",
+          "en": "Recent physical prototype photographed in November 2026.",
+          "de": "Aktueller physischer Prototyp, fotografiert im November 2026."
+        },
+        "blocks": [
+          {
+            "t": "two",
+            "left": [
+              {
+                "t": "h3",
+                "text": {
+                  "uk": "ВЛАСНИЙ ПРИСТРІЙ",
+                  "en": "CUSTOM DEVICE",
+                  "de": "EIGENES GERÄT"
+                }
+              },
+              {
+                "t": "p",
+                "text": {
+                  "uk": "Компактна закрита система керування з вбудованим кольоровим сенсорним екраном, великими цифровими показами, вибором пресетів, кнопкою запуску й статистикою роботи.",
+                  "en": "A compact, enclosed control system with an integrated color touchscreen, large numerical readouts, preset selection, start control and run statistics.",
+                  "de": "Ein kompaktes, gekapseltes Steuersystem mit integriertem Farb-Touchscreen, großen Zahlenanzeigen, Preset-Auswahl, Startsteuerung und Laufstatistik."
+                }
+              },
+              {
+                "t": "p",
+                "text": {
+                  "uk": "На фото інтерфейс показує час, швидкість, навігацію між пресетами й стан. Корпус виглядає виготовленим на замовлення; внутрішня схема та характеристики прошивки за наявним фото не встановлені.",
+                  "en": "The photographed interface displays time, speed, preset navigation and status. The enclosure appears custom-made; its internal circuitry and firmware specifications are not established by the available photograph.",
+                  "de": "Die fotografierte Oberfläche zeigt Zeit, Geschwindigkeit, Preset-Navigation und Status. Das Gehäuse wirkt maßgefertigt; interne Schaltung und Firmware-Daten lassen sich aus dem vorhandenen Foto nicht ableiten."
+                }
+              },
+              {
+                "t": "focus",
+                "label": {
+                  "uk": "АКЦЕНТ ПРОЄКТУ",
+                  "en": "DESIGN FOCUS",
+                  "de": "DESIGN-SCHWERPUNKT"
+                },
+                "text": {
+                  "uk": "Інтерфейс «людина–машина» · Інтеграція в корпус · Керування на рівні пристрою",
+                  "en": "Human-machine interface · Enclosure integration · Device-level controls",
+                  "de": "Mensch-Maschine-Schnittstelle · Gehäuseintegration · Bedienelemente auf Geräteebene"
+                }
+              }
+            ],
+            "right": [
+              {
+                "t": "fig",
+                "img": "touch-unit",
+                "caption": {
+                  "uk": "Блок керування із сенсорним екраном, фото прототипу",
+                  "en": "Touchscreen control unit, prototype photo",
+                  "de": "Steuergerät mit Touchscreen, Prototypenfoto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "models3d",
+        "type": "blocks",
+        "kicker": {
+          "uk": "02A / 3D-МОДЕЛІ",
+          "en": "02A / 3D MODELS",
+          "de": "02A / 3D-MODELLE"
+        },
+        "title": {
+          "uk": "Контролер у 3D",
+          "en": "Controller in 3D",
+          "de": "Controller in 3D"
+        },
+        "lead": {
+          "uk": "Два покоління блока керування як 3D-моделі для вебу (GLB), експортовані з оригінального проєкту Blender; рендери нижче зроблено з цих GLB-файлів.",
+          "en": "Two generations of the touchscreen control unit as web-ready 3D models (GLB), exported from the original Blender project; the renders below come from those GLB files.",
+          "de": "Zwei Generationen des Steuergeräts als webtaugliche 3D-Modelle (GLB), exportiert aus dem Original-Blender-Projekt; die Renderings unten stammen aus diesen GLB-Dateien."
+        },
+        "blocks": [
+          {
+            "t": "fig",
+            "img": "cronos-v1",
+            "caption": {
+              "uk": "Перша версія: малий дисплей, кнопки, чорна кришка",
+              "en": "First version: small display, buttons, black cover",
+              "de": "Erste Version: kleines Display, Tasten, schwarze Abdeckung"
+            },
+            "wide": true,
+            "small": true
+          },
+          {
+            "t": "fig",
+            "img": "cronos-v2",
+            "caption": {
+              "uk": "Остання версія: великий сенсорний екран, без кнопок, логотип ViTeh, круглий роз'єм",
+              "en": "Latest version: large touchscreen, no buttons, ViTeh mark, round connector",
+              "de": "Aktuelle Version: großer Touchscreen, keine Tasten, ViTeh-Logo, runder Steckverbinder"
+            },
+            "wide": true,
+            "small": true
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "МОДЕЛІ ДЛЯ ВЕБУ",
+              "en": "MODELS FOR THE WEB",
+              "de": "MODELLE FÜR DAS WEB"
+            },
+            "text": [
+              {
+                "uk": "Легкі GLB-моделі (близько 150 КБ кожна) з PBR-матеріалами; текстура екрана взята з фото реального пристрою; вони підключаються до інтерактивної 3D-галереї виробів на viteh.org.",
+                "en": "Lightweight GLB models (about 150 KB each) with PBR materials, the screen texture taken from a photo of the real unit; they plug into the interactive 3D product gallery on viteh.org.",
+                "de": "Leichte GLB-Modelle (je etwa 150 KB) mit PBR-Materialien; die Bildschirmtextur stammt aus einem Foto des echten Geräts; sie sind in die interaktive 3D-Produktgalerie auf viteh.org eingebunden."
+              }
+            ],
+            "skills": {
+              "uk": "Blender / glTF / WebGL",
+              "en": "Blender / glTF / WebGL",
+              "de": "Blender / glTF / WebGL"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ВІД CAD ДО СТОРІНКИ ВИРОБУ",
+              "en": "FROM CAD TO PRODUCT PAGE",
+              "de": "VOM CAD ZUR PRODUKTSEITE"
+            },
+            "text": [
+              {
+                "uk": "Шлях від проєкту корпусу й плати (KiCad, Blender) до інтерактивної моделі, яку відвідувачі можуть обертати, без сторонніх переглядачів і відстеження.",
+                "en": "The path from the enclosure design and PCB project (KiCad, Blender) to an interactive model that visitors can rotate, without third-party viewers or tracking.",
+                "de": "Der Weg vom Gehäuse- und Platinenentwurf (KiCad, Blender) zu einem interaktiven Modell, das Besucher drehen können, ohne Fremdanbieter-Viewer und ohne Tracking."
+              }
+            ],
+            "skills": {
+              "uk": "CAD корпусів / 3D-конвеєр / веб",
+              "en": "enclosure CAD / 3D pipeline / web",
+              "de": "Gehäuse-CAD / 3D-Pipeline / Web"
+            }
+          }
+        ]
+      },
+      {
+        "id": "sensors",
+        "type": "blocks",
+        "kicker": {
+          "uk": "03 / ПРОМИСЛОВЕ КЕРУВАННЯ",
+          "en": "03 / INDUSTRIAL CONTROL",
+          "de": "03 / INDUSTRIESTEUERUNG"
+        },
+        "title": {
+          "uk": "Датчики й автоматизація",
+          "en": "Sensors & automation",
+          "de": "Sensorik & Automatisierung"
+        },
+        "lead": {
+          "uk": "Вибрані проєкти з оригінальними зображеннями виробів і систем.",
+          "en": "Selected projects documented with original product and system images.",
+          "de": "Ausgewählte Projekte, dokumentiert mit originalen Produkt- und Systembildern."
+        },
+        "blocks": [
+          {
+            "t": "grid2",
+            "items": [
+              [
+                {
+                  "t": "fig",
+                  "img": "greenhouse",
+                  "caption": {
+                    "uk": "Контролер екранів теплиці",
+                    "en": "Greenhouse screen controller",
+                    "de": "Steuerung für Gewächshausschirme"
+                  }
+                },
+                {
+                  "t": "h4",
+                  "text": {
+                    "uk": "КОНТРОЛЕР ТЕПЛИЦІ",
+                    "en": "GREENHOUSE CONTROLLER",
+                    "de": "GEWÄCHSHAUS-STEUERUNG"
+                  }
+                },
+                {
+                  "t": "p",
+                  "text": {
+                    "uk": "Контролер відкриття й закриття екранів теплиці з локальним дисплеєм і відповідною електронікою керування. В оригінальному архіві проєкту є схеми підключення та відеоінструкція.",
+                    "en": "Controller for opening and closing greenhouse screens, with a local display and associated control electronics. The original project archive includes connection illustrations and a video guide.",
+                    "de": "Steuerung zum Öffnen und Schließen von Gewächshausschirmen, mit lokalem Display und zugehöriger Steuerelektronik. Das Originalprojekt enthält Anschlussillustrationen und eine Videoanleitung."
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "dmm-t2",
+                  "caption": {
+                    "uk": "Сенсорний модуль DMM-T2",
+                    "en": "DMM-T2 sensor module",
+                    "de": "Sensormodul DMM-T2"
+                  }
+                },
+                {
+                  "t": "h4",
+                  "text": {
+                    "uk": "СЕНСОРНИЙ МОДУЛЬ DMM-T2",
+                    "en": "DMM-T2 SENSOR MODULE",
+                    "de": "SENSORMODUL DMM-T2"
+                  }
+                },
+                {
+                  "t": "p",
+                  "text": {
+                    "uk": "Модулі збору даних температури й вологості зі зв'язком Modbus RTU, зокрема варіанти з входами для термопар і різним механічним виконанням.",
+                    "en": "Temperature and humidity data acquisition modules with Modbus RTU communication, including variants for thermocouple inputs and different mechanical layouts.",
+                    "de": "Module zur Erfassung von Temperatur und Feuchte mit Modbus-RTU-Kommunikation, einschließlich Varianten mit Thermoelement-Eingängen und unterschiedlichen mechanischen Ausführungen."
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "temp-display",
+                  "caption": {
+                    "uk": "Багатоканальний індикатор температури",
+                    "en": "Multi-channel temperature display",
+                    "de": "Mehrkanal-Temperaturanzeige"
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "temp-eth",
+                  "caption": {
+                    "uk": "Монітор температури з Ethernet",
+                    "en": "Ethernet-connected temperature monitor",
+                    "de": "Temperaturmonitor mit Ethernet"
+                  }
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "electronics",
+        "type": "blocks",
+        "kicker": {
+          "uk": "04 / ЕЛЕКТРОНІКА Й ПЛАТИ",
+          "en": "04 / ELECTRONICS & PCB",
+          "de": "04 / ELEKTRONIK & LEITERPLATTEN"
+        },
+        "title": {
+          "uk": "Власні апаратні платформи",
+          "en": "Custom hardware platforms",
+          "de": "Eigene Hardware-Plattformen"
+        },
+        "lead": {
+          "uk": "Оригінальні зображення плат із попередніх проєктів апаратної розробки.",
+          "en": "Original board imagery from previous hardware development projects.",
+          "de": "Originale Platinenbilder aus früheren Hardware-Entwicklungsprojekten."
+        },
+        "blocks": [
+          {
+            "t": "fig",
+            "img": "tryboard",
+            "caption": {
+              "uk": "TryBrd / багатошарова плата керування кроковими двигунами",
+              "en": "TryBrd / multi-layer stepper-control PCB",
+              "de": "TryBrd / mehrlagige Schrittmotor-Steuerplatine"
+            },
+            "wide": true
+          },
+          {
+            "t": "h4",
+            "text": {
+              "uk": "БАГАТОШАРОВЕ КЕРУВАННЯ РУХОМ",
+              "en": "MULTI-LAYER MOTION CONTROL",
+              "de": "MEHRLAGIGE BEWEGUNGSSTEUERUNG"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "Розробив чотиришарову плату контролера для драйверів крокових двигунів TMC5130A у межах замовного проєкту 3D-друку; також написав базову прошивку керування двигунами. Додаткові плати розширення стосувалися систем з кількома двигунами.",
+              "en": "Designed a four-layer controller board for TMC5130A stepper motor drivers as part of a customer 3D-printing project; also developed basic motor-control firmware. Additional expansion-board work addressed multi-motor systems.",
+              "de": "Eine vierlagige Steuerplatine für TMC5130A-Schrittmotortreiber im Rahmen eines Kunden-3D-Druckprojekts entworfen; außerdem grundlegende Motorsteuer-Firmware entwickelt. Zusätzliche Erweiterungsplatinen betrafen Mehrmotorsysteme."
+            }
+          },
+          {
+            "t": "h4",
+            "text": {
+              "uk": "ІНШІ РОБОТИ З ПЛАТАМИ",
+              "en": "OTHER BOARD WORK",
+              "de": "WEITERE PLATINENARBEITEN"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "Електроніка вводу-виводу, модулі зарядних станцій, GSM-моніторинг і поточна робота над платою шлюзу ESP32-S3 з Ethernet / RS-485 / CAN.",
+              "en": "I/O electronics, charging-station modules, GSM monitoring, and current ESP32-S3 gateway / Ethernet / RS-485 / CAN PCB work.",
+              "de": "I/O-Elektronik, Ladestations-Module, GSM-Überwachung und aktuelle Arbeit an einer ESP32-S3-Gateway-Platine mit Ethernet / RS-485 / CAN."
+            }
+          },
+          {
+            "t": "grid2",
+            "items": [
+              [
+                {
+                  "t": "fig",
+                  "img": "io-board",
+                  "caption": {
+                    "uk": "Власна плата розширення вводу-виводу",
+                    "en": "Custom I/O expansion board",
+                    "de": "Eigene I/O-Erweiterungsplatine"
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "chbrg-board",
+                  "caption": {
+                    "uk": "Плата пристрою зарядної станції CHBRG",
+                    "en": "CHBRG charging-station device board",
+                    "de": "CHBRG-Ladestations-Geräteplatine"
+                  }
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "telemetry",
+        "type": "blocks",
+        "kicker": {
+          "uk": "05 / ПІДКЛЮЧЕНІ ПРИСТРОЇ",
+          "en": "05 / CONNECTED DEVICES",
+          "de": "05 / VERNETZTE GERÄTE"
+        },
+        "title": {
+          "uk": "Телеметрія й віддалений моніторинг",
+          "en": "Telemetry & remote monitoring",
+          "de": "Telemetrie & Fernüberwachung"
+        },
+        "lead": {
+          "uk": "Польова електроніка для збору інформації, передачі стану та інтеграції з системами оператора.",
+          "en": "Field electronics designed to collect information, report status and integrate with operator systems.",
+          "de": "Feldelektronik zum Erfassen von Informationen, Melden von Zuständen und zur Integration in Betreibersysteme."
+        },
+        "blocks": [
+          {
+            "t": "fig",
+            "img": "gsm-logger",
+            "caption": {
+              "uk": "Апаратна частина GSM-реєстратора подій і датчиків",
+              "en": "GSM event and sensor logger hardware",
+              "de": "Hardware des GSM-Ereignis- und Sensorloggers"
+            },
+            "wide": true
+          },
+          {
+            "t": "h4",
+            "text": {
+              "uk": "GSM-РЕЄСТРАТОР ДАТЧИКІВ",
+              "en": "GSM SENSOR LOGGER",
+              "de": "GSM-SENSORLOGGER"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "Чотири входи датчиків, два релейні виходи та резервне живлення. Реєстратор записував значення датчиків і надсилав SMS-сповіщення при перевищенні заданих порогів. Також вивантажував дані на сервер для побудови графіків і віддаленого налаштування, з керуванням через SMS-команди.",
+              "en": "Four sensor inputs, two relay outputs and backup power. The logger recorded sensor values and issued SMS alerts when configured thresholds were exceeded. It also uploaded data to a server for charting and remote configuration, with SMS-based commands.",
+              "de": "Vier Sensoreingänge, zwei Relaisausgänge und Pufferbatterie. Der Logger zeichnete Sensorwerte auf und sendete SMS-Alarme bei Überschreiten konfigurierter Schwellen. Außerdem lud er Daten für Diagramme und Fernkonfiguration auf einen Server und nahm SMS-Befehle entgegen."
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ІНШІ ПІДКЛЮЧЕНІ ВИРОБИ",
+              "en": "ADDITIONAL CONNECTED PRODUCTS",
+              "de": "WEITERE VERNETZTE PRODUKTE"
+            },
+            "text": [
+              {
+                "uk": "Сторожовий пристрій мовлення: GSM-моніторинг радіозвуку зі сповіщеннями про зникнення мовлення та віддаленим прослуховуванням.",
+                "en": "Broadcast watchdog: GSM-based radio-audio monitoring with loss-of-broadcast alerts and remote audio listening.",
+                "de": "Sendewächter: GSM-gestützte Überwachung von Radio-Audio mit Alarm bei Sendeausfall und Fern-Mithören."
+              },
+              {
+                "uk": "Реєстратор подій: мітки часу спрацювань PIR-датчика збираються в ПК-утиліту з табличним переглядом і експортом у CSV; корпус надруковано на 3D-принтері.",
+                "en": "Event logger: PIR event timestamps collected to a PC utility, tabular viewer and CSV export; enclosure produced with 3D printing.",
+                "de": "Ereignislogger: Zeitstempel von PIR-Ereignissen werden in ein PC-Programm mit Tabellenansicht und CSV-Export übernommen; Gehäuse aus dem 3D-Drucker."
+              }
+            ],
+            "hi": true
+          }
+        ]
+      },
+      {
+        "id": "software",
+        "type": "blocks",
+        "kicker": {
+          "uk": "06 / ПРОГРАМНА ІНЖЕНЕРІЯ",
+          "en": "06 / SOFTWARE ENGINEERING",
+          "de": "06 / SOFTWARE-ENTWICKLUNG"
+        },
+        "title": {
+          "uk": "Інструменти для апаратури",
+          "en": "Tools that support hardware",
+          "de": "Werkzeuge rund um Hardware"
+        },
+        "lead": {
+          "uk": "Десктопні застосунки керування, діагностичні утиліти й кросплатформні інженерні процеси.",
+          "en": "Desktop control applications, diagnostic utilities and cross-platform engineering workflows.",
+          "de": "Desktop-Steuerprogramme, Diagnosewerkzeuge und plattformübergreifende Engineering-Abläufe."
+        },
+        "blocks": [
+          {
+            "t": "fig",
+            "img": "modbus-tool",
+            "caption": {
+              "uk": "Утиліта діагностики Modbus RTU і моніторингу регістрів",
+              "en": "Modbus RTU diagnostic and register-monitoring utility",
+              "de": "Modbus-RTU-Diagnose- und Registerüberwachungsprogramm"
+            },
+            "wide": true
+          },
+          {
+            "t": "h4",
+            "text": {
+              "uk": "ДЕСКТОПНІ ІНСТРУМЕНТИ",
+              "en": "DESKTOP TOOLS",
+              "de": "DESKTOP-WERKZEUGE"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "ПЗ на C# для налаштування й керування датчиками, обміну через послідовний порт, аналізу Modbus, перегляду CAN-пакетів і діагностики пристроїв. Містить власні інтерфейси для інженерних і сервісних задач.",
+              "en": "C# software for sensor configuration and control, serial-port communication, Modbus analysis, CAN packet inspection and device diagnostics. Includes custom user interfaces for engineering and service tasks.",
+              "de": "C#-Software zur Sensorkonfiguration und -steuerung, serielle Kommunikation, Modbus-Analyse, CAN-Paketinspektion und Gerätediagnose. Mit eigenen Oberflächen für Engineering- und Serviceaufgaben."
+            }
+          },
+          {
+            "t": "grid2",
+            "items": [
+              [
+                {
+                  "t": "fig",
+                  "img": "can-tool",
+                  "caption": {
+                    "uk": "Утиліта аналізу CAN / пакетів",
+                    "en": "CAN analysis / packet utility",
+                    "de": "CAN-Analyse- / Paketprogramm"
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "dmm-config",
+                  "caption": {
+                    "uk": "Застосунок налаштування DMM",
+                    "en": "DMM configuration application",
+                    "de": "DMM-Konfigurationsprogramm"
+                  }
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "web",
+        "type": "blocks",
+        "kicker": {
+          "uk": "06A / ВЕБ-РОЗРОБКА",
+          "en": "06A / WEB DEVELOPMENT",
+          "de": "06A / WEB-ENTWICKLUNG"
+        },
+        "title": {
+          "uk": "Сайти й веб-інтерфейси",
+          "en": "Websites & web interfaces",
+          "de": "Webseiten & Weboberflächen"
+        },
+        "lead": {
+          "uk": "Швидкі, приватні, багатомовні сайти та інструменти для їх ведення.",
+          "en": "Fast, private, multilingual sites, with the tools to run them.",
+          "de": "Schnelle, private, mehrsprachige Webseiten samt den Werkzeugen für ihren Betrieb."
+        },
+        "blocks": [
+          {
+            "t": "fig",
+            "img": "site-cards",
+            "caption": {
+              "uk": "viteh.org: картки виробів із 3D-переглядом (UA / EN / DE, світла й темна тема)",
+              "en": "viteh.org: product cards with a 3D view (UA / EN / DE, light and dark theme)",
+              "de": "viteh.org: Produktkarten mit 3D-Ansicht (UA / EN / DE, helles und dunkles Theme)"
+            },
+            "wide": true
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "СТАТИЧНІ САЙТИ БЕЗ ТРЕКЕРІВ",
+              "en": "STATIC SITES, NO TRACKERS",
+              "de": "STATISCHE SEITEN OHNE TRACKER"
+            },
+            "text": [
+              {
+                "uk": "Статичні сайти без збірки та без сторонніх запитів (без CDN, шрифтів чи аналітики), створені з урахуванням GDPR, із юридичними сторінками для Німеччини та світлою/темною темами.",
+                "en": "Static, no-build sites without third-party requests (no CDN, fonts or analytics), built to be GDPR-friendly, with legal pages for Germany and light/dark themes.",
+                "de": "Statische Seiten ohne Build-Schritt und ohne Drittanbieter-Anfragen (kein CDN, keine Fonts oder Analytics), DSGVO-freundlich gebaut, mit Rechtstexten für Deutschland und hellem/dunklem Theme."
+              }
+            ],
+            "skills": {
+              "uk": "веб-дизайн / швидкодія / приватність",
+              "en": "web design / performance / privacy",
+              "de": "Webdesign / Performance / Datenschutz"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ФОРМИ ЗВОРОТНОГО ЗВ'ЯЗКУ Й ІНТЕГРАЦІЇ",
+              "en": "CONTACT FORMS & INTEGRATIONS",
+              "de": "KONTAKTFORMULARE & INTEGRATIONEN"
+            },
+            "text": [
+              {
+                "uk": "Форма зворотного зв'язку з вкладеннями на Cloudflare Worker і Email Routing, із захистом від спаму та перевіркою джерела запиту; точки підключення пошти й чат-асистентів.",
+                "en": "Contact form with attachments served by a Cloudflare Worker and Email Routing, with spam protection and origin checks; hooks for mail and chat assistants.",
+                "de": "Kontaktformular mit Anhängen über einen Cloudflare Worker und Email Routing, mit Spam-Schutz und Origin-Prüfung; Anbindungen für Mail- und Chat-Assistenten."
+              }
+            ],
+            "skills": {
+              "uk": "Cloudflare Workers / форми / інтеграції",
+              "en": "Cloudflare Workers / forms / integrations",
+              "de": "Cloudflare Workers / Formulare / Integrationen"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "3D-ГАЛЕРЕЯ ВИРОБІВ",
+              "en": "3D PRODUCT GALLERY",
+              "de": "3D-PRODUKTGALERIE"
+            },
+            "text": [
+              {
+                "uk": "Інтерактивні 3D-моделі апаратних виробів (GLB з Blender), що завантажуються за потреби, по одній сцені, із запасним плоским зображенням.",
+                "en": "Interactive 3D models of hardware products (GLB exported from Blender), loaded lazily, one scene at a time, with a flat-image fallback.",
+                "de": "Interaktive 3D-Modelle von Hardware-Produkten (GLB aus Blender), träge geladen, jeweils eine Szene, mit Fallback auf ein flaches Bild."
+              }
+            ],
+            "skills": {
+              "uk": "3D у вебі / Blender / доступність",
+              "en": "3D on the web / Blender / accessibility",
+              "de": "3D im Web / Blender / Barrierefreiheit"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ПРИВАТНА АДМІНКА Й ШАБЛОНИ",
+              "en": "PRIVATE ADMIN & TEMPLATES",
+              "de": "PRIVATE ADMIN & VORLAGEN"
+            },
+            "text": [
+              {
+                "uk": "Приватна адмінка сайту: вмикання й вимикання розділів, редагування текстів трьома мовами, збирання сторінок із шаблонів, перегляд і публікація.",
+                "en": "A private admin for the site: switch sections on or off, edit texts in three languages, build pages from templates, preview, then publish.",
+                "de": "Ein privates Admin für die Seite: Bereiche ein- und ausschalten, Texte in drei Sprachen bearbeiten, Seiten aus Vorlagen bauen, Vorschau, dann veröffentlichen."
+              }
+            ],
+            "skills": {
+              "uk": "інструменти адміністрування / робота з вмістом",
+              "en": "admin tooling / content workflow",
+              "de": "Admin-Werkzeuge / Content-Workflow"
+            }
+          }
+        ]
+      },
+      {
+        "id": "android",
+        "type": "blocks",
+        "kicker": {
+          "uk": "06B / ANDROID-ЗАСТОСУНКИ",
+          "en": "06B / ANDROID APPLICATIONS",
+          "de": "06B / ANDROID-ANWENDUNGEN"
+        },
+        "title": {
+          "uk": "Android-клієнт для приватних AI-систем",
+          "en": "Android client for private AI systems",
+          "de": "Android-Client für private KI-Systeme"
+        },
+        "lead": {
+          "uk": "Нативний Android-застосунок для власних серверів і пристроїв користувача.",
+          "en": "Native Android application for the user's own servers and devices.",
+          "de": "Native Android-Anwendung für die eigenen Server und Geräte des Nutzers."
+        },
+        "blocks": [
+          {
+            "t": "card",
+            "title": {
+              "uk": "ЧАТ І ГОЛОСОВИЙ АГЕНТ",
+              "en": "CHAT & VOICE AGENT",
+              "de": "CHAT & SPRACHAGENT"
+            },
+            "text": [
+              {
+                "uk": "Застосунок на Kotlin і Jetpack Compose з вкладками чату й голосового агента: розпізнавання мовлення, голосові відповіді, керування кнопками гарнітури та сервіси переднього плану.",
+                "en": "Kotlin and Jetpack Compose app with a chat tab and a voice-agent tab: speech recognition, spoken replies, headset button controls and foreground services.",
+                "de": "App in Kotlin und Jetpack Compose mit Chat- und Sprachagent-Tab: Spracherkennung, gesprochene Antworten, Headset-Tastensteuerung und Vordergrunddienste."
+              }
+            ],
+            "skills": {
+              "uk": "Kotlin / Compose / аудіоконвеєри",
+              "en": "Kotlin / Compose / audio pipelines",
+              "de": "Kotlin / Compose / Audio-Pipelines"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ПЕРЕКЛАДАЧ І РЕЖИМ ЛЕКЦІЇ",
+              "en": "INTERPRETER & LECTURE MODE",
+              "de": "DOLMETSCHER & VORLESUNGSMODUS"
+            },
+            "text": [
+              {
+                "uk": "Переклад наживо й запис лекцій із сегментацією мовлення та детекцією голосу; працює з локальними мовними моделями.",
+                "en": "Live translation and lecture capture with speech segmentation and voice detection, running against local speech and language models.",
+                "de": "Live-Übersetzung und Vorlesungsaufzeichnung mit Sprachsegmentierung und Spracherkennung, auf lokalen Sprach- und Sprachmodellen."
+              }
+            ],
+            "skills": {
+              "uk": "обробка мовлення / стримінг / UX",
+              "en": "speech processing / streaming / UX",
+              "de": "Sprachverarbeitung / Streaming / UX"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ФАЙЛИ, ПОШТА Й ДОШКА АГЕНТА",
+              "en": "FILES, MAIL & AGENT BOARD",
+              "de": "DATEIEN, MAIL & AGENTEN-BOARD"
+            },
+            "text": [
+              {
+                "uk": "Вкладка файлів із переглядом, вкладка пошти зі стислими викладами та push-сповіщеннями, дошка завдань для агентів.",
+                "en": "Files tab with previews, a mail tab with summaries and push-style notifications, and a board for agent tasks.",
+                "de": "Datei-Tab mit Vorschau, Mail-Tab mit Zusammenfassungen und Push-Benachrichtigungen sowie ein Board für Agentenaufgaben."
+              }
+            ],
+            "skills": {
+              "uk": "архітектура застосунку / сповіщення / протоколи",
+              "en": "app architecture / notifications / protocols",
+              "de": "App-Architektur / Benachrichtigungen / Protokolle"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "РОБОТА В ПРИВАТНІЙ МЕРЕЖІ",
+              "en": "PRIVATE-NETWORK OPERATIONS",
+              "de": "BETRIEB IM PRIVATEN NETZ"
+            },
+            "text": [
+              {
+                "uk": "Маршрутизація через приватний tailnet із запасними шляхами, автоматичні тихі оновлення, журнали на пристрої, які можна вивантажити для діагностики, і скриптований процес релізів.",
+                "en": "Routing over a private tailnet with fallbacks, automatic silent updates, on-device logs that can be uploaded for diagnostics, and a scripted release process.",
+                "de": "Routing über ein privates Tailnet mit Fallbacks, automatische stille Updates, Logs auf dem Gerät, die zur Diagnose hochgeladen werden können, und ein skriptgesteuerter Release-Prozess."
+              }
+            ],
+            "skills": {
+              "uk": "мережі / доставка / супровід",
+              "en": "networking / delivery / maintenance",
+              "de": "Netzwerk / Auslieferung / Wartung"
+            }
+          },
+          {
+            "t": "grid2",
+            "items": [
+              [
+                {
+                  "t": "fig",
+                  "img": "ai-chat",
+                  "caption": {
+                    "uk": "Чат",
+                    "en": "Chat",
+                    "de": "Chat"
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "ai-translate",
+                  "caption": {
+                    "uk": "Переклад наживо",
+                    "en": "Live translation",
+                    "de": "Live-Übersetzung"
+                  }
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "aiclient",
+        "type": "blocks",
+        "kicker": {
+          "uk": "06C / AI-КЛІЄНТ У РОБОТІ",
+          "en": "06C / AI CLIENT IN USE",
+          "de": "06C / KI-CLIENT IM EINSATZ"
+        },
+        "title": {
+          "uk": "Приватний AI-клієнт: веб і Android",
+          "en": "Private AI client: web and Android",
+          "de": "Privater KI-Client: Web und Android"
+        },
+        "lead": {
+          "uk": "Та сама приватна AI-система, доступна з браузера й нативного планшетного застосунку (екрани з тестовими даними; приватні тексти розмито).",
+          "en": "The same private AI system reached from a browser and from a native tablet app (screens with test data; private texts blurred).",
+          "de": "Dasselbe private KI-System, erreichbar im Browser und in einer nativen Tablet-App (Bildschirme mit Testdaten; private Texte unkenntlich gemacht)."
+        },
+        "blocks": [
+          {
+            "t": "grid2",
+            "items": [
+              [
+                {
+                  "t": "fig",
+                  "img": "ai-mail",
+                  "caption": {
+                    "uk": "Поштовий агент (тестові листи)",
+                    "en": "Mail agent (test messages)",
+                    "de": "Mail-Agent (Testnachrichten)"
+                  }
+                }
+              ],
+              [
+                {
+                  "t": "fig",
+                  "img": "ai-service",
+                  "caption": {
+                    "uk": "Стан сервісу",
+                    "en": "Service status",
+                    "de": "Dienststatus"
+                  }
+                }
+              ]
+            ]
+          },
+          {
+            "t": "webrow",
+            "items": [
+              {
+                "t": "fig",
+                "img": "ai-web-desktop",
+                "caption": {
+                  "uk": "Веб: сторінка проєкту, світла тема",
+                  "en": "Web: project page, light theme",
+                  "de": "Web: Projektseite, helles Theme"
+                }
+              },
+              {
+                "t": "fig",
+                "img": "ai-web-phone-dark",
+                "caption": {
+                  "uk": "Веб на телефоні, темна тема",
+                  "en": "Web on a phone, dark theme",
+                  "de": "Web auf dem Smartphone, dunkles Theme"
+                }
+              },
+              {
+                "t": "fig",
+                "img": "ai-web-phone-light",
+                "caption": {
+                  "uk": "Веб на телефоні, світла тема",
+                  "en": "Web on a phone, light theme",
+                  "de": "Web auf dem Smartphone, helles Theme"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "services",
+        "type": "services",
+        "kicker": {
+          "uk": "07 / ПОСЛУГИ",
+          "en": "07 / SERVICES",
+          "de": "07 / LEISTUNGEN"
+        },
+        "title": {
+          "uk": "Що я пропоную",
+          "en": "What I offer",
+          "de": "Was ich anbiete"
+        },
+        "lead": {
+          "uk": "Ті самі назви послуг, що й на viteh.org; кожна підтверджена роботами з цього портфоліо.",
+          "en": "The same service names as on viteh.org, each backed by the work shown in this portfolio.",
+          "de": "Dieselben Leistungsnamen wie auf viteh.org, jeweils durch die in diesem Portfolio gezeigten Arbeiten belegt."
+        },
+        "note": {
+          "uk": "Десктопні та кросплатформні застосунки (C# WinForms/WPF, Qt, GTK, Swift): старі проєкти на цих платформах не збереглися й не показуються як кейси. Їх пропонується розробляти під замовлення разом з AI-агентами; поточні приклади: Android-клієнт, застосунок на Rust/Slint, веб-інструменти та голосовий асистент.",
+          "en": "Desktop and cross-platform apps (C# WinForms/WPF, Qt, GTK, Swift): earlier projects on these platforms were not preserved and are not shown as case studies. They are offered as custom development together with AI agents; current examples are the Android client, a Rust/Slint application, web tools and a voice assistant.",
+          "de": "Desktop- und plattformübergreifende Apps (C# WinForms/WPF, Qt, GTK, Swift): frühere Projekte auf diesen Plattformen sind nicht erhalten und werden nicht als Fallstudien gezeigt. Sie werden als individuelle Entwicklung gemeinsam mit KI-Agenten angeboten; aktuelle Beispiele sind der Android-Client, eine Rust/Slint-Anwendung, Web-Werkzeuge und ein Sprachassistent."
+        }
+      },
+      {
+        "id": "archive",
+        "type": "archive",
+        "kicker": {
+          "uk": "07A / ПРОЄКТИ 2022–2025",
+          "en": "07A / PROJECTS 2022–2025",
+          "de": "07A / PROJEKTE 2022–2025"
+        },
+        "title": {
+          "uk": "Проєкти 2022–2025",
+          "en": "Projects 2022–2025",
+          "de": "Projekte 2022–2025"
+        },
+        "note": {
+          "uk": "Ролі, замовники та результати — за запитом.",
+          "en": "Roles, customers and results are available on request.",
+          "de": "Rollen, Auftraggeber und Ergebnisse auf Anfrage."
+        },
+        "more": {
+          "uk": "Ще плати, прошивки й програми з архіву проєктів.",
+          "en": "More boards, firmware and programs from the project archive.",
+          "de": "Weitere Platinen, Firmware und Programme aus dem Projektarchiv."
+        },
+        "cont": {
+          "uk": "продовження",
+          "en": "continued",
+          "de": "Fortsetzung"
+        }
+      },
+      {
+        "id": "embedded",
+        "type": "blocks",
+        "kicker": {
+          "uk": "08 / R&D ВБУДОВАНИХ СИСТЕМ",
+          "en": "08 / EMBEDDED R&D",
+          "de": "08 / EMBEDDED-F&E"
+        },
+        "title": {
+          "uk": "Вбудовані системи та HMI",
+          "en": "Embedded Systems & HMI",
+          "de": "Embedded-Systeme & HMI"
+        },
+        "lead": {
+          "uk": "Дослідження, експерименти й прототипи — частина моєї прикладної інженерної експертизи, а не лише майбутні ідеї виробів.",
+          "en": "Research, experiments and prototypes are part of my applied engineering expertise, not just future product ideas.",
+          "de": "Forschung, Experimente und Prototypen gehören zu meiner angewandten Ingenieurskompetenz, nicht nur zu künftigen Produktideen."
+        },
+        "blocks": [
+          {
+            "t": "card",
+            "title": {
+              "uk": "ГРАФІЧНІ ІНТЕРФЕЙСИ ESP32-S3 / LVGL",
+              "en": "ESP32-S3 / LVGL GRAPHICAL INTERFACES",
+              "de": "GRAFISCHE OBERFLÄCHEN ESP32-S3 / LVGL"
+            },
+            "text": [
+              {
+                "uk": "Реалізація та оцінка сенсорних інтерфейсів на LVGL 9.x; запуск дисплеїв на контролерах CO5300, SH8601, NV3041A і ST7789; підключення дисплеїв по SPI/QSPI, сенсор FT3168 і обмеження PSRAM.",
+                "en": "Implementation and evaluation of LVGL 9.x touchscreen user interfaces; display bring-up using CO5300, SH8601, NV3041A and ST7789 controllers; SPI/QSPI display integration, FT3168 touch and PSRAM constraints.",
+                "de": "Umsetzung und Bewertung von LVGL-9.x-Touchoberflächen; Display-Inbetriebnahme mit den Controllern CO5300, SH8601, NV3041A und ST7789; SPI/QSPI-Displayanbindung, FT3168-Touch und PSRAM-Einschränkungen."
+              }
+            ],
+            "skills": {
+              "uk": "архітектура UI / драйвери дисплеїв / налагодження HMI",
+              "en": "UI architecture / display drivers / HMI debugging",
+              "de": "UI-Architektur / Display-Treiber / HMI-Debugging"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "КЕРУВАННЯ ЖИВЛЕННЯМ І БЕЗДРОТОВЕ КЕРУВАННЯ",
+              "en": "POWER MANAGEMENT & WIRELESS CONTROL",
+              "de": "ENERGIEMANAGEMENT & FUNKSTEUERUNG"
+            },
+            "text": [
+              {
+                "uk": "Експерименти з керування серводвигунами на ESP32-C6 + ESP-NOW із циклами пробудження, передачі та сну. Оцінено поведінку в deep-sleep і light-sleep, споживання, ШІМ-керування та швидкість реакції.",
+                "en": "ESP32-C6 + ESP-NOW servo-control experiments with wake, transmission and sleep cycles. Evaluated deep-sleep and light-sleep behavior, power consumption, PWM control and responsiveness.",
+                "de": "Experimente zur Servosteuerung mit ESP32-C6 + ESP-NOW mit Aufwach-, Sende- und Schlafzyklen. Bewertet wurden Deep-Sleep- und Light-Sleep-Verhalten, Stromverbrauch, PWM-Steuerung und Reaktionszeit."
+              }
+            ],
+            "skills": {
+              "uk": "енергоощадне проєктування / телеметрія / вимірювання",
+              "en": "low-power design / telemetry / measurement",
+              "de": "Low-Power-Design / Telemetrie / Messung"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "МК-ПЛАТФОРМИ Й ЗАПУСК ПЛАТ",
+              "en": "MCU PLATFORMS & BOARD BRING-UP",
+              "de": "MCU-PLATTFORMEN & BOARD-BRING-UP"
+            },
+            "text": [
+              {
+                "uk": "Досвід роботи з STM32 і ESP32, а також з RISC-V і Linux-платами, зокрема Milk-V Duo, LicheeRV Nano та пристроями на RK3506. Оцінено можливості периферії й процеси розробки.",
+                "en": "Experience exploring STM32 and ESP32 alongside RISC-V and Linux-capable boards including Milk-V Duo, LicheeRV Nano and RK3506-based hardware. Evaluated peripheral capabilities and development workflows.",
+                "de": "Erfahrung mit STM32 und ESP32 sowie RISC-V- und Linux-fähigen Boards, darunter Milk-V Duo, LicheeRV Nano und RK3506-basierte Hardware. Bewertet wurden Peripheriefähigkeiten und Entwicklungsabläufe."
+              }
+            ],
+            "skills": {
+              "uk": "оцінка платформ / інтеграція прошивок",
+              "en": "platform evaluation / firmware integration",
+              "de": "Plattformbewertung / Firmware-Integration"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "EDGE-АПАРАТУРА Й АРХІТЕКТУРА ПЛАТ",
+              "en": "EDGE HARDWARE & PCB ARCHITECTURE",
+              "de": "EDGE-HARDWARE & PLATINENARCHITEKTUR"
+            },
+            "text": [
+              {
+                "uk": "Проєктне дослідження підключених плат на мікроконтролерах з CAN, RS-485, Ethernet, цифровим вводом-виводом і інтерфейсами датчиків; досвід у розведенні плат, сумісності та фізичній інтеграції.",
+                "en": "Design investigation of connected microcontroller boards with CAN, RS-485, Ethernet, digital I/O and sensor interfaces; experience considering board layout, interoperability and physical integration.",
+                "de": "Entwurfsuntersuchung vernetzter Mikrocontroller-Platinen mit CAN, RS-485, Ethernet, digitalen I/Os und Sensorschnittstellen; Erfahrung mit Platinenlayout, Interoperabilität und physischer Integration."
+              }
+            ],
+            "skills": {
+              "uk": "схеми / вибір інтерфейсів / прототипування",
+              "en": "schematics / interface selection / prototyping",
+              "de": "Schaltpläne / Schnittstellenauswahl / Prototyping"
+            }
+          }
+        ]
+      },
+      {
+        "id": "systems",
+        "type": "blocks",
+        "kicker": {
+          "uk": "09 / R&D СИСТЕМ",
+          "en": "09 / SYSTEMS R&D",
+          "de": "09 / SYSTEM-F&E"
+        },
+        "title": {
+          "uk": "Linux, мережі й діагностика",
+          "en": "Linux, Networks & Diagnostics",
+          "de": "Linux, Netzwerke & Diagnose"
+        },
+        "lead": {
+          "uk": "Практична системна інтеграція, налагодження, аналіз протоколів і експерименти на реальних пристроях.",
+          "en": "Hands-on system integration, debugging, protocol analysis and real-device experimentation.",
+          "de": "Praktische Systemintegration, Debugging, Protokollanalyse und Experimente an realen Geräten."
+        },
+        "blocks": [
+          {
+            "t": "card",
+            "title": {
+              "uk": "LINUX / OPENWRT МЕРЕЖІ",
+              "en": "LINUX / OPENWRT NETWORKING",
+              "de": "LINUX / OPENWRT-NETZWERKE"
+            },
+            "text": [
+              {
+                "uk": "Налаштування й дослідження шлюзів OpenWrt, віртуалізованих маршрутизаторів, IPv4-маршрутизації, LAN-мостів, маршрутизації підмереж Tailscale, Cloudflare Tunnel та процесів віддаленого керування.",
+                "en": "Configured and investigated OpenWrt gateways, virtualized routers, IPv4 routing, LAN bridges, Tailscale subnet routing, Cloudflare Tunnel and remote management workflows.",
+                "de": "Konfiguration und Untersuchung von OpenWrt-Gateways, virtualisierten Routern, IPv4-Routing, LAN-Bridges, Tailscale-Subnetz-Routing, Cloudflare Tunnel und Fernverwaltungs-Abläufen."
+              }
+            ],
+            "skills": {
+              "uk": "мережі / логіка фаєрвола / віддалений доступ",
+              "en": "networking / firewall logic / remote access",
+              "de": "Netzwerk / Firewall-Logik / Fernzugriff"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ОДНОПЛАТНІ КОМП'ЮТЕРИ Й СЕРВІСИ",
+              "en": "SINGLE-BOARD COMPUTERS & SERVICES",
+              "de": "EINPLATINENCOMPUTER & DIENSTE"
+            },
+            "text": [
+              {
+                "uk": "Дослідження Raspberry Pi та вбудованих Linux-платформ: планування сховища й завантаження, SSH, сервіси, робота з Docker і автоматизація Linux для пристроїв.",
+                "en": "Raspberry Pi and embedded Linux platform investigations: storage and boot planning, SSH, services, Docker-based workflows and device-oriented Linux automation.",
+                "de": "Untersuchungen zu Raspberry Pi und Embedded-Linux-Plattformen: Speicher- und Boot-Planung, SSH, Dienste, Docker-Abläufe und geräteorientierte Linux-Automatisierung."
+              }
+            ],
+            "skills": {
+              "uk": "адміністрування Linux / Bash / системна інтеграція",
+              "en": "Linux administration / Bash / systems integration",
+              "de": "Linux-Administration / Bash / Systemintegration"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "АВТОМОБІЛЬНА CAN-ШИНА Й ДІАГНОСТИКА",
+              "en": "AUTOMOTIVE CAN BUS & DIAGNOSTICS",
+              "de": "FAHRZEUG-CAN-BUS & DIAGNOSE"
+            },
+            "text": [
+              {
+                "uk": "Практичний ремонт і діагностика гібридної батареї Toyota Prius із CANable V2 та Python-CAN, обмін запитами й відповідями з ECU, напруги блоків батареї та вимірювання при рекуперації й навантаженні.",
+                "en": "Practical Toyota Prius hybrid-battery repair and diagnostic work with CANable V2, Python-CAN, ECU request/response traffic, battery-block voltage and regeneration/load measurements.",
+                "de": "Praktische Reparatur und Diagnose der Toyota-Prius-Hybridbatterie mit CANable V2, Python-CAN, ECU-Anfrage/Antwort-Verkehr, Blockspannungen und Messungen bei Rekuperation und Last."
+              }
+            ],
+            "skills": {
+              "uk": "CAN / діагностика / інтерпретація даних / ремонт апаратури",
+              "en": "CAN / diagnostics / data interpretation / hardware repair",
+              "de": "CAN / Diagnose / Dateninterpretation / Hardware-Reparatur"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ІНТЕГРАЦІЯ ДЕСКТОПУ Й ПРИСТРОЇВ",
+              "en": "DESKTOP & DEVICE INTEGRATION",
+              "de": "DESKTOP- & GERÄTEINTEGRATION"
+            },
+            "text": [
+              {
+                "uk": "Досвід розв'язання проблем інтеграції апаратури й ПЗ в Linux і Windows: інтерфейси пристроїв, віддалений робочий стіл, служби друку, USB, послідовні інструменти та процеси прошивання.",
+                "en": "Experience solving hardware/software integration problems across Linux and Windows, including device interfaces, remote desktop, printing services, USB, serial tools and firmware processes.",
+                "de": "Erfahrung bei der Lösung von Hardware/Software-Integrationsproblemen unter Linux und Windows: Geräteschnittstellen, Remote-Desktop, Druckdienste, USB, serielle Werkzeuge und Firmware-Prozesse."
+              }
+            ],
+            "skills": {
+              "uk": "пошук несправностей / інтеграція / автоматизація",
+              "en": "troubleshooting / integration / automation",
+              "de": "Fehlersuche / Integration / Automatisierung"
+            }
+          }
+        ]
+      },
+      {
+        "id": "compute",
+        "type": "blocks",
+        "kicker": {
+          "uk": "10 / R&D ОБЧИСЛЕНЬ",
+          "en": "10 / COMPUTE R&D",
+          "de": "10 / COMPUTE-F&E"
+        },
+        "title": {
+          "uk": "Локальний AI та GPU-інженерія",
+          "en": "Local AI & GPU Engineering",
+          "de": "Lokale KI & GPU-Engineering"
+        },
+        "lead": {
+          "uk": "Прикладні дослідження, що дали підтверджені технічні знання з розгортання моделей і гетерогенних обчислень.",
+          "en": "Applied investigations that developed demonstrable technical knowledge in model deployment and heterogeneous computing.",
+          "de": "Angewandte Untersuchungen, die belegbares technisches Wissen zu Modellbereitstellung und heterogenem Rechnen aufgebaut haben."
+        },
+        "blocks": [
+          {
+            "t": "card",
+            "title": {
+              "uk": "РОЗГОРТАННЯ ЛОКАЛЬНИХ LLM",
+              "en": "LOCAL LLM DEPLOYMENT",
+              "de": "LOKALE LLM-BEREITSTELLUNG"
+            },
+            "text": [
+              {
+                "uk": "Практична робота й тестування локальних моделей для коду та загального призначення, зокрема квантованих GGUF. Порівняно якість моделей, квантизацію, обсяг пам'яті та компроміси із затримкою.",
+                "en": "Hands-on operation and testing of coding and general-purpose local models, including GGUF quantized deployments. Compared model quality, quantization, memory footprint and latency trade-offs.",
+                "de": "Praktischer Betrieb und Test lokaler Coding- und Allzweckmodelle, auch GGUF-quantisiert. Verglichen wurden Modellqualität, Quantisierung, Speicherbedarf und Latenz-Kompromisse."
+              }
+            ],
+            "skills": {
+              "uk": "розгортання інференсу / бенчмаркінг / оцінка",
+              "en": "inference deployment / benchmarking / evaluation",
+              "de": "Inferenz-Bereitstellung / Benchmarking / Bewertung"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "AMD ROCm / КЕРУВАННЯ ПАМ'ЯТТЮ",
+              "en": "AMD ROCm / MEMORY MANAGEMENT",
+              "de": "AMD ROCm / SPEICHERVERWALTUNG"
+            },
+            "text": [
+              {
+                "uk": "Розібрано поведінку завантаження моделей ROCm на системі AMD з уніфікованою пам'яттю: mmap проти mlock, ліміти пам'яті й резидентність моделі. Задокументовано успішні тести виклику інструментів у власних експериментах.",
+                "en": "Troubleshot ROCm model-loading behavior on an AMD unified-memory system, including mmap versus mlock loading, memory limits and model residency. Documented successful tool-call tests in personal experiments.",
+                "de": "Fehlersuche beim ROCm-Modellladen auf einem AMD-System mit Unified Memory, einschließlich mmap gegenüber mlock, Speichergrenzen und Modellresidenz. Erfolgreiche Tool-Call-Tests in eigenen Experimenten dokumentiert."
+              }
+            ],
+            "skills": {
+              "uk": "ROCm / налагодження runtime / профілювання пам'яті",
+              "en": "ROCm / runtime debugging / memory profiling",
+              "de": "ROCm / Runtime-Debugging / Speicherprofilierung"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "MULTI-GPU / РОЗМІЩЕННЯ ЕКСПЕРТІВ",
+              "en": "MULTI-GPU / EXPERT PLACEMENT",
+              "de": "MULTI-GPU / EXPERTEN-PLATZIERUNG"
+            },
+            "text": [
+              {
+                "uk": "Досліджено конфігурації NVIDIA й AMD, ліміти VRAM, розподіл навантаження CPU/GPU, розміщення активних експертів MoE, розбиття та можливий вплив на пропускну здатність інференсу.",
+                "en": "Explored NVIDIA and AMD compute configurations, GPU VRAM limits, CPU/GPU offload, MoE active-expert placement, partitioning and the potential impact on inference throughput.",
+                "de": "Untersucht wurden NVIDIA- und AMD-Konfigurationen, VRAM-Grenzen, CPU/GPU-Offload, Platzierung aktiver MoE-Experten, Partitionierung und der mögliche Einfluss auf den Inferenzdurchsatz."
+              }
+            ],
+            "skills": {
+              "uk": "оптимізація з урахуванням апаратури / аналіз продуктивності",
+              "en": "hardware-aware optimization / performance analysis",
+              "de": "Hardware-bewusste Optimierung / Leistungsanalyse"
+            }
+          },
+          {
+            "t": "card",
+            "title": {
+              "uk": "ІНЖЕНЕРНІ ПРОЦЕСИ З AI-АСИСТЕНТАМИ",
+              "en": "AI-ASSISTED ENGINEERING WORKFLOWS",
+              "de": "KI-GESTÜTZTE ENGINEERING-ABLÄUFE"
+            },
+            "text": [
+              {
+                "uk": "Експерименти з локальними асистентами для коду, надійністю виклику інструментів, скриптами, процесами на Git і повторюваними технічними перевірками для вбудованої та програмної розробки.",
+                "en": "Experimented with local coding assistants, tool-calling reliability, scripting, Git-based workflows and repeatable technical checks for embedded and software development.",
+                "de": "Experimente mit lokalen Coding-Assistenten, Zuverlässigkeit von Tool-Aufrufen, Skripting, Git-basierten Abläufen und wiederholbaren technischen Prüfungen für Embedded- und Software-Entwicklung."
+              }
+            ],
+            "skills": {
+              "uk": "інструменти розробника / валідація / процеси агентів",
+              "en": "developer tooling / validation / agent workflows",
+              "de": "Entwickler-Tooling / Validierung / Agenten-Abläufe"
+            }
+          }
+        ]
+      },
+      {
+        "id": "collaboration",
+        "type": "blocks",
+        "kicker": {
+          "uk": "11 / СПІВПРАЦЯ",
+          "en": "11 / COLLABORATION",
+          "de": "11 / ZUSAMMENARBEIT"
+        },
+        "title": {
+          "uk": "Створюю справжні системи.",
+          "en": "Building real systems.",
+          "de": "Echte Systeme bauen."
+        },
+        "lead": {
+          "uk": "Працюю на межі апаратури й ПЗ: від вбудованих інтерфейсів, вимірювання та зв'язку до ПК-утиліт, сайтів, Android-застосунків, інструментів діагностики й фізичних прототипів виробів.",
+          "en": "I work across the boundary of hardware and software: from embedded interfaces, sensing and communication to PC utilities, websites, Android applications, troubleshooting tools and physical product prototypes.",
+          "de": "Ich arbeite an der Grenze von Hardware und Software: von Embedded-Schnittstellen, Sensorik und Kommunikation bis zu PC-Werkzeugen, Webseiten, Android-Apps, Diagnosewerkzeugen und physischen Produktprototypen."
+        },
+        "blocks": [
+          {
+            "t": "h3",
+            "text": {
+              "uk": "РОЛІ",
+              "en": "RELEVANT ROLES",
+              "de": "RELEVANTE ROLLEN"
+            }
+          },
+          {
+            "t": "list",
+            "items": [
+              {
+                "uk": "Інженер вбудованих систем / розробник прошивок",
+                "en": "Embedded Systems Engineer / Firmware Developer",
+                "de": "Embedded-Systems-Ingenieur / Firmware-Entwickler"
+              },
+              {
+                "uk": "Розробник електроніки й плат / розробник IoT і автоматизації",
+                "en": "Electronics & PCB Designer / IoT & Automation Developer",
+                "de": "Elektronik- & Leiterplattenentwickler / IoT- & Automatisierungsentwickler"
+              },
+              {
+                "uk": "Інженер інтеграції апаратури й ПЗ",
+                "en": "Hardware–Software Integration Engineer",
+                "de": "Hardware-Software-Integrationsingenieur"
+              },
+              {
+                "uk": "Розробник веб- і Android-застосунків",
+                "en": "Web & Android Application Developer",
+                "de": "Web- & Android-Anwendungsentwickler"
+              }
+            ]
+          },
+          {
+            "t": "h3",
+            "text": {
+              "uk": "ТЕХНОЛОГІЇ",
+              "en": "TECHNOLOGY",
+              "de": "TECHNOLOGIE"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "C · C++ · C# (WinForms, WPF) · Qt · GTK · Swift · Python · Bash · Kotlin · Jetpack Compose · Rust / Slint · HTML/CSS/JS · Cloudflare · STM32 · ESP32 · Linux · KiCad · Altium · Modbus · CAN · LVGL",
+              "en": "C · C++ · C# (WinForms, WPF) · Qt · GTK · Swift · Python · Bash · Kotlin · Jetpack Compose · Rust / Slint · HTML/CSS/JS · Cloudflare · STM32 · ESP32 · Linux · KiCad · Altium · Modbus · CAN · LVGL",
+              "de": "C · C++ · C# (WinForms, WPF) · Qt · GTK · Swift · Python · Bash · Kotlin · Jetpack Compose · Rust / Slint · HTML/CSS/JS · Cloudflare · STM32 · ESP32 · Linux · KiCad · Altium · Modbus · CAN · LVGL"
+            }
+          },
+          {
+            "t": "h3",
+            "text": {
+              "uk": "КОНТАКТ",
+              "en": "CONTACT",
+              "de": "KONTAKT"
+            }
+          },
+          {
+            "t": "p",
+            "text": {
+              "uk": "info@viteh.org · viteh.org",
+              "en": "info@viteh.org · viteh.org",
+              "de": "info@viteh.org · viteh.org"
+            }
+          },
+          {
+            "t": "note",
+            "text": {
+              "uk": "Це портфоліо документує видиму частину робіт, виконаних з 2014 року; проєктів було більше, зокрема внутрішніх та інструментальних, які тут не показано. Його вперше складено у 2023 році з архівів проєктів і оригінальних фотографій, а у 2026 році доповнено новими роботами. Історичні вироби, поточні прототипи й триваючі дослідження позначено окремо. Зображення з наданого архіву проєктів, якщо не вказано інше.",
+              "en": "This portfolio documents the visible part of the work done since 2014; there were more projects, including internal and tooling work that is not shown. It was first compiled in 2023 from project archives and original photographs, and updated in 2026 with recent work. Historical products, current prototypes and ongoing R&D are identified separately. Images are from the supplied project archive unless otherwise noted.",
+              "de": "Dieses Portfolio dokumentiert den sichtbaren Teil der seit 2014 geleisteten Arbeit; es gab weitere Projekte, darunter interne und Werkzeugarbeiten, die hier nicht gezeigt werden. Es wurde 2023 aus Projektarchiven und Originalfotos zusammengestellt und 2026 um aktuelle Arbeiten ergänzt. Historische Produkte, aktuelle Prototypen und laufende F&E sind getrennt gekennzeichnet. Bilder stammen aus dem bereitgestellten Projektarchiv, sofern nicht anders angegeben."
+            }
+          }
+        ]
+      }
+    ]
   }
 }

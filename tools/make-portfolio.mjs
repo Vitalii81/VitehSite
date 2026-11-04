@@ -1,12 +1,13 @@
 // Builds the engineering portfolio PDF (A4) with a local headless Chrome. A development tool: only its output (assets/portfolio/*.pdf) ships.
-//   node tools/make-portfolio.mjs [--chrome /path/to/chrome] [--slots] [--no-renders]
+//   node tools/make-portfolio.mjs [--lang uk|en|de|all] [--chrome /path/to/chrome] [--slots] [--final] [--no-renders]
+//   --lang        which language to build (default all: three PDFs; English keeps the plain name, the others get _uk / _de)
 //   --slots       draws still-missing project pictures as red PLACEHOLDER boxes (run tools/make-portfolio-placeholders.mjs first); never for the published PDF
 //   --final       fails when any project picture slot is still a placeholder
 //   --no-renders  keep assets/portfolio/img/cronos-v*.jpg as they are instead of re-rendering them from the GLB files
 // Needs Chrome/Chromium (software WebGL is fine). No npm packages: it speaks the DevTools protocol over node's built-in WebSocket.
-// Inputs: data/portfolio-page.json (page content, shared with the web page portfolio/index.html), assets/portfolio/img/*.jpg (photos and screenshots already approved for publication), data/site.json (service names, so PDF and site agree),
+// Inputs: site.portfolioPage in data/site.json (page content in uk/en/de, shared with the web page portfolio/index.html and editable in the admin), assets/portfolio/img/*.jpg (photos and screenshots already approved for publication), data/site.json (service names, so PDF and site agree),
 //         assets/models/cronos-controller-v1.glb / -v2.glb (rendered through tools/poster.html, the same scene as the site).
-// Output: assets/portfolio/Vitalii_Krutikov_Engineering_Portfolio_2026.pdf; tools/portfolio/portfolio.html is a build by-product (git-ignored).
+// Output: assets/portfolio/Vitalii_Krutikov_Engineering_Portfolio_2026[_uk|_de].pdf; tools/portfolio/portfolio.html is a build by-product (git-ignored).
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -18,44 +19,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(n);
 const chromeArg = flag("--chrome") ? args[args.indexOf("--chrome") + 1] : null;
-const OUT = "assets/portfolio/Vitalii_Krutikov_Engineering_Portfolio_2026.pdf";
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const OUT = (lang) => `assets/portfolio/Vitalii_Krutikov_Engineering_Portfolio_2026${lang === "en" ? "" : "_" + lang}.pdf`;
+const langArg = flag("--lang") ? args[args.indexOf("--lang") + 1] : "all";
+const LANG_LIST = langArg === "all" ? ["en", "uk", "de"] : [langArg];
+if (!LANG_LIST.every((l) => ["uk", "en", "de"].includes(l))) { console.error("--lang must be uk, en, de or all"); process.exit(2); }
 
-/* ---------------- content (English; only facts from the owner's PDF v3, the skills file and the site) ---------------- */
 const site = JSON.parse(readFileSync(join(root, "data/site.json"), "utf8"));
-const services = site.services.items.map((s) => ({ title: s.title.en, text: s.text.en, points: s.points.map((p) => p.en) }));
-const contactEmail = site.contact.details.find((d) => d.label.en === "Email")?.value?.en ?? site.contact.details[0]?.value ?? "info@viteh.org";
-
-/* Page content lives in data/portfolio-page.json (shared with the web page /portfolio/); services and the project archive are generated from data/site.json and data/portfolio.json. */
-const pages = [];
-const page = (kicker, title, lead, body, cls = "") => pages.push({ kicker, title, lead, body, cls });
-const content = JSON.parse(readFileSync(join(root, "data/portfolio-page.json"), "utf8")).pages;
-
-/* Projects 2022-2025: texts from data/portfolio.json, pictures from data/portfolio-images.json. A "final" slot is shown; a "placeholder" slot is left out of
-   the public PDF, shown with a red PLACEHOLDER marker with --slots, and makes --final fail (so a PDF with missing pictures cannot be released unnoticed). */
 const archive = JSON.parse(readFileSync(join(root, "data/portfolio.json"), "utf8")).projects;
 const slotManifest = JSON.parse(readFileSync(join(root, "data/portfolio-images.json"), "utf8"));
-const cats = Object.fromEntries(site.work.archive.categories.map((c) => [c.id, c.label.en]));
-const pendingSlots = [];
-const archiveCard = (p) => {
-  const shots = (p.slots || []).map((slot) => slotManifest.find((m) => m.slug === p.slug && m.slot === slot)).filter(Boolean).flatMap((m) => {
-    if (m.status === "final") return [`<figure style="flex:${(m.ratio.split(":")[0] / m.ratio.split(":")[1]).toFixed(2)} 1 0"><img src="/${m.file}" alt="${esc(m.alt.en)}"></figure>`];
-    pendingSlots.push(`${m.slug}/${m.slot}`);
-    return flag("--slots") ? [`<figure style="flex:${(m.ratio.split(":")[0] / m.ratio.split(":")[1]).toFixed(2)} 1 0" class="ph"><img src="/tools/portfolio/placeholders/${m.slug}/${m.slot}.webp" alt=""><figcaption>PLACEHOLDER</figcaption></figure>`] : [];
-  }).slice(0, 3);
-  return `<div class="card arch"><p class="skills">${esc(cats[p.category] || p.category)}${p.years ? " · " + esc(p.years) : ""}</p><h4>${esc(p.title.en)}</h4>${shots.length ? `<div class="shots n${shots.length}">${shots.join("")}</div>` : ""}<p>${esc(p.summary.en)}</p><p class="skills">${esc(p.tags.join(" · "))}</p></div>`;
-};
-for (const p of content) {
-  if (p.type === "html") page(p.kicker, p.title, p.lead, p.html);
-  else if (p.type === "services") page(p.kicker, p.title, p.lead, `<div class="svc">${services.map((s) => `<div class="card"><h4>${esc(s.title)}</h4><p>${esc(s.text)}</p><p class="skills">${esc(s.points.join(" · "))}</p></div>`).join("")}</div><p class="note">${esc(p.note)}</p>`);
-  else if (p.type === "archive") for (let i = 0; i < archive.length; i += 4) page(p.kicker, i ? `${p.title}, continued` : p.title, i ? "More boards, firmware and programs from the project archive." : site.work.archive.lead.en,
-    `<div class="svc arch-grid">${archive.slice(i, i + 4).map(archiveCard).join("")}</div>${i + 4 >= archive.length ? `<p class="note">${esc(p.note)}</p>` : ""}`);
-}
-if (flag("--final") && pendingSlots.length) { console.error(`--final: ${pendingSlots.length} image slot(s) are still placeholders: ${pendingSlots.join(", ")}`); process.exit(1); }
-
-
-/* ---------------- HTML ---------------- */
-const total = pages.length + 1;
+const { esc, sectionsFor, tr } = await import("../assets/portfolio-render.js");
+const PER_PAGE = 4;
+/* A "final" project picture is shown; a "placeholder" is left out of the public PDF, drawn with a red PLACEHOLDER box with --slots (preview mode of the renderer),
+   and --final fails while any placeholder remains (so a PDF with missing pictures cannot be released unnoticed). */
 const css = `
 @page { size: A4; margin: 0; }
 :root { --bg:#0b1424; --panel:#12203a; --ink:#e9eef7; --muted:#a6b4cb; --acc:#4fd1e8; }
@@ -89,7 +64,7 @@ figcaption { font-size: 8pt; margin-top: 1.2mm; }
 .two { display: grid; grid-template-columns: 1fr 1.1fr; gap: 8mm; align-items: start; } .two img { max-height: 190mm; object-fit: contain; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; } .grid2 img { max-height: 80mm; object-fit: contain; background: #0e1a30; }
 .webrow { display: grid; grid-template-columns: 3fr 1fr 1fr; gap: 3mm; align-items: start; margin-bottom: 2mm; }
-.stack figure.wide img { max-height: 70mm; }
+figure.small img { max-height: 58mm; }
 .caps { display: grid; grid-template-columns: 38mm 1fr; gap: 3mm 4mm; margin: 0; } .caps dt { color: var(--acc); font-size: 8.5pt; letter-spacing: .08em; } .caps dd { margin: 0; }
 .roles { padding-left: 5mm; margin: 0; } .focus b { color: var(--acc); margin-right: 3mm; }
 .cover { padding: 0; display: grid; grid-template-columns: 105mm 1fr; border-top: 1.2mm solid var(--acc); }
@@ -98,15 +73,18 @@ figcaption { font-size: 8pt; margin-top: 1.2mm; }
 .cover img { width: 100%; height: 100%; object-fit: cover; }
 .cover .tags { color: var(--acc); font-size: 8pt; letter-spacing: .12em; line-height: 1.9; }
 `;
-const cover = `<section class="page cover"><div class="l"><p class="kicker">ENGINEERING<br>PORTFOLIO / 2026</p>
-  <h1>VITALII<br>KRUTIKOV</h1><p>Embedded Systems Engineer<br>Hardware &amp; PCB Designer<br>Software Developer</p><div class="sp"></div>
-  <p class="muted">From circuit design and firmware to production-oriented prototypes, desktop tools, websites, Android apps and connected systems.</p>
-  <p class="tags">STM32 · ESP32 · C/C++ · C#<br>LINUX · PCB · IoT · AI</p><p class="muted" style="font-size:8pt">SELECTED WORK · VISIBLE PART OF WORK SINCE 2014</p></div>
-  <img src="/assets/portfolio/img/hero-unit.jpg" alt="Touchscreen control unit"></section>`;
-const body = pages.map((p, i) => `<section class="page ${p.cls}"><div class="top"><b>VITALII KRUTIKOV</b><span>ENGINEERING PORTFOLIO</span></div>
-  <p class="kicker">${p.kicker}</p><h1>${esc(p.title)}</h1><p class="lead">${esc(p.lead)}</p><div class="body">${p.body}</div>
-  <div class="foot"><span>EMBEDDED / HARDWARE / SOFTWARE</span><span>${String(i + 2).padStart(2, "0")} / ${String(total).padStart(2, "0")}</span></div></section>`).join("\n");
-const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Vitalii Krutikov, Engineering Portfolio 2026</title><style>${css}</style></head><body>${cover}${body}</body></html>`;
+function buildHtml(lang, pending) {
+  const page = site.portfolioPage, ui = page.ui, c = page.cover, t = (v) => esc(tr(v, lang));
+  const secs = sectionsFor(page, site, archive, slotManifest, lang, { perPage: PER_PAGE, preview: flag("--slots"), pending });
+  const total = secs.length + 1;
+  const cover = `<section class="page cover"><div class="l"><p class="kicker">${t(ui.year)}</p><h1>${t(c.name).replace(" ", "<br>")}</h1><p>${t(c.roles).split(" · ").join("<br>")}</p><div class="sp"></div>
+  <p class="muted">${t(c.text)}</p><p class="tags">${t(c.tags)}</p><p class="muted" style="font-size:8pt">${t(c.since)}</p></div>
+  <img src="/assets/portfolio/img/hero-unit.jpg" alt=""></section>`;
+  const body = secs.map((p, i) => `<section class="page"><div class="top"><b>${t(c.name).toUpperCase()}</b><span>${t(ui.year).split(" / ")[0]}</span></div>
+  <p class="kicker">${esc(p.kicker)}</p><h1>${esc(p.title)}</h1><p class="lead">${esc(p.lead)}</p><div class="body">${p.body}</div>
+  <div class="foot"><span>${t(ui.footer)}</span><span>${String(i + 2).padStart(2, "0")} / ${String(total).padStart(2, "0")}</span></div></section>`).join("\n");
+  return { total, html: `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${t(ui.title)}</title><style>${css}</style></head><body>${cover}${body}</body></html>` };
+}
 
 /* ---------------- Chrome ---------------- */
 const CANDIDATES = [chromeArg, process.env.CHROME, "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser", "/opt/pw-browsers/chromium", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].filter(Boolean);
@@ -156,14 +134,19 @@ if (!flag("--no-renders")) {
   }
 }
 
-writeFileSync(join(root, "tools/portfolio/portfolio.html"), html);
 await cdp("Emulation.clearDeviceMetricsOverride");
-await cdp("Page.navigate", { url: `${base}/tools/portfolio/portfolio.html` });
-await new Promise((r) => setTimeout(r, 2500));
-const pdf = await cdp("Page.printToPDF", { preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false });
 mkdirSync(join(root, "assets/portfolio"), { recursive: true });
-writeFileSync(join(root, OUT), Buffer.from(pdf.data, "base64"));
-console.log(`${OUT}  ${(statSync(join(root, OUT)).size / 1024).toFixed(0)} KB, ${total} pages${flag("--slots") ? " (with mock-up slots)" : ""}`);
+for (const lang of LANG_LIST) {
+  const pending = [];
+  const { total, html } = buildHtml(lang, pending);
+  if (flag("--final") && pending.length) { console.error(`--final: ${new Set(pending).size} image slot(s) are still placeholders: ${[...new Set(pending)].join(", ")}`); failed++; break; }
+  writeFileSync(join(root, "tools/portfolio/portfolio.html"), html);
+  await cdp("Page.navigate", { url: `${base}/tools/portfolio/portfolio.html` });
+  await new Promise((r) => setTimeout(r, 2500));
+  const pdf = await cdp("Page.printToPDF", { preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false });
+  writeFileSync(join(root, OUT(lang)), Buffer.from(pdf.data, "base64"));
+  console.log(`${OUT(lang)}  ${(statSync(join(root, OUT(lang))).size / 1024).toFixed(0)} KB, ${total} pages${flag("--slots") ? " (with PLACEHOLDER boxes)" : ""}`);
+}
 ws.close(); proc.kill(); server.close();
 try { rmSync(profile, { recursive: true, force: true }); } catch {}
 process.exit(failed ? 1 : 0);

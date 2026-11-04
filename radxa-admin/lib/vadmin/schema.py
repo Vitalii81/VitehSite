@@ -254,7 +254,7 @@ def editable_texts(site):
 
 
 def empty_draft():
-    return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": []}, "widgets": {}, "effects": {}, "texts": {},
+    return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}},
             "pages": [], "forms": {}}
 
@@ -279,6 +279,8 @@ def sanitize(raw, ctx):
     dis = raw.get("disabled") if isinstance(raw.get("disabled"), dict) else {}
     d["disabled"]["services"] = sorted({x for x in (dis.get("services") or []) if x in known_s})
     d["disabled"]["projects"] = sorted({x for x in (dis.get("projects") or []) if x in known_p})
+    known_pf = {x.get("id") for x in ctx.site.get("portfolioPage", {}).get("sections", [])}
+    d["disabled"]["portfolio"] = sorted({x for x in (dis.get("portfolio") or []) if x in known_pf})
 
     texts = raw.get("texts") if isinstance(raw.get("texts"), dict) else {}
     leaves = editable_texts(ctx.site)

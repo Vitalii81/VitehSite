@@ -95,7 +95,7 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["portfolio", "Портфоліо (сторінка)"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
@@ -356,6 +356,16 @@ const VIEWS = {
         h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` }))))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));
+  },
+
+  portfolio(main) {
+    main.append(...head("Портфоліо", "Розділи сторінки /portfolio/ (і PDF після перезбирання): вмикайте й вимикайте. Тексти кожного розділу трьома мовами редагуються в «Тексти» (групи «portfolioPage:назва»). Саме посилання на сторінку вмикається у «Віджетах й ефектах»."));
+    S.draft.disabled.portfolio ||= [];
+    for (const s of S.catalog.factory.portfolio) {
+      const on = !S.draft.disabled.portfolio.includes(s.id);
+      const card = h("div", { class: `card${on ? "" : " off"}` }, toggle(`${uk(s.title)} (${s.id})`, on, (v) => { setDisabled("portfolio", s.id, !v); card.classList.toggle("off", !v); }));
+      main.append(card);
+    }
   },
 
   projects(main) {

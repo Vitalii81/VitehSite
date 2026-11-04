@@ -20,11 +20,33 @@ const leaves = (o, path = "", out = []) => {
   return out;
 };
 
-test("the portfolio PDF exists, is a PDF, and stays light", () => {
-  assert.ok(existsSync(join(root, PDF)));
-  const bytes = readFileSync(join(root, PDF));
-  assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
-  assert.ok(bytes.length < 5 * 1024 * 1024, `${bytes.length} bytes`);
+test("the portfolio PDFs exist in three languages, are PDFs, and stay light", () => {
+  for (const f of [PDF, PDF.replace(".pdf", "_uk.pdf"), PDF.replace(".pdf", "_de.pdf")]) {
+    assert.ok(existsSync(join(root, f)), f);
+    const bytes = readFileSync(join(root, f));
+    assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
+    assert.ok(bytes.length < 5 * 1024 * 1024, `${f}: ${bytes.length} bytes`);
+  }
+});
+
+test("the web portfolio renders every section in every language, escapes text and falls back to English", async () => {
+  const { sectionsFor, tr, esc } = await import("../assets/portfolio-render.js");
+  const { projects } = JSON.parse(read("data/portfolio.json")), manifest = JSON.parse(read("data/portfolio-images.json"));
+  const counts = new Set();
+  for (const l of LANGS) {
+    const secs = sectionsFor(site.portfolioPage, site, projects, manifest, l);
+    counts.add(secs.length);
+    for (const s of secs) { assert.ok(s.title && s.kicker, `${l}/${s.id}`); assert.ok(s.body.length > 20, `${l}/${s.id} body`); assert.ok(!/<script|undefined|\[object/i.test(s.body), `${l}/${s.id}`); }
+  }
+  assert.equal(counts.size, 1, "same sections in every language");
+  const uk = sectionsFor(site.portfolioPage, site, projects, manifest, "uk"), en = sectionsFor(site.portfolioPage, site, projects, manifest, "en");
+  assert.notEqual(uk[1].title, en[1].title);
+  assert.equal(tr({ en: "x", uk: "", de: "z" }, "uk"), "x");
+  assert.equal(esc('<img src=x onerror="1">'), "&lt;img src=x onerror=&quot;1&quot;&gt;");
+  const evil = structuredClone(site.portfolioPage); evil.sections[0].blocks = [{ t: "p", text: { en: "<script>alert(1)</script>" } }, { t: "fig", img: "../../etc", caption: { en: "x" } }];
+  const html = sectionsFor(evil, site, projects, manifest, "en")[0].body;
+  assert.ok(!html.includes("<script") && !html.includes("etc"));
+  assert.equal(sectionsFor(site.portfolioPage, site, projects, manifest, "en", { disabled: ["profile"] }).some((s) => s.id === "profile"), false);
 });
 
 test("Projects and Contact link to the web portfolio (which offers the PDF), and the link texts exist in three languages", () => {
@@ -32,7 +54,7 @@ test("Projects and Contact link to the web portfolio (which offers the PDF), and
   assert.equal((html.match(/href="portfolio\/"/g) || []).length, 2);
   assert.ok(existsSync(join(root, "portfolio/index.html")));
   assert.match(read("portfolio/index.html"), new RegExp(PDF.split("/").pop()));
-  assert.ok(JSON.parse(read("data/portfolio-page.json")).pages.length >= 14);
+  assert.ok(site.portfolioPage.sections.length >= 14);
   for (const k of [site.work.portfolio, site.contact.portfolio]) for (const l of LANGS) assert.ok(k[l]);
 });
 
@@ -40,16 +62,16 @@ test("experience is counted from 2014 everywhere and workplaces stay out of the 
   const all = JSON.stringify(site);
   assert.ok(!/9\+|9 років|9 Jahre|9 years/.test(all), "old 9+ years wording");
   for (const l of LANGS) { assert.match(site.hero.experience[l], /2014/); }
-  assert.ok(!/Adventx|Tesla-service/.test(all), "workplace names are for the PDF portfolio only");
-  assert.match(read("data/portfolio-page.json"), /Adventx and Tesla-service/);
+  const { portfolioPage, ...rest } = site;
+  assert.ok(!/Adventx|Tesla-service/.test(JSON.stringify(rest)));
+  assert.match(JSON.stringify(portfolioPage), /Adventx and Tesla-service/);
   assert.match(site.meta.description.en, /2014/);
 });
 
 test("the new services exist, are complete in three languages and use the same names as the portfolio", () => {
   const titles = site.services.items.map((s) => s.title.en);
   for (const t of ["Website development", "Android apps", "Custom apps built together with AI agents", "Local AI and voice", "Linux, networks and diagnostics", "AI server: mail, website, documents"]) assert.ok(titles.includes(t), t);
-  const pdfSource = read("tools/make-portfolio.mjs");
-  assert.match(pdfSource, /site\.services\.items/, "the PDF reads the service names from data/site.json");
+  assert.match(read("assets/portfolio-render.js"), /site\.services\.items/, "page and PDF read the service names from data/site.json");
 });
 
 test("every text in data/site.json and data/products.json has all three languages", () => {
