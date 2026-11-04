@@ -4,6 +4,7 @@
 // (LEAD_URL + secret LEAD_SECRET). The visitor gets "ok" if at least one worked.
 import { EmailMessage } from "cloudflare:email";
 import { FILE_LIMITS, LIMITS, buildMime, leadPayload, originAllowed, validate, validateFiles } from "./contact.mjs";
+import { FORM_LIMITS, findForm, validateForm } from "./forms.mjs";
 
 const json = (status, body, extra = {}) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extra } });
@@ -39,9 +40,48 @@ async function readRequest(request) {
   throw { status: 415, error: "type" };
 }
 
+/** Forms made in the admin (Radxa). The description is read from the published /forms.json, so the browser cannot change what is accepted.
+ *  The ways out are the same as for the contact form (letter + queue); /api/contact above is untouched. */
+async function handleForm(request, env, url) {
+  if (request.method !== "POST") return json(405, { error: "method" }, { allow: "POST" });
+  if (!originAllowed(request.headers.get("origin"))) return json(403, { error: "origin" });
+  if (!(request.headers.get("content-type") || "").toLowerCase().startsWith("application/json")) return json(415, { error: "type" });
+  const text = await request.text();
+  if (text.length > FORM_LIMITS.body) return json(413, { error: "too_large" });
+  let body;
+  try { body = JSON.parse(text); } catch { return json(400, { error: "bad_request" }); }
+
+  let forms;
+  try {
+    const published = env.ASSETS ? await env.ASSETS.fetch(new Request(new URL("/forms.json", url))) : await fetch(new URL("/forms.json", url));
+    forms = published.ok ? await published.json() : null;
+  } catch { forms = null; }
+  if (!forms) return json(503, { error: "forms_unavailable" });
+  const form = findForm(forms, body && body.form);
+  if (!form) return json(404, { error: "unknown_form" });
+  const checked = validateForm(form, body);
+  if (!checked.ok) return checked.silent ? json(200, { ok: true }) : json(400, { error: checked.error, field: checked.field });
+
+  const leadId = crypto.randomUUID();
+  const from = env.CONTACT_FROM, to = env.CONTACT_TO;
+  const ways = [["mail", async () => { await env.MAIL.send(new EmailMessage(from, to, buildMime({ from, to, value: checked.value, id: leadId }))); }]];
+  if (env.LEAD_URL && env.LEAD_SECRET) {
+    ways.push(["queue", async () => {
+      const response = await fetch(env.LEAD_URL, { method: "POST", headers: { "x-lead-secret": env.LEAD_SECRET, "content-type": "application/json" },
+        body: JSON.stringify(leadPayload(checked.value, leadId)), signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error("queue answered HTTP " + response.status);
+    }]);
+  }
+  const results = await Promise.allSettled(ways.map(([, send]) => send()));
+  results.forEach((r, i) => { if (r.status === "rejected") console.error(`form way "${ways[i][0]}" failed:`, r.reason && r.reason.message); });
+  if (!results.some((r) => r.status === "fulfilled")) return json(502, { error: "send_failed" });
+  return json(200, { ok: true });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/form") return handleForm(request, env, url);
     if (url.pathname !== "/api/contact") return json(404, { error: "not_found" });
     if (request.method !== "POST") return json(405, { error: "method" }, { allow: "POST" });
     if (!originAllowed(request.headers.get("origin"))) return json(403, { error: "origin" });

@@ -1,0 +1,469 @@
+"""Builds the static package: factory files + draft -> builds/<id>/site (+ manifest.json, draft.json snapshot).
+Nothing is shown or hidden by CSS: disabled sections, items and widgets are removed from the HTML and from the JSON."""
+import contextlib
+import copy
+import os
+import re
+import shutil
+import tarfile
+import time
+
+from . import check, core, render, schema
+from .core import ApiError, LANGS, read_json, sha256_file, stamp, write_json
+from .richtext import esc
+from .schema import SECTION_IDS
+
+BUILD_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$")
+PUBLIC_FILES = ("index.html", "impressum.html", "datenschutz.html", "robots.txt")
+GALLERY_ASSETS = ("vendor", "models", "gallery3d.js")
+# Lists that the public JS renders from site.json; a disabled section gets empty lists (the heading texts stay).
+SECTION_LISTS = {"hero": ["hero.badges"], "trust": ["trust.items"], "services": ["services.items"], "ai": ["ai.features"], "process": ["process.steps"],
+                 "stack": ["stack.groups"], "pricing": ["pricing.models"], "faq": ["faq.items"], "contact": ["contact.details"]}
+EXTERNAL_TAG = re.compile(r"<(?:script|img|iframe|source|video|audio|embed|object)\b[^>]*?\b(?:src|data)\s*=\s*[\"']\s*(?:https?:)?//", re.I)
+EXTERNAL_LINK = re.compile(r"<link\b[^>]*?\brel\s*=\s*[\"'][^\"']*(?:stylesheet|preload|icon|modulepreload|prefetch|preconnect|dns-prefetch)[^\"']*[\"'][^>]*?\bhref\s*=\s*[\"']\s*(?:https?:)?//", re.I)
+EXTERNAL_LINK2 = re.compile(r"<link\b[^>]*?\bhref\s*=\s*[\"']\s*(?:https?:)?//[^>]*?\brel\s*=\s*[\"'][^\"']*(?:stylesheet|preload|icon|modulepreload|prefetch|preconnect|dns-prefetch)", re.I)
+EXTERNAL_CSS = re.compile(r"(?:url\(\s*[\"']?|@import\s+[\"']?)\s*(?:https?:)?//", re.I)
+EXTERNAL_JS = re.compile(r"\b(?:fetch|import|importScripts)\s*\(\s*[\"'`]\s*(?:https?:)?//|\.src\s*=\s*[\"']\s*https?://|new\s+(?:Worker|EventSource|WebSocket)\s*\(\s*[\"']\s*(?:https?:|wss?:)?//", re.I)
+
+
+def read_text(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def write_text(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(data)
+
+
+# ---------- home page transformation ----------
+
+def section_span(html, sid):
+    if sid == "hero":
+        pattern = r'<section class="hero">'
+    elif sid == "trust":
+        pattern = r'<section class="trust"[^>]*>'
+    else:
+        pattern = r'<section class="[^"]*" id="%s">' % sid
+    m = re.search(pattern, html)
+    if not m:
+        raise ApiError("src_changed", "У index.html не знайдено розділ «%s»: файли сайту на Radxa відрізняються від очікуваних" % sid, 500)
+    end = html.index("</section>", m.end()) + len("</section>")
+    while html[end:end + 1] == "\n":
+        end += 1
+    return m.start(), end
+
+
+def remove_section(html, sid):
+    a, b = section_span(html, sid)
+    return html[:a] + html[b:]
+
+
+def nav_span(html):
+    a = html.index('<nav class="nav"')
+    return a, html.index("</nav>", a)
+
+
+def drop_nav_links(html, sid):
+    a, b = nav_span(html)
+    nav = re.sub(r'[ \t]*<a [^>]*href="#%s"[^>]*>.*?</a>\n?' % re.escape(sid), "", html[a:b], flags=re.S)
+    return html[:a] + nav + html[b:]
+
+
+def nav_page_links(pages):
+    return "".join('<a href="/s/%s/">%s</a>\n        ' % (esc(p["slug"]), render.tl(p["title"])) for p in pages if p["enabled"] and p["inNav"])
+
+
+def insert_nav_pages(html, pages):
+    links = nav_page_links(pages)
+    if not links:
+        return html
+    a, b = nav_span(html)
+    nav = html[a:b]
+    cta = nav.find('<a class="nav-cta"')
+    nav = nav[:cta] + links + nav[cta:] if cta != -1 else nav + links
+    return html[:a] + nav + html[b:]
+
+
+def transform_home(html, draft, ctx, assets, forms):
+    sections = {s: draft["sections"].get(s, True) for s in SECTION_IDS}
+    for sid in SECTION_IDS:
+        if not sections[sid]:
+            html = remove_section(html, sid)
+            if sid not in ("hero", "trust"):
+                html = drop_nav_links(html, sid)
+    html = insert_nav_pages(html, draft["pages"])
+    if sections["hero"] and draft["images"]["hero"]:
+        url = assets.url(draft["images"]["hero"])
+        html = html.replace('src="assets/hero-illustration.svg"', 'src="%s"' % esc(url.lstrip("/")), 1)
+    if not draft["widgets"].get("gallery3d", True):
+        html = re.sub(r'[ \t]*<script type="module" src="assets/gallery3d.js"></script>\n?', "", html)
+    head_add = ""
+    if not (draft["effects"].get("floating", True) and draft["effects"].get("reveal", True)):
+        head_add += '  <link rel="stylesheet" href="assets/fx.css">\n'
+    extra = [b for b in draft["extra"]["home"] if b["enabled"]]
+    if extra:
+        head_add += '  <link rel="stylesheet" href="assets/blocks.css">\n'
+        body = render.render_blocks(extra, ctx, assets, forms)
+        marker = '<section class="section contact-section" id="contact">'
+        html = html.replace(marker, body + "    " + marker, 1) if sections["contact"] and marker in html else html.replace("</main>", body + "  </main>", 1)
+        if render.uses(extra, "form"):
+            html = html.replace("</body>", '  <script src="assets/forms.js" defer></script>\n</body>', 1)
+    if head_add:
+        html = re.sub(r'(<link rel="stylesheet" href="assets/styles.css">\n)', lambda m: m.group(1) + head_add, html, count=1)
+    return html
+
+
+# ---------- data files ----------
+
+def merged_site(draft, ctx):
+    site = copy.deepcopy(ctx.site)
+    for path, value in draft["texts"].items():
+        parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
+        last = path.rsplit(".", 1)[-1]
+        if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
+            parent[int(last)] = value
+        elif isinstance(parent, dict) and last in parent:
+            parent[last] = value
+    items = site["services"]["items"]
+    kept = [it for i, it in enumerate(items) if "s%d" % i not in draft["disabled"]["services"]]
+    for s in draft["extra"]["services"]:
+        if s["id"] not in draft["disabled"]["services"]:
+            kept.append({"icon": s["icon"], "title": s["title"], "text": s["text"], "points": [p for p in s["points"] if render.has(p)]})
+    site["services"]["items"] = kept
+    for sid, paths in SECTION_LISTS.items():
+        if not draft["sections"].get(sid, True):
+            for path in paths:
+                parent = schema.get_path(site, path.rsplit(".", 1)[0])
+                if isinstance(parent, dict):
+                    parent[path.rsplit(".", 1)[1]] = []
+    return site
+
+
+def merged_products(draft, ctx, assets):
+    gallery = draft["widgets"].get("gallery3d", True)
+    out = []
+    for p in copy.deepcopy(ctx.products) + [dict(x) for x in draft["extra"]["projects"]]:
+        pid = p["id"]
+        if pid in draft["disabled"]["projects"]:
+            continue
+        img = draft["images"]["projects"].get(pid) or p.get("image", "")
+        p["image"] = assets.url(img).lstrip("/") if img.startswith("u:") else img
+        model = draft["images"]["models"].get(pid) or p.get("model", "")
+        if model.startswith("u:"):
+            model = assets.url(model).lstrip("/")
+        if gallery and model:
+            p["model"] = model
+        else:
+            p.pop("model", None)
+        out.append(p)
+    return out
+
+
+def forms_for_worker(draft):
+    """What worker/forms.mjs needs to validate a submission. Labels are English (uk as fallback) for the notification mail."""
+    out = {}
+    for fid, form in draft["forms"].items():
+        lab = lambda v: render.fill(v)["en"]
+        out[fid] = {"title": lab(form["title"]), "consentRequired": form["consentRequired"], "fields": [
+            dict({"key": f["key"], "type": f["type"], "label": lab(f["label"]), "required": f["required"], "max": f["max"]},
+                 **({"options": [lab(o) for o in f.get("options", [])]} if f["type"] == "select" else {})) for f in form["fields"]]}
+    return out
+
+
+# ---------- pages ----------
+
+def page_parts(src):
+    html = read_text(os.path.join(src, "index.html"))
+    return {
+        "theme": re.search(r"<script>.*?</script>", html, re.S).group(0),
+        "header": re.search(r'<header class="topbar".*?</header>', html, re.S).group(0),
+        "footer": re.search(r'<footer class="footer">.*?</footer>', html, re.S).group(0),
+    }
+
+
+def prepare_shell(parts, draft):
+    header = parts["header"]
+    for sid in SECTION_IDS:
+        if not draft["sections"].get(sid, True) and sid not in ("hero", "trust"):
+            header = drop_nav_links(header, sid)
+    header = insert_nav_pages(header, draft["pages"])
+    header = re.sub(r'href="#([a-z]+)"', r'href="/#\1"', header)
+    header = header.replace('href="/#top"', 'href="/"').replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
+    footer = parts["footer"].replace('href="#top"', 'href="/"').replace('href="impressum.html"', 'href="/impressum.html"').replace('href="datenschutz.html"', 'href="/datenschutz.html"').replace('src="assets/', 'src="/assets/').replace('href="assets/', 'href="/assets/')
+    return header, footer
+
+
+def render_page(page, draft, ctx, assets, forms, shell, effects_css):
+    header, footer, theme = shell
+    f = render.fill
+    title, desc = f(page["title"]), f(page["description"])
+    body = render.render_blocks(page["blocks"], ctx, assets, forms)
+    scripts = '  <script src="/assets/app.js" defer></script>\n'
+    if render.uses(page["blocks"], "form"):
+        scripts += '  <script src="/assets/forms.js" defer></script>\n'
+    if draft["widgets"].get("gallery3d", True) and (render.uses(page["blocks"], "gallery3d") or render.uses(page["blocks"], "projects")):
+        scripts = '  <script type="module" src="/assets/gallery3d.js"></script>\n' + scripts
+    base = ctx.site.get("brand", {}).get("url", "https://viteh.org/").rstrip("/")
+    return """<!doctype html>
+<html lang="en" data-page="page" data-title='%s' data-desc='%s'>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>%s — ViTeh</title>
+  <meta name="description" content="%s">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="%s/s/%s/">
+  %s
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/blocks.css">
+%s</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="ui.skip">Skip to content</a>
+  %s
+  <main id="main">
+%s  </main>
+  %s
+%s</body>
+</html>
+""" % (render.json_attr(title), render.json_attr(desc), esc(title["en"]), esc(desc["en"]), esc(base), esc(page["slug"]), theme, effects_css, header, body, footer, scripts)
+
+
+def sitemap(draft, ctx, built_at):
+    base = ctx.site.get("brand", {}).get("url", "https://viteh.org/").rstrip("/")
+    urls = [("/", base + "/")] + [("/s/%s/" % p["slug"], "%s/s/%s/" % (base, p["slug"])) for p in draft["pages"] if p["enabled"]]
+    rows = []
+    for _, loc in urls:
+        alts = "".join('\n    <xhtml:link rel="alternate" hreflang="%s" href="%s?lang=%s"/>' % (l, loc, l) for l in LANGS)
+        rows.append("  <url>\n    <loc>%s</loc>\n    <lastmod>%s-%s-%s</lastmod>%s\n    <xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"%s\"/>\n  </url>" % (loc, built_at[0:4], built_at[4:6], built_at[6:8], alts, loc))
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n%s\n</urlset>\n' % "\n".join(rows))
+
+
+def fx_css(draft):
+    css = "/* generated: visual effects switched off in the admin */\n"
+    if not draft["effects"].get("floating", True):
+        css += ".hero-media img { animation: none !important; }\n"
+    if not draft["effects"].get("reveal", True):
+        css += ".js .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }\n"
+    return css
+
+
+# ---------- safety scan ----------
+
+def scan_external(site_dir):
+    """No third-party requests: reports every resource-loading reference to a foreign host in our own files (vendor/ is exempt: documented)."""
+    found = []
+    for root, _, files in os.walk(site_dir):
+        for name in files:
+            rel = os.path.relpath(os.path.join(root, name), site_dir)
+            if rel.startswith(os.path.join("assets", "vendor")):
+                continue
+            ext = name.rsplit(".", 1)[-1].lower()
+            if ext not in ("html", "css", "js", "mjs", "svg"):
+                continue
+            text = read_text(os.path.join(root, name))
+            hits = []
+            if ext in ("html", "svg"):
+                hits += EXTERNAL_TAG.findall(text) + EXTERNAL_LINK.findall(text) + EXTERNAL_LINK2.findall(text)
+                hits += EXTERNAL_CSS.findall(text)
+            elif ext == "css":
+                hits += EXTERNAL_CSS.findall(text)
+            else:
+                hits += EXTERNAL_JS.findall(text)
+            if hits:
+                found.append(rel)
+    return found
+
+
+# ---------- orchestration ----------
+
+def draft_digest(draft):
+    """Hash of the draft content without its revision counter, to tell "changed since the last build" from "saved again"."""
+    import hashlib
+    import json
+    body = {k: v for k, v in draft.items() if k != "rev"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def read_state(paths):
+    return read_json(paths.state, {}) or {}
+
+
+def build(paths, ctx=None):
+    paths.ensure()
+    ctx = ctx or schema.Context(paths)
+    raw = read_json(paths.draft, None)
+    draft = schema.sanitize(raw, ctx) if raw is not None else schema.sanitize({}, ctx)
+    problems = check.validate(draft, ctx, paths.src)
+    if problems:
+        return {"ok": False, "problems": problems}
+
+    stamp_now = stamp()
+    bid = "%s-%s" % (stamp_now, core.new_id())
+    tmp = os.path.join(paths.builds, ".tmp-" + bid)
+    site_dir = os.path.join(tmp, "site")
+    try:
+        os.makedirs(site_dir)
+        assets = render.Assets(ctx)
+        forms = draft["forms"]
+        gallery_on = draft["widgets"].get("gallery3d", True)
+
+        for name in PUBLIC_FILES:
+            if os.path.isfile(os.path.join(paths.src, name)):
+                shutil.copyfile(os.path.join(paths.src, name), os.path.join(site_dir, name))
+        assets_src = os.path.join(paths.src, "assets")
+        for root, _, files in os.walk(assets_src):
+            for f in files:
+                rel = os.path.relpath(os.path.join(root, f), assets_src).replace(os.sep, "/")
+                if not gallery_on and (rel.split("/")[0] in ("vendor", "models") or rel == "gallery3d.js"):
+                    continue
+                dest = os.path.join(site_dir, "assets", rel)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                shutil.copyfile(os.path.join(root, f), dest)
+
+        html = transform_home(read_text(os.path.join(paths.src, "index.html")), draft, ctx, assets, forms)
+        site = merged_site(draft, ctx)
+        products = merged_products(draft, ctx, assets)
+        write_json(os.path.join(site_dir, "data", "site.json"), site)
+        write_json(os.path.join(site_dir, "data", "products.json"), products)
+
+        shell_parts = page_parts(paths.src)
+        header, footer = prepare_shell(shell_parts, draft)
+        shell = (header, footer, shell_parts["theme"])
+        effects_css = '  <link rel="stylesheet" href="/assets/fx.css">\n' if not (draft["effects"].get("floating", True) and draft["effects"].get("reveal", True)) else ""
+        for page in draft["pages"]:
+            if page["enabled"]:
+                write_text(os.path.join(site_dir, "s", page["slug"], "index.html"), render_page(page, draft, ctx, assets, forms, shell, effects_css))
+        write_text(os.path.join(site_dir, "index.html"), html)
+        if effects_css:
+            write_text(os.path.join(site_dir, "assets", "fx.css"), fx_css(draft))
+        write_text(os.path.join(site_dir, "sitemap.xml"), sitemap(draft, ctx, stamp_now))
+        write_json(os.path.join(site_dir, "forms.json"), forms_for_worker(draft))
+
+        for uid, public in assets.used.items():
+            item = ctx.uploads[uid]
+            dest = os.path.join(site_dir, public)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            shutil.copyfile(os.path.join(paths.uploads, item["file"]), dest)
+
+        foreign = scan_external(site_dir)
+        if foreign:
+            raise ApiError("external_request", "У пакеті знайдено запити до сторонніх хостів: %s" % ", ".join(sorted(foreign)), 500)
+
+        files = {}
+        for root, _, names in os.walk(site_dir):
+            for n in names:
+                p = os.path.join(root, n)
+                files[os.path.relpath(p, site_dir).replace(os.sep, "/")] = sha256_file(p)
+        manifest = {"id": bid, "created": stamp_now, "draftDigest": draft_digest(draft), "files": dict(sorted(files.items())), "count": len(files),
+                    "bytes": sum(os.path.getsize(os.path.join(site_dir, p)) for p in files)}
+        write_json(os.path.join(tmp, "manifest.json"), manifest)
+        write_json(os.path.join(tmp, "draft.json"), draft)
+        final = os.path.join(paths.builds, bid)
+        os.rename(tmp, final)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+
+    state = read_state(paths)
+    state.update({"built": bid, "builtAt": stamp_now})
+    write_json(paths.state, state)
+    set_current(paths, bid)
+    prune(paths)
+    return {"ok": True, "id": bid, "files": manifest["count"], "bytes": manifest["bytes"]}
+
+
+def set_current(paths, bid):
+    link, tmp = os.path.join(paths.builds, "current"), os.path.join(paths.builds, ".current-tmp")
+    if os.path.lexists(tmp):
+        os.unlink(tmp)
+    os.symlink(bid, tmp)
+    os.replace(tmp, link)
+
+
+def list_builds(paths):
+    """Newest first. The id carries only a one-second timestamp, so ties (two builds in one second) are ordered by the manifest's mtime."""
+    state = read_state(paths)
+    found = []
+    for name in os.listdir(paths.builds) if os.path.isdir(paths.builds) else []:
+        if not BUILD_ID.match(name):                       # skips "current", temp directories and anything foreign
+            continue
+        mpath = os.path.join(paths.builds, name, "manifest.json")
+        manifest = read_json(mpath, None)
+        if manifest:
+            found.append((manifest.get("created") or "", os.stat(mpath).st_mtime_ns, name, manifest))
+    out = []
+    for created, _, name, manifest in sorted(found, reverse=True):
+        out.append({"id": name, "created": created, "files": manifest.get("count"), "bytes": manifest.get("bytes"), "digest": manifest.get("draftDigest"),
+                    "current": state.get("built") == name, "published": state.get("published") == name})
+    return out
+
+
+def prune(paths, keep=core.KEEP_BUILDS):
+    """Keeps the newest `keep` builds (and always the published one), then removes uploads nobody references any more."""
+    state = read_state(paths)
+    builds = [b["id"] for b in list_builds(paths)]
+    for bid in builds[keep:]:
+        if bid not in (state.get("published"), state.get("built")):
+            shutil.rmtree(os.path.join(paths.builds, bid), ignore_errors=True)
+    for name in os.listdir(paths.builds):
+        if name.startswith(".tmp-"):
+            shutil.rmtree(os.path.join(paths.builds, name), ignore_errors=True)
+    gc_uploads(paths)
+
+
+def referenced_uploads(draft):
+    refs = set()
+
+    def walk(node):
+        if isinstance(node, str) and node.startswith("u:") and len(node) == 18:
+            refs.add(node[2:])
+        elif isinstance(node, dict):
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+    walk(draft)
+    return refs
+
+
+def gc_uploads(paths):
+    index = read_json(paths.uploads_index, {"items": {}}) or {"items": {}}
+    keep = referenced_uploads(read_json(paths.draft, {}) or {})
+    for b in list_builds(paths):
+        keep |= referenced_uploads(read_json(os.path.join(paths.builds, b["id"], "draft.json"), {}) or {})
+    changed = False
+    for uid in list(index.get("items", {})):
+        item = index["items"][uid]
+        if uid not in keep and item.get("created", "") < stamp_minutes_ago(60 * 24):      # a fresh upload has a day to be used
+            with contextlib.suppress(OSError):
+                os.unlink(os.path.join(paths.uploads, item["file"]))
+            del index["items"][uid]
+            changed = True
+    if changed:
+        write_json(paths.uploads_index, index)
+
+
+def stamp_minutes_ago(minutes):
+    return time.strftime("%Y%m%d-%H%M%S", time.gmtime(time.time() - minutes * 60))
+
+
+def export_tar(paths, bid, fileobj):
+    """Streams manifest.json + site/ as a tar (used over ssh by deploy-from-radxa.sh)."""
+    base = os.path.join(paths.builds, bid)
+    if not re.match(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$", bid) or not os.path.isfile(os.path.join(base, "manifest.json")):
+        raise ApiError("no_build", "Збірку не знайдено", 404)
+    with tarfile.open(fileobj=fileobj, mode="w|") as tar:
+        tar.add(os.path.join(base, "manifest.json"), arcname="manifest.json")
+        tar.add(os.path.join(base, "site"), arcname="site")
+
+
+def verify_build(paths, bid):
+    base = os.path.join(paths.builds, bid)
+    manifest = read_json(os.path.join(base, "manifest.json"), None)
+    if not manifest:
+        raise ApiError("no_build", "Збірку не знайдено", 404)
+    bad = [p for p, digest in manifest["files"].items() if not os.path.isfile(os.path.join(base, "site", p)) or sha256_file(os.path.join(base, "site", p)) != digest]
+    return {"ok": not bad, "bad": bad, "count": manifest["count"]}
