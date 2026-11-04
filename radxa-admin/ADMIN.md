@@ -193,3 +193,23 @@ The page and the PDF share one content source, `portfolioPage` in `data/site.jso
 Adding a brand-new section or picture still means editing `site.json` / `assets/portfolio/img/` in the repository.
 
 The tab **«Зображення проєктів 2022–2025»** lists every slot (`<project>/<slot>`) with its ratio and the expected source: pick an uploaded image (the slot becomes `final` in the build) and, if needed, type its alt text in uk/en/de (empty languages keep the factory text). An alt text alone never publishes a picture.
+
+## Публічний доступ: admin.viteh.org (Cloudflare Access + пароль)
+
+Адмінка лишається на Radxa на приватних портах (`:8082` адмінка, `:8083` перегляд). В інтернет її виставляє **лише Cloudflare Tunnel**, а перед нею стоїть **Cloudflare Access**. Входів два, один за одним:
+
+1. **Cloudflare Access**: одноразовий код на вашу пошту (нічого не пишемо самі, листи шле Cloudflare);
+2. **парольна фраза адмінки** (PBKDF2, від 20 символів, блокування після невдалих спроб).
+
+Що додано в код (нічого не змінює для приватних портів):
+- запит, що прийшов через Cloudflare (є `CF-Connecting-IP`), без заголовка `Cf-Access-Jwt-Assertion` API **відхиляє** (`403 access_required`): якщо Access-застосунок видалили чи неправильно налаштували, адмінка не відкриється відкрито (fail closed). Перевіряється наявність заголовка, а не підпис: джерело запитів лише тунель, loopback і tailnet;
+- cookie сесії отримує `Secure`, коли запит прийшов по https;
+- блокування спроб рахується за справжнім IP відвідувача (`CF-Connecting-IP`), а не за адресою тунелю (довіряється лише коли запит прийшов з `127.0.0.1`/`::1`).
+
+Налаштування (один раз, у панелі Cloudflare):
+1. **Zero Trust → Networks → Tunnels →** ваш тунель Radxa **→ Public hostname → Add**: піддомен `admin`, домен `viteh.org`, Service **HTTP** `localhost:8082`. DNS-запис Cloudflare створить сам.
+2. **Zero Trust → Access → Applications → Add → Self-hosted**: застосунок `viteh-admin`, домен `admin.viteh.org`. Політика **Allow**: *Emails* = ваша адреса (лише вона). Метод входу: **One-time PIN**. Тривалість сесії 8 годин, не довше.
+3. Перевірка: відкрийте `https://admin.viteh.org` у приватному вікні: спершу сторінка Cloudflare з полем пошти, потім код, потім форма парольної фрази. Інша адреса пошти коду не отримає.
+4. Режим «Редагувати на сторінці» (перегляд `:8083`) лишається приватним (tailnet). Публічно виставляється тільки адмінка.
+
+Відкат: видаліть Public hostname `admin` у тунелі (або Access-застосунок разом із hostname). Файли на Radxa не змінюються.

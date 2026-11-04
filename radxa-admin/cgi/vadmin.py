@@ -27,6 +27,8 @@ def main():
     else:
         body, too_big = sys.stdin.buffer.read(length) if length else b"", False
     client = os.environ.get("REMOTE_ADDR", "unknown")
+    if client in ("127.0.0.1", "::1") and headers.get("cf-connecting-ip"):        # through the Cloudflare tunnel every request comes from loopback
+        client = headers["cf-connecting-ip"][:64]
     if too_big:
         status, out_headers, payload = 413, [("Content-Type", "application/json")], b'{"ok":false,"error":"too_large"}'
     else:

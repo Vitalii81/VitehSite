@@ -23,9 +23,22 @@ def _json(status, value, headers=None):
     return status, h + (headers or []), body
 
 
-def _session_cookie(value, clear=False):
-    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS)
+def _https(headers):
+    """True when the browser reached us over https (Cloudflare tunnel); the private http ports never set these."""
+    return headers.get("x-forwarded-proto", "").lower() == "https" or '"scheme":"https"' in headers.get("cf-visitor", "").replace(" ", "")
+
+
+def _session_cookie(value, clear=False, secure=False):
+    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS, "; Secure" if secure else "")
     return [("Set-Cookie", c)]
+
+
+def _require_access(headers):
+    """A request that came through Cloudflare (it carries CF-Connecting-IP) must have passed Cloudflare Access, which adds a signed
+    Cf-Access-Jwt-Assertion header. Missing means the Access application is absent or misconfigured: fail closed. Only presence is checked;
+    the origin is reachable solely through the tunnel, loopback and the tailnet, so the header cannot be forged from the internet."""
+    if headers.get("cf-connecting-ip") and not headers.get("cf-access-jwt-assertion"):
+        raise ApiError("access_required", "Потрібен вхід через Cloudflare Access", 403)
 
 
 def _same_origin(headers):
@@ -106,6 +119,7 @@ def handle(paths, method, action, headers, body=b"", query=None, client="local")
 def _handle(paths, method, action, headers, body, query, client):
     if method not in ("GET", "POST"):
         raise ApiError("method", "Метод не підтримується", 405)
+    _require_access(headers)
     if method == "POST":
         if headers.get("x-vadmin") != "1":
             raise ApiError("csrf", "Відхилено: немає службового заголовка", 403)
@@ -117,7 +131,7 @@ def _handle(paths, method, action, headers, body, query, client):
     if action == "login" and method == "POST":
         data = _body_json(body)
         cookie = auth.login(paths, str(data.get("passphrase", "")), client)
-        return _json(200, {"ok": True}, _session_cookie(cookie))
+        return _json(200, {"ok": True}, _session_cookie(cookie, secure=_https(headers)))
 
     jar = SimpleCookie()
     try:
@@ -128,7 +142,7 @@ def _handle(paths, method, action, headers, body, query, client):
         raise ApiError("auth", "Потрібен вхід", 401)
 
     if action == "logout" and method == "POST":
-        return _json(200, {"ok": True}, _session_cookie("", clear=True))
+        return _json(200, {"ok": True}, _session_cookie("", clear=True, secure=_https(headers)))
 
     ctx = schema.Context(paths)
     host = headers.get("host", "")
