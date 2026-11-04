@@ -279,6 +279,8 @@ def render_page(page, draft, ctx, assets, forms, shell, effects_css):
 def sitemap(draft, ctx, built_at):
     base = ctx.site.get("brand", {}).get("url", "https://viteh.org/").rstrip("/")
     urls = [("/", base + "/")] + [("/s/%s/" % p["slug"], "%s/s/%s/" % (base, p["slug"])) for p in draft["pages"] if p["enabled"]]
+    if draft["widgets"].get("portfolioLink", True):
+        urls.append(("/portfolio/", base + "/portfolio/"))
     rows = []
     for _, loc in urls:
         alts = "".join('\n    <xhtml:link rel="alternate" hreflang="%s" href="%s?lang=%s"/>' % (l, loc, l) for l in LANGS)

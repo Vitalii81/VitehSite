@@ -105,3 +105,7 @@ test("the public texts do not call the controller by its internal name", () => {
   const visible = JSON.stringify([site, JSON.parse(read("data/products.json")).map(({ title, summary, tags }) => ({ title, summary, tags }))]);
   assert.ok(!/cronos/i.test(visible.replace(/"img":"[^"]*"/g, "")), "Cronos is an internal file name only");
 });
+
+test("the sitemap lists the web portfolio", () => {
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/viteh\.org\/portfolio\/<\/loc>/);
+});

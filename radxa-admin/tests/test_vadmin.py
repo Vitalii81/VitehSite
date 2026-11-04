@@ -408,6 +408,7 @@ class BuildTests(unittest.TestCase):
         r = build.build(self.w.paths)
         self.assertEqual(self.w.read(r["id"], "index.html").count('href="portfolio/"'), 2)
         self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "portfolio/index.html")))
+        self.assertIn("/portfolio/", self.w.read(r["id"], "sitemap.xml"))
 
         d = self.w.draft()
         d["widgets"]["portfolioLink"] = False
@@ -416,6 +417,7 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(r["ok"], r)
         html = self.w.read(r["id"], "index.html")
         self.assertNotIn('href="portfolio/"', html)
+        self.assertNotIn("/portfolio/", self.w.read(r["id"], "sitemap.xml"), "no sitemap entry while the page is off")
         self.assertFalse(os.path.exists(os.path.join(self.w.site(r["id"]), "portfolio")), "the page is not shipped while its link is off")
         self.assertNotIn("portfolio-link", html)
         self.assertIn('id="contact"', html)

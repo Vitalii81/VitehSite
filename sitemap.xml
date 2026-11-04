@@ -7,4 +7,11 @@
     <xhtml:link rel="alternate" hreflang="de" href="https://viteh.org/?lang=de"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://viteh.org/"/>
   </url>
+  <url>
+    <loc>https://viteh.org/portfolio/</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://viteh.org/portfolio/?lang=uk"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://viteh.org/portfolio/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://viteh.org/portfolio/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://viteh.org/portfolio/"/>
+  </url>
 </urlset>
