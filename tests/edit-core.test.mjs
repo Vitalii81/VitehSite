@@ -148,3 +148,25 @@ test("picker lists factory pictures for images only, uploads by kind", () => {
   assert.equal(C.imageSrc("u:abc", "/cgi-bin/vadmin-api"), "/cgi-bin/vadmin-api?action=file&id=abc");
   assert.equal(C.imageSrc("assets/x.svg", "/api"), "/assets/x.svg");
 });
+
+test("save indicator: typing is unsaved at once, 'saved' only when nothing is pending", () => {
+  const I = C.saveIndicator;
+  assert.equal(I({ state: "saved", dirty: false, typing: false }), "saved");
+  assert.equal(I({ state: "saved", dirty: false, typing: true }), "dirty", "text typed but the field not left yet");
+  assert.equal(I({ state: "saved", dirty: true, typing: false }), "dirty", "committed, not saved");
+  assert.equal(I({ state: "saving", dirty: false, typing: false }), "saving");
+  assert.equal(I({ state: "saving", dirty: false, typing: true }), "dirty", "typing during a save request: the new text is not in it");
+  assert.equal(I({ state: "dirty", dirty: false, typing: false }), "saved", "after a successful save the stale 'dirty' state does not stick");
+  assert.equal(I({ state: "error", dirty: true, typing: true }), "error");
+  assert.equal(I({ state: "conflict", dirty: false, typing: false }), "conflict");
+});
+
+test("save indicator over a typing session: type, leave the field, save", () => {
+  const s = { state: "saved", dirty: false, typing: false };
+  const steps = [];
+  s.typing = true; steps.push(C.saveIndicator(s));                         // input event
+  s.typing = false; s.dirty = true; s.state = "dirty"; steps.push(C.saveIndicator(s));   // focusout -> commit -> markDirty
+  s.dirty = false; s.state = "saving"; steps.push(C.saveIndicator(s));     // save() started
+  s.state = "saved"; steps.push(C.saveIndicator(s));                       // save() succeeded
+  assert.deepEqual(steps, ["dirty", "dirty", "saving", "saved"]);
+});

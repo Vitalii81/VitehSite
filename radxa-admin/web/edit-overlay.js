@@ -10,7 +10,7 @@
   if (!C || !bootNode) return;
   const boot = JSON.parse(bootNode.textContent);
   const API = boot.api;
-  const S = { draft: boot.draft, rev: boot.rev, dirty: false, saving: null, timer: null, state: "saved", message: "", conflict: false, problems: [] };
+  const S = { draft: boot.draft, rev: boot.rev, dirty: false, saving: null, timer: null, state: "saved", message: "", conflict: false, problems: [], typing: false };
   const BIND = new WeakMap();
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -96,17 +96,18 @@
     location.reload();
   }
 
-  window.addEventListener("beforeunload", (e) => { if (S.dirty || S.saving) { e.preventDefault(); e.returnValue = ""; } });
+  window.addEventListener("beforeunload", (e) => { if (S.dirty || S.saving || S.typing) { e.preventDefault(); e.returnValue = ""; } });
 
   /* ---------- the bottom bar ---------- */
   const bar = h("div", { class: "ve-ui ve-toolbar", role: "region", "aria-label": "Режим редагування" });
+  const shownState = () => C.saveIndicator(S);                 // typing counts as unsaved even before the field is left
   const stateLabel = { saved: "Збережено", dirty: "Є зміни…", saving: "Зберігаю…", error: "Помилка", conflict: "Конфлікт" };
 
   function paintBar() {
     const problem = S.problems[0];
     bar.replaceChildren(...[
       h("strong", { class: "ve-title" }, "Редагування"),
-      h("span", { class: `ve-state ve-${S.state}`, role: "status" }, stateLabel[S.state] + (S.message ? `: ${S.message}` : "")),
+      h("span", { class: `ve-state ve-${shownState()}`, role: "status" }, stateLabel[shownState()] + (S.message ? `: ${S.message}` : "")),
       S.conflict ? h("button", { class: "ve-btn", type: "button", onclick: () => location.reload() }, "Оновити сторінку") : h("button", { class: "ve-btn", type: "button", onclick: () => { document.activeElement?.blur?.(); save(); } }, "Зберегти"),
       !boot.gallery ? h("span", { class: "ve-note" }, "3D вимкнено в чернетці: моделі не потраплять у збірку") : null,
       problem ? h("span", { class: "ve-note ve-warn", title: S.problems.map((p) => `${p.where}: ${p.message}`).join("\n") }, `Збірка не пройде: ${problem.message}`) : null,
@@ -193,7 +194,8 @@
   }
 
   document.addEventListener("focusin", (e) => { const n = e.target.closest?.(".ve-editable"); if (n) n.dataset.veOrig = n.textContent; });
-  document.addEventListener("focusout", (e) => { const n = e.target.closest?.(".ve-editable"); if (n) { commit(n); delete n.dataset.veOrig; } });
+  document.addEventListener("input", (e) => { if (e.target.closest?.(".ve-editable") && !S.typing) { S.typing = true; paintBar(); } });   // "Збережено" must not show while text is being typed
+  document.addEventListener("focusout", (e) => { const n = e.target.closest?.(".ve-editable"); if (n) { S.typing = false; commit(n); delete n.dataset.veOrig; paintBar(); } });
   document.addEventListener("keydown", (e) => {
     const n = e.target.closest?.(".ve-editable");
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); n?.blur(); save(); return; }
@@ -238,7 +240,14 @@
       h("span", {}, label));
   }
 
-  const barOf = (node, ...kids) => { $$(":scope > .ve-bar", node).forEach((b) => b.remove()); node.classList.add("ve-host"); node.append(h("div", { class: "ve-ui ve-bar" }, kids.filter(Boolean))); };
+  /** The control strip of a section or card. `spec` = {key, fallback} adds the hover/focus/long-press preview and an eye button (preview-tip.js). */
+  const barOf = (node, spec, ...kids) => {
+    $$(":scope > .ve-bar", node).forEach((b) => b.remove());
+    node.classList.add("ve-host");
+    const bar = h("div", { class: "ve-ui ve-bar" }, kids.filter(Boolean));
+    if (spec && window.VPreview) { VPreview.attach(bar, spec.key, spec.fallback); bar.append(VPreview.eyeButton(bar, spec.key, spec.fallback)); }
+    node.append(bar);
+  };
 
   function bindSections() {
     const order = C.effectiveOrder(S.draft);
@@ -252,7 +261,7 @@
         class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${boot.labels[id] || id}`, title: label, disabled: at < 0 || (dir < 0 ? at === 0 : at === order.length - 1) || null,
         onclick: async () => { if (C.moveSection(S.draft, id, dir)) { markDirty(); if (await flush()) reloadKeepingPlace(); } },
       }, dir < 0 ? "▲" : "▼");
-      barOf(node,
+      barOf(node, { key: `section:${id}`, fallback: { title: boot.labels[id] || id } },
         h("span", { class: "ve-name" }, boot.labels[id] || id),
         switchBox("Показувати", target, node),
         id === "hero" ? h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "hero" }, "image") }, "Зображення…") : null,
@@ -266,13 +275,13 @@
       if (!id) return;
       const target = { type: "service", id };
       setOff(card, C.isOff(S.draft, target));
-      barOf(card, switchBox("Показувати", target, card), h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "serviceModel", id }, "model") }, "3D…"));
+      barOf(card, { key: `service:${id.startsWith("x-") ? "custom" : id}`, fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("Показувати", target, card), h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "serviceModel", id }, "model") }, "3D…"));
     });
     $$("#productGrid .product-card[data-id]").forEach((card) => {
       const id = card.dataset.id;
       const target = { type: "project", id };
       setOff(card, C.isOff(S.draft, target));
-      barOf(card, switchBox("Показувати", target, card),
+      barOf(card, { key: `project:${boot.factory.projects.includes(id) ? id : "custom"}`, fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("Показувати", target, card),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectImage", id }, "image") }, "Фото…"),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectModel", id }, "model") }, "3D…"));
     });

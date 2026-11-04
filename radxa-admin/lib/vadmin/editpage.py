@@ -51,7 +51,7 @@ def json_script(script_id, value):
 def overlay_version():
     """Cache-buster for the overlay files (the installer copies web/ next to lib/, so the layout is the same in the repository and on the Radxa)."""
     web = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "web")
-    stamps = [int(os.path.getmtime(os.path.join(web, n))) for n in ("edit-core.js", "edit-overlay.js", "edit-overlay.css") if os.path.isfile(os.path.join(web, n))]
+    stamps = [int(os.path.getmtime(os.path.join(web, n))) for n in ("edit-core.js", "edit-overlay.js", "edit-overlay.css", "preview-tip.js", "preview-tip.css") if os.path.isfile(os.path.join(web, n))]
     return str(max(stamps)) if stamps else "0"
 
 
@@ -84,7 +84,7 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
             % (json_script("ve-site", site), json_script("ve-products", products), json_script("ve-boot", boot), FETCH_STUB))
     html = html.replace('<meta charset="utf-8">\n', '<meta charset="utf-8">\n' + head, 1)
     v = overlay_version()
-    html = html.replace("</head>", '  <link rel="stylesheet" href="edit-overlay.css?v=%s">\n</head>' % v, 1)
+    html = html.replace("</head>", '  <link rel="stylesheet" href="edit-overlay.css?v=%s">\n  <link rel="stylesheet" href="preview-tip.css?v=%s">\n</head>' % (v, v), 1)
     html = html.replace("<body>", '<body class="ve-edit">', 1)
-    html = html.replace("</body>", '  <script src="edit-core.js?v=%s"></script>\n  <script src="edit-overlay.js?v=%s" defer></script>\n</body>' % (v, v), 1)
+    html = html.replace("</body>", '  <script src="edit-core.js?v=%s"></script>\n  <script src="preview-tip.js?v=%s"></script>\n  <script src="edit-overlay.js?v=%s" defer></script>\n</body>' % (v, v, v), 1)
     return 200, HTML_HEADERS, html.encode("utf-8")

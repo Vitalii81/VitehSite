@@ -120,6 +120,16 @@
     return index < factoryServices ? `s${index}` : extraServices(draft)[index - factoryServices]?.id || null;
   }
 
+  /* ---------- save indicator ---------- */
+  /** What the bar's status chip shows. `typing`: a text field has been changed but not left yet (the change is committed on blur), `dirty`: committed
+   *  but not saved, `saving`: a request is in flight. Typing and unsaved changes always win over "saved", so the chip never claims "Збережено"
+   *  while there is text the server does not have; error and conflict are sticky until the next save. */
+  function saveIndicator({ state, dirty, typing }) {
+    if (state === "error" || state === "conflict") return state;
+    if (typing || dirty) return "dirty";
+    return state === "saving" ? "saving" : "saved";
+  }
+
   /* ---------- order ---------- */
   const effectiveOrder = (draft) => (Array.isArray(draft.order) && draft.order.length === MOVABLE.length ? draft.order : MOVABLE.slice());
 
@@ -169,5 +179,5 @@
 
   const imageSrc = (ref, api) => (ref.startsWith("u:") ? `${api}?action=file&id=${ref.slice(2)}` : `/${ref}`);
 
-  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, setMedia, mediaRef, pickerItems, imageSrc };
+  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, saveIndicator, setMedia, mediaRef, pickerItems, imageSrc };
 });
