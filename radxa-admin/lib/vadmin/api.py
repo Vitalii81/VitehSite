@@ -80,7 +80,7 @@ def status(paths, host, ctx=None):
     manifest = read_json(os.path.join(paths.builds, state["built"], "manifest.json"), {}) if state.get("built") else {}
     changed = (manifest or {}).get("draftDigest") != build.draft_digest(read_draft(paths, ctx))
     return {"built": state.get("built"), "builtAt": state.get("builtAt"), "published": state.get("published"), "changedSinceBuild": changed,
-            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or "http://%s:8081/" % name, "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
+            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or "http://%s:%s/" % (name, os.environ.get("VADMIN_PREVIEW_PORT", "8083")), "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
 
 
 def handle(paths, method, action, headers, body=b"", query=None, client="local"):

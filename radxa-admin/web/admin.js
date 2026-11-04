@@ -2,7 +2,7 @@
 // ViTeh admin UI. Plain DOM, no dependencies, no innerHTML: every value is inserted as text.
 // The draft lives in memory, is saved (debounced) with its revision number, and the server re-sanitises everything it receives.
 
-const API = "/vadmin-api";
+const API = "/cgi-bin/vadmin-api";
 const LANGS = ["uk", "en", "de"];
 const S = { draft: null, catalog: null, status: null, uploads: [], builds: [], view: { name: "sections" }, save: "saved", timer: null, saving: null, conflict: false };
 

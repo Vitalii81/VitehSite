@@ -400,6 +400,25 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "assets/u", img["file"])))
         self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "assets/models", "u-" + model["file"])))
 
+    def test_the_preview_folder_follows_the_current_build(self):
+        first = build.build(self.w.paths)
+        self.assertTrue(first["ok"], first)
+        preview = self.w.paths.preview
+        self.assertEqual(read_file(os.path.join(preview, "index.html")), self.w.read(first["id"], "index.html"))
+        marker = os.path.join(preview, "old-only.txt")
+        with open(marker, "w") as fh:
+            fh.write("stale")                                  # anything not in the next build must disappear
+        ctx, d = self.w.ctx(), self.w.draft()
+        schema.add_from_template(d, "page", "about", ctx)
+        self.w.save(d)
+        second = build.build(self.w.paths)
+        self.assertTrue(second["ok"], second)
+        self.assertFalse(os.path.exists(marker))
+        self.assertEqual(sorted(os.listdir(preview)), sorted(os.listdir(self.w.site(second["id"]))))
+        self.assertFalse(os.path.exists(preview + ".new"))
+        build.set_current(self.w.paths, first["id"])                      # rollback switches the preview back
+        self.assertEqual(sorted(os.listdir(preview)), sorted(os.listdir(self.w.site(first["id"]))))
+
     def test_a_check_failure_builds_nothing(self):
         ctx, d = self.w.ctx(), self.w.draft()
         schema.add_from_template(d, "page", "contacts", ctx)           # the form block has no form

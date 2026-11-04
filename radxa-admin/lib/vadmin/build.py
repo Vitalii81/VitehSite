@@ -380,6 +380,25 @@ def set_current(paths, bid):
         os.unlink(tmp)
     os.symlink(bid, tmp)
     os.replace(tmp, link)
+    sync_preview(paths, bid)
+
+
+def sync_preview(paths, bid):
+    """uhttpd resolves its document root once at start, so a moving `current` link would show a stale build. The preview
+    server therefore serves a fixed folder whose contents are swapped here (children are renamed in, not copied in place)."""
+    src = os.path.join(paths.builds, bid, "site")
+    if not os.path.isdir(src):
+        return
+    new = paths.preview + ".new"
+    shutil.rmtree(new, ignore_errors=True)
+    shutil.copytree(src, new)
+    os.makedirs(paths.preview, exist_ok=True)
+    for name in os.listdir(paths.preview):
+        full = os.path.join(paths.preview, name)
+        shutil.rmtree(full) if os.path.isdir(full) and not os.path.islink(full) else os.unlink(full)
+    for name in os.listdir(new):
+        os.rename(os.path.join(new, name), os.path.join(paths.preview, name))
+    os.rmdir(new)
 
 
 def list_builds(paths):

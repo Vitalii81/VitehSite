@@ -61,14 +61,14 @@ class Handler(Base):
 
     def do_GET(self):
         path = urlsplit(self.path).path
-        if path == "/vadmin-api":
+        if path == "/cgi-bin/vadmin-api":
             return self._api("GET")
         if path.startswith("/site-assets/"):
             return self._static(os.path.join(PATHS.src, "assets"), path[len("/site-assets"):])
         self._static(os.path.join(HERE, "web"), path)
 
     def do_POST(self):
-        if urlsplit(self.path).path == "/vadmin-api":
+        if urlsplit(self.path).path == "/cgi-bin/vadmin-api":
             return self._api("POST")
         self._send(404, [], b"not found")
 
