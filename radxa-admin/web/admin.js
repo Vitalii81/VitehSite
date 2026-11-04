@@ -503,7 +503,7 @@ const VIEWS = {
       h("td", { class: "row" },
         h("button", { class: "btn small", type: "button", onclick: async () => { try { const r = await api("preview", { method: "POST", body: { id: b.id } }); S.status = r.status; window.open(r.status.previewUrl, "_blank", "noopener"); await refreshStatus(); rerender(); } catch (e) { fail(e); } } }, "Перегляд"),
         h("button", { class: "btn small", type: "button", onclick: () => rollback(b.id) }, "Відкотити чернетку"),
-        h("button", { class: "btn small", type: "button", onclick: () => main.prepend(publishBox(b.id)) }, "Опублікувати…"))));
+        h("button", { class: "btn small", type: "button", onclick: () => publish(b.id) }, "Опублікувати"))));
     table.append(tb);
     main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
   },
@@ -573,14 +573,17 @@ function publishBox(id) {
   const mine = d.id === id;
   const busy = mine && (d.state === "queued" || d.state === "running");
   const label = { queued: "У черзі…", running: "Публікується…", ok: "Опубліковано", failed: "Помилка публікації" }[mine ? d.state : ""] || "";
-  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: async () => {
-    try { const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender(); } catch (e) { fail(e); }
-  } }, busy ? "Публікується…" : "Опублікувати цю версію");
+  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: () => publish(id) }, busy ? "Публікується…" : "Опублікувати цю версію");
   const note = !d.agentOnline && !busy ? h("p", { class: "muted" }, "Агент публікації на основному ПК зараз не на зв'язку: запит дочекається, поки його запустять (deploy-agent.sh).") : null;
   return h("div", { class: "card" }, h("strong", {}, `Опублікувати ${id}`),
     h("p", { class: "muted" }, "Кнопка ставить публікацію в чергу; ключі Cloudflare лишаються на основному ПК, де її виконує агент."),
     h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), note,
     mine && d.log ? h("pre", { class: "mono", style: "white-space:pre-wrap;max-height:240px;overflow:auto" }, d.log) : null);
+}
+
+async function publish(id) {
+  if (!confirm(`Опублікувати версію ${id} на viteh.org?`)) return;
+  try { const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender(); } catch (e) { fail(e); }
 }
 
 let deployTimer = null;
