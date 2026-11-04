@@ -3,16 +3,16 @@
     "id": "cronos-controller",
     "category": "automation",
     "image": "assets/product-controller.svg",
-    "model": "assets/models/cronos-controller.glb",
+    "model": "assets/models/cronos-controller-v2.glb",
     "title": {
-      "uk": "Cronos Controller",
-      "en": "Cronos Controller",
-      "de": "Cronos Controller"
+      "uk": "Cronos Controller, остання версія",
+      "en": "Cronos Controller, latest version",
+      "de": "Cronos Controller, aktuelle Version"
     },
     "summary": {
-      "uk": "Компактний контролер для керування процесами, тестування прототипів і локальної автоматики.",
-      "en": "A compact controller for process control, prototype testing and local automation.",
-      "de": "Kompakter Controller für Prozesssteuerung, Prototypentests und lokale Automatisierung."
+      "uk": "Корпус контролера з великим сенсорним екраном без кнопок, логотипом ViTeh на нижній кришці та круглим роз'ємом. 3D-модель зі збереженого проєкту Blender; екран із фото реального пристрою.",
+      "en": "Controller enclosure with a large touchscreen, no buttons, the ViTeh mark on the lower cover and a round connector. 3D model from the original Blender project; the screen is taken from a photo of the real unit.",
+      "de": "Controller-Gehäuse mit großem Touchscreen ohne Tasten, ViTeh-Logo auf der unteren Abdeckung und rundem Steckverbinder. 3D-Modell aus dem Blender-Originalprojekt; der Bildschirm stammt aus einem Foto des echten Geräts."
     },
     "status": {
       "uk": "Прототип",
@@ -20,11 +20,40 @@
       "de": "Prototyp"
     },
     "tags": [
-      "ESP32",
-      "RS-485",
-      "OTA"
+      "3D",
+      "Blender",
+      "HMI"
     ],
-    "poster": "assets/posters/cronos-controller"
+    "poster": "assets/posters/cronos-controller-v2",
+    "orbit": "-30deg 58deg 88%"
+  },
+  {
+    "id": "cronos-controller-v1",
+    "category": "automation",
+    "image": "assets/product-controller.svg",
+    "model": "assets/models/cronos-controller-v1.glb",
+    "poster": "assets/posters/cronos-controller-v1",
+    "title": {
+      "uk": "Cronos Controller, перша версія",
+      "en": "Cronos Controller, first version",
+      "de": "Cronos Controller, erste Version"
+    },
+    "summary": {
+      "uk": "Перша версія корпусу: невеликий дисплей, кнопки керування, чорна кришка та металевий роз'єм збоку. 3D-модель зі збереженого проєкту Blender.",
+      "en": "The first enclosure version: a small display, control buttons, a black cover and a metal connector on the side. 3D model from the original Blender project.",
+      "de": "Die erste Gehäuseversion: kleines Display, Bedientasten, schwarze Abdeckung und ein Metallsteckverbinder an der Seite. 3D-Modell aus dem Blender-Originalprojekt."
+    },
+    "status": {
+      "uk": "Прототип",
+      "en": "Prototype",
+      "de": "Prototyp"
+    },
+    "tags": [
+      "3D",
+      "Blender",
+      "HMI"
+    ],
+    "orbit": "30deg 66deg 94%"
   },
   {
     "id": "iot-module",

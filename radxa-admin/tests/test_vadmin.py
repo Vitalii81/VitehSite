@@ -338,7 +338,7 @@ class BuildTests(unittest.TestCase):
         site = json.loads(self.w.read(r["id"], "data/site.json"))
         self.assertEqual(site["hero"]["lead"]["de"], "Neu")
         self.assertEqual(site["services"]["items"][-1]["title"]["en"], "My service")
-        self.assertEqual(len(json.loads(self.w.read(r["id"], "data/products.json"))), 7)
+        self.assertEqual(len(json.loads(self.w.read(r["id"], "data/products.json"))), 8)
         html = self.w.read(r["id"], "index.html")
         self.assertIn("cta-box", html)
         self.assertLess(html.index("cta-box"), html.index('id="contact"'), "extra sections sit before the contact section")
