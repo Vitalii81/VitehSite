@@ -37,6 +37,7 @@ This site is independent from NanoKVM and from the OTA file server.
 | `tools/models/`, `tools/make-env.mjs`, `tools/make-posters.mjs`, `tools/poster.html` | Model generator modules, lighting map and poster tools |
 | `docs/3d-quality/` | Before/after screenshots of the models (not published by the deploy) |
 | `assets/portfolio/*.pdf`, `tools/make-portfolio.mjs`, `tools/portfolio/img/` | Engineering portfolio (A4 PDF) and its reproducible build (`node tools/make-portfolio.mjs`, needs Chrome; `--slots` adds a mock-up page for the owner, never published); linked from Projects and Contact |
+| `portfolio/index.html`, `assets/portfolio-page.js/.css`, `data/portfolio-page.json`, `assets/portfolio/img/` | Web version of the engineering portfolio (`/portfolio/`): light theme, prints without a dark background, offers the PDF; the same JSON and pictures feed the PDF build. Shipped by the admin only while the «portfolioLink» widget is on |
 | `data/portfolio.json`, `data/portfolio-images.json`, `assets/portfolio.js`, `assets/portfolio/<slug>/<slot>.webp` | Project archive 2022–2025 inside "Projects": texts, the image-slot manifest (`placeholder` / `final`), the renderer and the final pictures |
 | `tools/make-portfolio-placeholders.mjs`, `tools/portfolio-images.mjs`, `tools/lib/headless.mjs` | Marked placeholder pictures (git-ignored, never deployed) and the one-command importer for the owner's pictures |
 | `docs/portfolio-mapping.md` | Site service ↔ portfolio page ↔ evidence table and the list of unpublished `[confirm]` items |

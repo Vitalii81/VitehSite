@@ -51,7 +51,7 @@ class World:
         if copy_src:
             self.src = os.path.join(self.dir, "src")
             os.makedirs(self.src)
-            for name in ("index.html", "impressum.html", "datenschutz.html", "robots.txt", "assets", "data"):
+            for name in ("index.html", "impressum.html", "datenschutz.html", "robots.txt", "assets", "data", "portfolio"):
                 p = os.path.join(REPO, name)
                 (shutil.copytree if os.path.isdir(p) else shutil.copy)(p, os.path.join(self.src, name))
         self.paths = core.Paths(root=os.path.join(self.dir, "root"), secret=os.path.join(self.dir, "secret"), src=self.src)
@@ -389,7 +389,7 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(factory, json.load(open(os.path.join(REPO, "data/portfolio-images.json"), encoding="utf-8")), "an empty draft keeps the factory manifest")
         self.assertTrue(self.w.read(r["id"], "data/portfolio.json"))
         pub = self.w.site(r["id"])
-        self.assertFalse([f for _, _, fs in os.walk(os.path.join(pub, "assets/portfolio")) for f in fs if not f.endswith(".pdf")], "no placeholder or slot files in the package")
+        self.assertFalse([f for rt, _, fs in os.walk(os.path.join(pub, "assets/portfolio")) for f in fs if not f.endswith(".pdf") and not rt.endswith("/img")], "no placeholder or slot files in the package")
         self.assertFalse(os.path.exists(os.path.join(pub, "tools")))
         img = uploads.store(self.w.paths, png(), "board.png")
         d = self.w.draft()
@@ -404,14 +404,17 @@ class BuildTests(unittest.TestCase):
 
     def test_portfolio_link_can_be_switched_off(self):
         r = build.build(self.w.paths)
-        self.assertEqual(self.w.read(r["id"], "index.html").count("Vitalii_Krutikov_Engineering_Portfolio_2026.pdf"), 2)
+        self.assertEqual(self.w.read(r["id"], "index.html").count('href="portfolio/"'), 2)
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "portfolio/index.html")))
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "data/portfolio-page.json")))
         d = self.w.draft()
         d["widgets"]["portfolioLink"] = False
         self.w.save(d)
         r = build.build(self.w.paths)
         self.assertTrue(r["ok"], r)
         html = self.w.read(r["id"], "index.html")
-        self.assertNotIn("Engineering_Portfolio_2026.pdf", html)
+        self.assertNotIn('href="portfolio/"', html)
+        self.assertFalse(os.path.exists(os.path.join(self.w.site(r["id"]), "portfolio")), "the page is not shipped while its link is off")
         self.assertNotIn("portfolio-link", html)
         self.assertIn('id="contact"', html)
 

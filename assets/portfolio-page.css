@@ -1,0 +1,44 @@
+/* Web version of the engineering portfolio. Light by default (prints without a dark background); follows the system theme on screen only. */
+:root { --bg:#fff; --ink:#14202e; --muted:#566678; --panel:#f1f5f9; --line:#d6dee8; --acc:#0b7285; --img:#e8eef4; }
+@media screen and (prefers-color-scheme: dark) { :root { --bg:#0b1424; --ink:#e9eef7; --muted:#a6b4cb; --panel:#12203a; --line:#26385c; --acc:#4fd1e8; --img:#0e1a30; } }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Inter, system-ui, "Segoe UI", Arial, sans-serif; }
+.pp-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 1rem; background: var(--bg); border-bottom: 1px solid var(--line); }
+.pp-back, .pp-btn { color: var(--acc); font-weight: 600; text-decoration: none; }
+.pp-btn { border: 1px solid var(--acc); background: transparent; border-radius: .5rem; padding: .35rem .8rem; font: inherit; font-weight: 600; cursor: pointer; margin-left: .4rem; }
+.pp-main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+.pp-cover { padding: 1rem 0 2rem; border-bottom: 3px solid var(--acc); margin-bottom: 1rem; }
+.pp-cover h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; margin: .3rem 0 .6rem; letter-spacing: .02em; }
+.pp-cover p { margin: .2rem 0; color: var(--muted); }
+.pp-sec { padding: 2rem 0; border-bottom: 1px solid var(--line); break-inside: auto; }
+.kicker { color: var(--acc); font-size: .78rem; letter-spacing: .14em; font-weight: 700; margin: 0 0 .3rem; }
+.pp-sec h2 { font-size: 1.7rem; line-height: 1.2; margin: 0 0 .4rem; }
+.lead, .muted, figcaption, .note { color: var(--muted); }
+.lead { margin: 0 0 1.2rem; max-width: 46rem; }
+h3 { color: var(--acc); font-size: .85rem; letter-spacing: .12em; margin: 1.4rem 0 .5rem; }
+h4 { color: var(--acc); font-size: .85rem; letter-spacing: .08em; margin: .9rem 0 .3rem; }
+p { margin: 0 0 .7rem; }
+.note { font-size: .88rem; }
+figure { margin: 0 0 1rem; } figure img { width: 100%; height: auto; display: block; border-radius: .4rem; background: var(--img); }
+figure.wide img { max-height: 28rem; object-fit: contain; }
+figcaption { font-size: .8rem; margin-top: .3rem; }
+.card { background: var(--panel); border-radius: .6rem; padding: 1rem 1.2rem; margin-bottom: 1rem; break-inside: avoid; }
+.card.hi { border-left: .3rem solid var(--acc); } .card h4 { margin-top: 0; }
+.skills { color: var(--muted); font-size: .8rem; letter-spacing: .04em; margin: .4rem 0 0; }
+.two, .grid2, .svc { display: grid; gap: 1rem; grid-template-columns: 1fr; align-items: start; }
+.webrow { display: grid; gap: .8rem; grid-template-columns: 3fr 1fr 1fr; align-items: start; }
+.stack figure.wide img { max-height: 22rem; }
+.caps { display: grid; grid-template-columns: 1fr; gap: .2rem 1rem; margin: 0; } .caps dt { color: var(--acc); font-size: .85rem; letter-spacing: .08em; font-weight: 700; margin-top: .6rem; } .caps dd { margin: 0; }
+.roles { padding-left: 1.2rem; } .focus b { color: var(--acc); margin-right: .6rem; }
+.arch .shots { display: flex; gap: .3rem; margin: .4rem 0 .6rem; height: 7rem; } .arch figure { margin: 0; flex: 1 1 0; min-width: 0; overflow: hidden; border-radius: .3rem; } .arch figure img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+@media (min-width: 42rem) { .two { grid-template-columns: 1fr 1.1fr; } .grid2, .svc { grid-template-columns: 1fr 1fr; } .caps { grid-template-columns: 11rem 1fr; } .caps dt { margin-top: 0; } }
+@media print {
+  @page { size: A4; margin: 14mm; }
+  :root { --bg:#fff; --ink:#111; --muted:#444; --panel:#f3f5f7; --line:#ccc; --acc:#0b5563; --img:#fff; }
+  body { font-size: 10.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pp-bar { display: none; } .pp-main { max-width: none; padding: 0; }
+  .pp-sec { break-before: page; border: 0; padding: 0; } .pp-cover + .pp-sec { break-before: auto; }
+  .card, figure { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}

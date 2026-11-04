@@ -177,8 +177,9 @@ install_code() {
     rm -rf "$APP.old"; [ -d "$APP" ] && mv "$APP" "$APP.old"; mv "$APP.new" "$APP" || die "cannot move the new code in place"
     rm -rf "$APP.old"
     for f in index.html impressum.html datenschutz.html robots.txt; do [ -f "$SITE_SRC/$f" ] && cp "$SITE_SRC/$f" "$STAGING/src/$f"; done
-    rm -rf "$STAGING/src/assets" "$STAGING/src/data"
+    rm -rf "$STAGING/src/assets" "$STAGING/src/data" "$STAGING/src/portfolio"
     cp -R "$SITE_SRC/assets" "$SITE_SRC/data" "$STAGING/src/" || die "cannot copy the site files"
+    [ -d "$SITE_SRC/portfolio" ] && cp -R "$SITE_SRC/portfolio" "$STAGING/src/"
     build_docroot
     ok "code in $APP, site files in $STAGING/src"
   else

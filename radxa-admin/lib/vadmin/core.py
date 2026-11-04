@@ -99,7 +99,7 @@ def new_id(prefix=""):
 
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-RESERVED_SLUGS = {"api", "admin", "assets", "data", "s", "cgi-bin", "index", "impressum", "datenschutz", "sitemap", "robots", "forms"}
+RESERVED_SLUGS = {"api", "admin", "assets", "data", "s", "cgi-bin", "index", "impressum", "datenschutz", "sitemap", "robots", "forms", "portfolio"}
 
 
 def valid_slug(slug):
