@@ -195,7 +195,11 @@ def merged_portfolio_images(draft, ctx, assets):
     every other slot keeps its factory status. Placeholder files never exist in the package, so a placeholder slot shows nothing to visitors."""
     out = []
     for m in copy.deepcopy(ctx.portfolio_images):
-        ref = draft["images"].get("portfolio", {}).get("%s/%s" % (m.get("slug"), m.get("slot")))
+        key = "%s/%s" % (m.get("slug"), m.get("slot"))
+        alt = draft["images"].get("portfolioAlt", {}).get(key)
+        if alt:                                              # an alt text typed in the admin replaces the factory one, language by language
+            m["alt"] = {lang: alt.get(lang) or m["alt"].get(lang, "") for lang in LANGS}
+        ref = draft["images"].get("portfolio", {}).get(key)
         if ref:
             m["file"] = assets.url(ref).lstrip("/")
             m["status"] = "final"

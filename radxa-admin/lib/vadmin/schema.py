@@ -255,7 +255,7 @@ def editable_texts(site):
 
 def empty_draft():
     return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
-            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}},
+            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}, "portfolioAlt": {}},
             "pages": [], "forms": {}}
 
 
@@ -299,6 +299,8 @@ def sanitize(raw, ctx):
     known_slots = {"%s/%s" % (m.get("slug"), m.get("slot")) for m in ctx.portfolio_images if isinstance(m, dict)}
     src = imgs.get("portfolio") if isinstance(imgs.get("portfolio"), dict) else {}
     d["images"]["portfolio"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in src.items()) if k in known_slots and v.startswith("u:")}
+    alts = imgs.get("portfolioAlt") if isinstance(imgs.get("portfolioAlt"), dict) else {}
+    d["images"]["portfolioAlt"] = {k: a for k, a in ((k, i18n(v, 200)) for k, v in alts.items() if k in known_slots) if any(a.get(l) for l in LANGS)}
 
     pages, seen = [], set()
     for p in (raw.get("pages") if isinstance(raw.get("pages"), list) else [])[:LIMITS["pages"]]:
