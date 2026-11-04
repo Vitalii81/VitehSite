@@ -1,0 +1,1355 @@
+{
+ "version": 1,
+ "icons": [
+  "code",
+  "chip",
+  "agent",
+  "iot",
+  "flask",
+  "shield",
+  "globe",
+  "chat",
+  "lock",
+  "mail"
+ ],
+ "blocks": {
+  "hero": {
+   "label": {
+    "uk": "Hero (перший екран)",
+    "en": "Hero",
+    "de": "Hero (Einstieg)"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "primary",
+     "type": "link",
+     "label": {
+      "uk": "Головна кнопка",
+      "en": "Primary button",
+      "de": "Haupt-Schaltfläche"
+     },
+     "required": false
+    },
+    {
+     "key": "secondary",
+     "type": "link",
+     "label": {
+      "uk": "Друга кнопка",
+      "en": "Secondary button",
+      "de": "Zweite Schaltfläche"
+     },
+     "required": false
+    },
+    {
+     "key": "image",
+     "type": "image",
+     "label": {
+      "uk": "Зображення",
+      "en": "Image",
+      "de": "Bild"
+     }
+    },
+    {
+     "key": "alt",
+     "type": "text",
+     "label": {
+      "uk": "Опис зображення (alt)",
+      "en": "Image description (alt)",
+      "de": "Bildbeschreibung (alt)"
+     },
+     "max": 160
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Нова сторінка",
+     "en": "New page",
+     "de": "Neue Seite"
+    },
+    "title": {
+     "uk": "Заголовок сторінки",
+     "en": "Page headline",
+     "de": "Seitenüberschrift"
+    },
+    "lead": {
+     "uk": "Коротко про те, що пропонуєте.",
+     "en": "A short sentence about what you offer.",
+     "de": "Ein kurzer Satz dazu, was Sie anbieten."
+    },
+    "primary": {
+     "text": {
+      "uk": "Зв'язатися",
+      "en": "Get in touch",
+      "de": "Kontakt aufnehmen"
+     },
+     "href": "/#contact"
+    },
+    "secondary": {
+     "text": {
+      "uk": "Детальніше",
+      "en": "Learn more",
+      "de": "Mehr erfahren"
+     },
+     "href": ""
+    },
+    "image": "",
+    "alt": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    }
+   }
+  },
+  "services": {
+   "label": {
+    "uk": "Перелік послуг",
+    "en": "Service list",
+    "de": "Leistungsübersicht"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 9,
+     "required": true,
+     "fields": [
+      {
+       "key": "icon",
+       "type": "select",
+       "label": {
+        "uk": "Іконка",
+        "en": "Icon",
+        "de": "Symbol"
+       },
+       "options": [
+        "code",
+        "chip",
+        "agent",
+        "iot",
+        "flask",
+        "shield",
+        "globe",
+        "chat",
+        "lock",
+        "mail"
+       ]
+      },
+      {
+       "key": "title",
+       "type": "text",
+       "label": {
+        "uk": "Заголовок",
+        "en": "Title",
+        "de": "Überschrift"
+       },
+       "required": true,
+       "max": 80
+      },
+      {
+       "key": "text",
+       "type": "longtext",
+       "label": {
+        "uk": "Текст",
+        "en": "Text",
+        "de": "Text"
+       },
+       "max": 300
+      }
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Послуги",
+     "en": "Services",
+     "de": "Leistungen"
+    },
+    "title": {
+     "uk": "Що ми робимо",
+     "en": "What we do",
+     "de": "Was wir tun"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "items": [
+     {
+      "icon": "code",
+      "title": {
+       "uk": "Програмне забезпечення",
+       "en": "Software",
+       "de": "Software"
+      },
+      "text": {
+       "uk": "Веб, API та інтеграції під ваші процеси.",
+       "en": "Web, APIs and integrations for your workflows.",
+       "de": "Web, APIs und Integrationen für Ihre Abläufe."
+      }
+     },
+     {
+      "icon": "chip",
+      "title": {
+       "uk": "Електроніка",
+       "en": "Electronics",
+       "de": "Elektronik"
+      },
+      "text": {
+       "uk": "Від схеми до прототипу та малої серії.",
+       "en": "From schematic to prototype and small series.",
+       "de": "Vom Schaltplan zum Prototyp und zur Kleinserie."
+      }
+     },
+     {
+      "icon": "agent",
+      "title": {
+       "uk": "AI-агенти",
+       "en": "AI agents",
+       "de": "KI-Agenten"
+      },
+      "text": {
+       "uk": "Автоматизація рутини під вашим контролем.",
+       "en": "Automating routine work under your control.",
+       "de": "Routine automatisieren, unter Ihrer Kontrolle."
+      }
+     }
+    ]
+   }
+  },
+  "projects": {
+   "label": {
+    "uk": "Картки проєктів",
+    "en": "Project cards",
+    "de": "Projektkarten"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "onlyModels",
+     "type": "bool",
+     "label": {
+      "uk": "Лише проєкти з 3D-моделлю",
+      "en": "Only projects with a 3D model",
+      "de": "Nur Projekte mit 3D-Modell"
+     }
+    }
+   ],
+   "singleton": "productGrid",
+   "example": {
+    "eyebrow": {
+     "uk": "Проєкти",
+     "en": "Projects",
+     "de": "Projekte"
+    },
+    "title": {
+     "uk": "Приклади робіт",
+     "en": "Example work",
+     "de": "Arbeitsbeispiele"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "onlyModels": false
+   }
+  },
+  "gallery3d": {
+   "label": {
+    "uk": "3D-галерея",
+    "en": "3D gallery",
+    "de": "3D-Galerie"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    }
+   ],
+   "singleton": "productGrid",
+   "example": {
+    "eyebrow": {
+     "uk": "3D",
+     "en": "3D",
+     "de": "3D"
+    },
+    "title": {
+     "uk": "Подивіться зблизька",
+     "en": "Take a closer look",
+     "de": "Aus der Nähe betrachten"
+    },
+    "lead": {
+     "uk": "Крутіть моделі пальцем або мишею.",
+     "en": "Rotate the models with your finger or mouse.",
+     "de": "Drehen Sie die Modelle mit Finger oder Maus."
+    }
+   }
+  },
+  "agents": {
+   "label": {
+    "uk": "AI-агенти",
+    "en": "AI agents",
+    "de": "KI-Agenten"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 6,
+     "required": true,
+     "fields": [
+      {
+       "key": "title",
+       "type": "text",
+       "label": {
+        "uk": "Заголовок",
+        "en": "Title",
+        "de": "Überschrift"
+       },
+       "required": true,
+       "max": 80
+      },
+      {
+       "key": "text",
+       "type": "longtext",
+       "label": {
+        "uk": "Текст",
+        "en": "Text",
+        "de": "Text"
+       },
+       "max": 300
+      }
+     ]
+    },
+    {
+     "key": "image",
+     "type": "image",
+     "label": {
+      "uk": "Зображення",
+      "en": "Image",
+      "de": "Bild"
+     }
+    },
+    {
+     "key": "alt",
+     "type": "text",
+     "label": {
+      "uk": "Опис зображення (alt)",
+      "en": "Image description (alt)",
+      "de": "Bildbeschreibung (alt)"
+     },
+     "max": 160
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "AI-агенти",
+     "en": "AI agents",
+     "de": "KI-Agenten"
+    },
+    "title": {
+     "uk": "Агенти, що працюють у вашому процесі",
+     "en": "Agents that work inside your process",
+     "de": "Agenten, die in Ihrem Prozess arbeiten"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "items": [
+     {
+      "title": {
+       "uk": "Підключення до систем",
+       "en": "Wired into your systems",
+       "de": "In Ihre Systeme eingebunden"
+      },
+      "text": {
+       "uk": "Пошта, CRM, бази даних, файли.",
+       "en": "Email, CRM, databases, files.",
+       "de": "E-Mail, CRM, Datenbanken, Dateien."
+      }
+     },
+     {
+      "title": {
+       "uk": "Людина в контурі",
+       "en": "Human in the loop",
+       "de": "Mensch in der Schleife"
+      },
+      "text": {
+       "uk": "Важливі дії проходять підтвердження.",
+       "en": "Important actions need approval.",
+       "de": "Wichtige Aktionen werden freigegeben."
+      }
+     }
+    ],
+    "image": "assets/agent-flow.svg",
+    "alt": {
+     "uk": "Схема роботи AI-агента",
+     "en": "AI agent workflow diagram",
+     "de": "Diagramm eines KI-Agenten-Ablaufs"
+    }
+   }
+  },
+  "steps": {
+   "label": {
+    "uk": "Кроки процесу",
+    "en": "Process steps",
+    "de": "Ablaufschritte"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 8,
+     "required": true,
+     "fields": [
+      {
+       "key": "title",
+       "type": "text",
+       "label": {
+        "uk": "Заголовок",
+        "en": "Title",
+        "de": "Überschrift"
+       },
+       "required": true,
+       "max": 80
+      },
+      {
+       "key": "text",
+       "type": "longtext",
+       "label": {
+        "uk": "Текст",
+        "en": "Text",
+        "de": "Text"
+       },
+       "max": 300
+      }
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Процес",
+     "en": "Process",
+     "de": "Ablauf"
+    },
+    "title": {
+     "uk": "Як ми працюємо",
+     "en": "How we work",
+     "de": "So arbeiten wir"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "items": [
+     {
+      "title": {
+       "uk": "Знайомство",
+       "en": "Discovery",
+       "de": "Kennenlernen"
+      },
+      "text": {
+       "uk": "Розбираємо задачу.",
+       "en": "We unpack the task.",
+       "de": "Wir klären die Aufgabe."
+      }
+     },
+     {
+      "title": {
+       "uk": "Розробка",
+       "en": "Build",
+       "de": "Umsetzung"
+      },
+      "text": {
+       "uk": "Короткі ітерації з демо.",
+       "en": "Short iterations with demos.",
+       "de": "Kurze Iterationen mit Demos."
+      }
+     },
+     {
+      "title": {
+       "uk": "Передача",
+       "en": "Handover",
+       "de": "Übergabe"
+      },
+      "text": {
+       "uk": "Код і документація.",
+       "en": "Code and documentation.",
+       "de": "Code und Dokumentation."
+      }
+     }
+    ]
+   }
+  },
+  "stack": {
+   "label": {
+    "uk": "Технології",
+    "en": "Technology stack",
+    "de": "Technologie-Stack"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Групи",
+      "en": "Groups",
+      "de": "Gruppen"
+     },
+     "max": 6,
+     "required": true,
+     "fields": [
+      {
+       "key": "title",
+       "type": "text",
+       "label": {
+        "uk": "Заголовок",
+        "en": "Title",
+        "de": "Überschrift"
+       },
+       "required": true,
+       "max": 60
+      },
+      {
+       "key": "tags",
+       "type": "plain",
+       "label": {
+        "uk": "Теги через кому",
+        "en": "Tags, comma separated",
+        "de": "Tags, kommagetrennt"
+       },
+       "max": 300,
+       "required": true
+      }
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Технології",
+     "en": "Technology",
+     "de": "Technologie"
+    },
+    "title": {
+     "uk": "Інструменти",
+     "en": "Tools",
+     "de": "Werkzeuge"
+    },
+    "items": [
+     {
+      "title": {
+       "uk": "Електроніка",
+       "en": "Electronics",
+       "de": "Elektronik"
+      },
+      "tags": "ESP32, STM32, KiCad"
+     },
+     {
+      "title": {
+       "uk": "Софт",
+       "en": "Software",
+       "de": "Software"
+      },
+      "tags": "Python, TypeScript, Docker"
+     }
+    ]
+   }
+  },
+  "pricing": {
+   "label": {
+    "uk": "Формати співпраці / ціни",
+    "en": "Engagement / pricing",
+    "de": "Zusammenarbeit / Preise"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 4,
+     "required": true,
+     "fields": [
+      {
+       "key": "title",
+       "type": "text",
+       "label": {
+        "uk": "Заголовок",
+        "en": "Title",
+        "de": "Überschrift"
+       },
+       "required": true,
+       "max": 60
+      },
+      {
+       "key": "price",
+       "type": "text",
+       "label": {
+        "uk": "Ціна / підпис",
+        "en": "Price / label",
+        "de": "Preis / Hinweis"
+       },
+       "max": 40
+      },
+      {
+       "key": "text",
+       "type": "longtext",
+       "label": {
+        "uk": "Опис (пункти з «- »)",
+        "en": "Description (bullets start with “- ”)",
+        "de": "Beschreibung (Aufzählung mit „- “)"
+       },
+       "max": 500
+      },
+      {
+       "key": "featured",
+       "type": "bool",
+       "label": {
+        "uk": "Виділити",
+        "en": "Highlight",
+        "de": "Hervorheben"
+       }
+      }
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Співпраця",
+     "en": "Engagement",
+     "de": "Zusammenarbeit"
+    },
+    "title": {
+     "uk": "Формати роботи",
+     "en": "Ways to work together",
+     "de": "Formen der Zusammenarbeit"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "items": [
+     {
+      "title": {
+       "uk": "Воркшоп",
+       "en": "Workshop",
+       "de": "Workshop"
+      },
+      "price": {
+       "uk": "За запитом",
+       "en": "On request",
+       "de": "Auf Anfrage"
+      },
+      "text": {
+       "uk": "- Аналіз вимог\n- Концепція",
+       "en": "- Requirements analysis\n- Concept",
+       "de": "- Anforderungsanalyse\n- Konzept"
+      },
+      "featured": false
+     },
+     {
+      "title": {
+       "uk": "Проєкт",
+       "en": "Project",
+       "de": "Projekt"
+      },
+      "price": {
+       "uk": "За запитом",
+       "en": "On request",
+       "de": "Auf Anfrage"
+      },
+      "text": {
+       "uk": "- Фіксований обсяг\n- Демо на кожному етапі",
+       "en": "- Fixed scope\n- Demos at every stage",
+       "de": "- Fester Umfang\n- Demos in jeder Phase"
+      },
+      "featured": true
+     }
+    ]
+   }
+  },
+  "faq": {
+   "label": {
+    "uk": "Запитання й відповіді",
+    "en": "FAQ",
+    "de": "FAQ"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 20,
+     "required": true,
+     "fields": [
+      {
+       "key": "q",
+       "type": "text",
+       "label": {
+        "uk": "Запитання",
+        "en": "Question",
+        "de": "Frage"
+       },
+       "required": true,
+       "max": 160
+      },
+      {
+       "key": "a",
+       "type": "longtext",
+       "label": {
+        "uk": "Відповідь",
+        "en": "Answer",
+        "de": "Antwort"
+       },
+       "required": true,
+       "max": 800
+      }
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "FAQ",
+     "en": "FAQ",
+     "de": "FAQ"
+    },
+    "title": {
+     "uk": "Запитання",
+     "en": "Questions",
+     "de": "Fragen"
+    },
+    "items": [
+     {
+      "q": {
+       "uk": "З чого почати?",
+       "en": "Where do we start?",
+       "de": "Womit beginnen wir?"
+      },
+      "a": {
+       "uk": "Напишіть нам коротко про задачу.",
+       "en": "Send us a short description of your task.",
+       "de": "Schicken Sie uns eine kurze Beschreibung Ihrer Aufgabe."
+      }
+     }
+    ]
+   }
+  },
+  "form": {
+   "label": {
+    "uk": "Форма",
+    "en": "Form",
+    "de": "Formular"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 400
+    },
+    {
+     "key": "form",
+     "type": "form",
+     "label": {
+      "uk": "Яка форма",
+      "en": "Which form",
+      "de": "Welches Formular"
+     },
+     "required": true
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Контакт",
+     "en": "Contact",
+     "de": "Kontakt"
+    },
+    "title": {
+     "uk": "Напишіть нам",
+     "en": "Write to us",
+     "de": "Schreiben Sie uns"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "form": ""
+   }
+  },
+  "text_image": {
+   "label": {
+    "uk": "Текст із зображенням",
+    "en": "Text with image",
+    "de": "Text mit Bild"
+   },
+   "fields": [
+    {
+     "key": "eyebrow",
+     "type": "text",
+     "label": {
+      "uk": "Надзаголовок",
+      "en": "Eyebrow",
+      "de": "Überschrift (klein)"
+     },
+     "max": 80
+    },
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "body",
+     "type": "longtext",
+     "label": {
+      "uk": "Текст",
+      "en": "Text",
+      "de": "Text"
+     },
+     "required": true,
+     "max": 3000
+    },
+    {
+     "key": "image",
+     "type": "image",
+     "label": {
+      "uk": "Зображення",
+      "en": "Image",
+      "de": "Bild"
+     }
+    },
+    {
+     "key": "alt",
+     "type": "text",
+     "label": {
+      "uk": "Опис зображення (alt)",
+      "en": "Image description (alt)",
+      "de": "Bildbeschreibung (alt)"
+     },
+     "max": 160
+    },
+    {
+     "key": "side",
+     "type": "select",
+     "label": {
+      "uk": "Де зображення",
+      "en": "Image side",
+      "de": "Bildseite"
+     },
+     "options": [
+      "right",
+      "left"
+     ]
+    }
+   ],
+   "example": {
+    "eyebrow": {
+     "uk": "Про нас",
+     "en": "About us",
+     "de": "Über uns"
+    },
+    "title": {
+     "uk": "Невелика команда, чіткий результат",
+     "en": "A small team with a clear result",
+     "de": "Kleines Team, klares Ergebnis"
+    },
+    "body": {
+     "uk": "Ми розробляємо програми та пристрої.\n\n- Прозорі етапи\n- Зрозумілі терміни",
+     "en": "We build software and devices.\n\n- Transparent steps\n- Honest timelines",
+     "de": "Wir entwickeln Software und Geräte.\n\n- Transparente Schritte\n- Ehrliche Zeitpläne"
+    },
+    "image": "assets/hero-illustration.svg",
+    "alt": {
+     "uk": "Ілюстрація",
+     "en": "Illustration",
+     "de": "Illustration"
+    },
+    "side": "right"
+   }
+  },
+  "gallery": {
+   "label": {
+    "uk": "Галерея фото",
+    "en": "Photo gallery",
+    "de": "Fotogalerie"
+   },
+   "fields": [
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "max": 120
+    },
+    {
+     "key": "items",
+     "type": "list",
+     "label": {
+      "uk": "Елементи",
+      "en": "Items",
+      "de": "Elemente"
+     },
+     "max": 12,
+     "required": true,
+     "fields": [
+      {
+       "key": "image",
+       "type": "image",
+       "label": {
+        "uk": "Зображення",
+        "en": "Image",
+        "de": "Bild"
+       },
+       "required": true
+      },
+      {
+       "key": "alt",
+       "type": "text",
+       "label": {
+        "uk": "Опис зображення (alt)",
+        "en": "Image description (alt)",
+        "de": "Bildbeschreibung (alt)"
+       },
+       "required": true,
+       "max": 160
+      },
+      {
+       "key": "caption",
+       "type": "text",
+       "label": {
+        "uk": "Підпис",
+        "en": "Caption",
+        "de": "Bildunterschrift"
+       },
+       "max": 160
+      }
+     ]
+    }
+   ],
+   "example": {
+    "title": {
+     "uk": "Галерея",
+     "en": "Gallery",
+     "de": "Galerie"
+    },
+    "items": [
+     {
+      "image": "assets/product-pcb.svg",
+      "alt": {
+       "uk": "Плата",
+       "en": "Circuit board",
+       "de": "Leiterplatte"
+      },
+      "caption": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      }
+     }
+    ]
+   }
+  },
+  "cta": {
+   "label": {
+    "uk": "Заклик до дії",
+    "en": "Call to action",
+    "de": "Handlungsaufforderung"
+   },
+   "fields": [
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "uk": "Заголовок",
+      "en": "Title",
+      "de": "Überschrift"
+     },
+     "required": true,
+     "max": 120
+    },
+    {
+     "key": "lead",
+     "type": "longtext",
+     "label": {
+      "uk": "Підзаголовок",
+      "en": "Lead text",
+      "de": "Einleitung"
+     },
+     "max": 300
+    },
+    {
+     "key": "button",
+     "type": "link",
+     "label": {
+      "uk": "Кнопка",
+      "en": "Button",
+      "de": "Schaltfläche"
+     },
+     "required": true
+    }
+   ],
+   "example": {
+    "title": {
+     "uk": "Готові обговорити проєкт?",
+     "en": "Ready to discuss your project?",
+     "de": "Bereit, Ihr Projekt zu besprechen?"
+    },
+    "lead": {
+     "uk": "",
+     "en": "",
+     "de": ""
+    },
+    "button": {
+     "text": {
+      "uk": "Написати нам",
+      "en": "Write to us",
+      "de": "Schreiben Sie uns"
+     },
+     "href": "/#contact"
+    }
+   }
+  },
+  "divider": {
+   "label": {
+    "uk": "Роздільник",
+    "en": "Divider",
+    "de": "Trenner"
+   },
+   "fields": [
+    {
+     "key": "style",
+     "type": "select",
+     "label": {
+      "uk": "Вигляд",
+      "en": "Style",
+      "de": "Stil"
+     },
+     "options": [
+      "line",
+      "space",
+      "dots"
+     ]
+    }
+   ],
+   "example": {
+    "style": "line"
+   }
+  }
+ }
+}

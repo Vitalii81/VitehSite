@@ -180,7 +180,9 @@ const renderFilters = () => {
 
 const renderProducts = () => {
   const { work } = state.site;
-  const visible = state.category === "all" ? state.products : state.products.filter((p) => p.category === state.category);
+  const onlyModels = $("#productGrid")?.dataset.onlyModels === "1";      // generated "3D gallery" blocks list only products with a model
+  const pool = onlyModels ? state.products.filter((p) => p.model) : state.products;
+  const visible = state.category === "all" ? pool : pool.filter((p) => p.category === state.category);
   mount("#productGrid", visible.map((product) => {
     const category = work.categories.find((c) => c.id === product.category);
     return h("article", { class: "product-card", "data-id": product.id },
@@ -261,6 +263,19 @@ const renderLegal = () => {
     h("p", {}, tr(block.p)),
   )));
   document.title = `${tr(section.title)} — ViTeh`;
+};
+
+/* ---------- generated pages (built by radxa-admin) ---------- */
+const renderPageHead = () => {
+  const root = document.documentElement;
+  if (root.dataset.page !== "page") return;
+  try {
+    const title = tr(JSON.parse(root.dataset.title || "{}"));
+    if (title) document.title = `${title} — ViTeh`;
+    const desc = tr(JSON.parse(root.dataset.desc || "{}"));
+    if (desc) setMeta('meta[name="description"]', "content", desc);
+  } catch { /* keep the static title */ }
+  $$("img[data-alt]").forEach((image) => { try { image.alt = tr(JSON.parse(image.dataset.alt)); } catch { /* keep default */ } });
 };
 
 /* ---------- SEO / head ---------- */
@@ -438,8 +453,12 @@ function render() {
     renderHero(); renderTrust(); renderServices(); renderAi(); renderProcess();
     renderFilters(); renderProducts(); renderStack(); renderPricing(); renderFaq(); renderContact();
     observeReveals();
+  } else if ($("#productGrid")) {
+    renderFilters(); renderProducts();
   }
+  if (document.documentElement.dataset.page === "page") observeReveals();
   renderLegal();
+  renderPageHead();
   renderHead();
   const year = $("#year");
   if (year) year.textContent = String(new Date().getFullYear());
@@ -448,9 +467,10 @@ function render() {
 const init = async () => {
   document.documentElement.classList.add("js");
   const isHome = document.documentElement.dataset.page === "home";
+  const needsProducts = isHome || !!$("#productGrid");               // generated pages may carry a project or 3D block
   const [site, products] = await Promise.all([
-    loadJson("data/site.json"),
-    isHome ? loadJson("data/products.json") : Promise.resolve([]),
+    loadJson("/data/site.json"),
+    needsProducts ? loadJson("/data/products.json") : Promise.resolve([]),
   ]);
   state.site = site;
   state.products = products;

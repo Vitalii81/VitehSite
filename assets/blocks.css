@@ -1,0 +1,40 @@
+/* Page-builder blocks (generated pages under /s/ and extra sections on the home page). Built by radxa-admin; safe to edit by hand. */
+
+/* Three-language text: the build writes all languages, <html lang> picks one. */
+.tl, .tlb { display: none; }
+html[lang="uk"] .tl[lang="uk"], html[lang="de"] .tl[lang="de"], html:not([lang="uk"]):not([lang="de"]) .tl[lang="en"] { display: inline; }
+html[lang="uk"] .tlb[lang="uk"], html[lang="de"] .tlb[lang="de"], html:not([lang="uk"]):not([lang="de"]) .tlb[lang="en"] { display: block; }
+.tlb > :first-child { margin-top: 0; }
+.tlb p + p, .tlb ul + p, .tlb p + ul { margin-top: .8em; }
+.tlb ul { display: grid; gap: 6px; padding-left: 1.2em; list-style: disc; }
+.tlb a { color: var(--accent-strong); }
+
+.hero-solo .hero-grid { grid-template-columns: 1fr; }
+.hero-solo .hero-copy { max-width: 760px; }
+.card-text, .feature-text { color: var(--muted); font-size: 16px; }
+.price-card .card-text ul { list-style: none; padding: 0; }
+.price-card .card-text li::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+.ti-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 64px); align-items: center; }
+.ti-grid.ti-left .ti-media { order: -1; }
+.ti-grid.ti-solo { grid-template-columns: 1fr; max-width: 820px; }
+.ti-copy h2 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 780; margin-bottom: 14px; }
+.rich { color: var(--muted); font-size: 18px; }
+.ti-media img, .photo-grid img { width: 100%; border-radius: 20px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.photo-grid figure { margin: 0; }
+.photo-grid figcaption { margin-top: 8px; color: var(--muted); font-size: 14px; }
+.cta-box { text-align: center; padding: clamp(28px, 5vw, 56px); border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(135deg, var(--accent-soft), transparent); }
+.cta-box h2 { font-size: clamp(26px, 3.2vw, 38px); }
+.cta-box .section-lead { margin: 14px auto 22px; }
+.divider { border: 0; border-top: 1px solid var(--line); margin: 8px 0; }
+.divider-space { border-top-color: transparent; margin: 40px 0; }
+.divider-dots { border-top: 3px dotted var(--line); }
+.form-wrap { max-width: 640px; margin-inline: auto; }
+.form-intro { color: var(--muted); }
+.contact-form input[type="tel"], .contact-form input[type="text"], .contact-form input[type="email"], .contact-form select, .contact-form textarea {
+  width: 100%; min-height: 48px; padding: 11px 14px; font: inherit; font-size: 16px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+}
+.contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.contact-form select { appearance: auto; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 900px) { .ti-grid { grid-template-columns: 1fr; } .ti-grid.ti-left .ti-media { order: 0; } }

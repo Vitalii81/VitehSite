@@ -1,0 +1,586 @@
+"use strict";
+// ViTeh admin UI. Plain DOM, no dependencies, no innerHTML: every value is inserted as text.
+// The draft lives in memory, is saved (debounced) with its revision number, and the server re-sanitises everything it receives.
+
+const API = "/vadmin-api";
+const LANGS = ["uk", "en", "de"];
+const S = { draft: null, catalog: null, status: null, uploads: [], builds: [], view: { name: "sections" }, save: "saved", timer: null, saving: null, conflict: false };
+
+/* ---------- helpers ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const h = (tag, attrs = {}, ...kids) => {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") node.className = v;
+    else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else if (k === "value") node.value = v;
+    else if (k === "checked") node.checked = !!v;
+    else node.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) node.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return node;
+};
+const uid = (prefix = "") => prefix + Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join("");
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const uk = (v) => (v && (v.uk || v.en || v.de)) || "";
+const filled = (v) => LANGS.some((l) => (v?.[l] || "").trim());
+const partial = (v) => filled(v) && LANGS.some((l) => !(v?.[l] || "").trim());
+
+async function api(action, { method = "GET", body, raw, headers = {}, query = "" } = {}) {
+  const init = { method, headers: { "X-Vadmin": "1", ...headers }, credentials: "same-origin" };
+  if (raw !== undefined) init.body = raw;
+  else if (body !== undefined) { init.body = JSON.stringify(body); init.headers["Content-Type"] = "application/json"; }
+  const response = await fetch(`${API}?action=${action}${query}`, init);
+  const data = await response.json().catch(() => ({ ok: false, error: "bad_response", message: "Сервер повернув неочікувану відповідь" }));
+  if (response.status === 401 && action !== "login") { showLogin(); throw Object.assign(new Error("auth"), { handled: true }); }
+  if (!response.ok) throw Object.assign(new Error(data.message || data.error), { data, status: response.status });
+  return data;
+}
+
+function toast(text, kind = "ok", ms = 4000) {
+  const node = h("div", { class: `msg ${kind} toast`, role: "status" }, text);
+  document.body.append(node);
+  setTimeout(() => node.remove(), ms);
+}
+const fail = (e) => { if (!e.handled) toast(e.message || "Помилка", "err", 7000); };
+
+/* ---------- saving ---------- */
+function touch() {
+  S.save = "dirty";
+  updateChips();
+  clearTimeout(S.timer);
+  S.timer = setTimeout(save, 700);
+}
+
+async function save() {
+  clearTimeout(S.timer);
+  if (S.save !== "dirty") return S.saving;
+  S.save = "saving";
+  updateChips();
+  S.saving = api("save", { method: "POST", body: { draft: S.draft, rev: S.draft.rev } }).then((r) => {
+    S.draft.rev = r.rev;
+    if (S.save === "saving") S.save = "saved";
+    return refreshStatus();
+  }).catch((e) => {
+    S.save = "error";
+    if (e.data?.error === "conflict") { S.conflict = true; toast("Чернетку змінено в іншій вкладці. Оновіть сторінку (F5).", "err", 12000); } else fail(e);
+  }).finally(updateChips);
+  return S.saving;
+}
+
+async function refreshStatus() {
+  const r = await api("status");
+  S.status = r.status; S.builds = r.builds;
+  updateChips();
+}
+
+window.addEventListener("beforeunload", (e) => { if (S.save === "dirty" || S.save === "saving") { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- login ---------- */
+function showLogin(message) {
+  const input = h("input", { type: "password", autocomplete: "current-password", id: "pass", "aria-label": "Фраза входу" });
+  const box = h("div", { class: "msg err", hidden: true });
+  const form = h("form", { class: "login", onsubmit: async (e) => {
+    e.preventDefault();
+    box.hidden = true;
+    try { await api("login", { method: "POST", body: { passphrase: input.value } }); input.value = ""; start(); }
+    catch (err) { box.textContent = err.message; box.hidden = false; }
+  } }, h("h1", {}, "ViTeh · адмінка"), h("p", { class: "muted" }, "Приватний доступ. Введіть фразу входу."), input, box,
+  h("button", { class: "btn primary", type: "submit" }, "Увійти"));
+  if (message) { box.textContent = message; box.hidden = false; }
+  $("#app").replaceChildren(form);
+  input.focus();
+}
+
+/* ---------- shell ---------- */
+const NAV = [
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
+  ["Випуск", [["builds", "Версії й публікація"]]],
+];
+
+function updateChips() {
+  const box = $("#chips");
+  if (!box || !S.status) return;
+  const saveText = { saved: "Збережено", dirty: "Є незбережені зміни…", saving: "Зберігаю…", error: "Помилка збереження" }[S.save];
+  const st = S.status;
+  box.replaceChildren(
+    h("span", { class: `chip ${S.save === "error" ? "err" : S.save === "saved" ? "" : "warn"}` }, `Чернетка: ${saveText}`),
+    h("span", { class: `chip ${st.built && st.changedSinceBuild ? "warn" : ""}` }, st.built ? `Зібрано: ${st.built}${st.changedSinceBuild ? " (є зміни після збірки)" : ""}` : "Ще не зібрано"),
+    h("span", { class: "chip" }, st.published ? `Опубліковано: ${st.published}` : "Опубліковано: —"),
+  );
+  const build = $("#btn-build"); if (build) build.disabled = S.conflict;
+  const prev = $("#btn-preview"); if (prev) { prev.href = st.built ? st.previewUrl : "#"; prev.toggleAttribute("aria-disabled", !st.built); }
+}
+
+function shell() {
+  const side = h("nav", { class: "side", "aria-label": "Розділи адмінки" }, NAV.map(([title, items]) => [h("h2", {}, title), items.map(([id, label]) => h("button", {
+    type: "button", "data-view": id, onclick: () => go(id),
+  }, label))]));
+  $("#app").replaceChildren(
+    h("header", { class: "top" }, h("h1", {}, "ViTeh · адмінка"), h("div", { class: "chips", id: "chips" }),
+      h("div", { class: "actions" },
+        h("a", { class: "btn", id: "btn-preview", target: "_blank", rel: "noopener", href: "#", onclick: (e) => { if (!S.status.built) { e.preventDefault(); toast("Спершу зберіть пакет", "warn"); } } }, "Перегляд"),
+        h("button", { class: "btn primary", id: "btn-build", type: "button", onclick: buildNow }, "Зібрати пакет"),
+        h("button", { class: "btn", type: "button", onclick: () => go("builds") }, "Відкотити…"),
+        h("button", { class: "btn", type: "button", onclick: async () => { await save(); try { await api("logout", { method: "POST", body: {} }); } catch { /* ignore */ } showLogin(); } }, "Вийти"))),
+    h("div", { class: "layout" }, side, h("main", { class: "main", id: "main", tabindex: "-1" })));
+  updateChips();
+}
+
+function go(name, arg) {
+  S.view = { name, arg };
+  document.querySelectorAll(".side button").forEach((b) => { if (b.dataset.view === name) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  const main = $("#main");
+  main.replaceChildren();
+  (VIEWS[name] || VIEWS.sections)(main, arg);
+  main.scrollTo?.(0, 0); window.scrollTo(0, 0);
+}
+const rerender = () => go(S.view.name, S.view.arg);
+
+/* ---------- reusable editors ---------- */
+const head = (title, lead) => [h("h2", {}, title), lead ? h("p", { class: "lead" }, lead) : null].filter(Boolean);
+const toggle = (label, checked, onchange, extra) => h("label", { class: "switch" }, h("input", { type: "checkbox", checked, onchange: (e) => { onchange(e.target.checked); touch(); } }), label, extra);
+
+function i18nField(obj, key, { multiline = false, max = 400, label } = {}) {
+  obj[key] ||= { uk: "", en: "", de: "" };
+  const value = obj[key];
+  const wrap = h("div", { class: "field" });
+  const rows = h("div", { class: "langs" });
+  const paint = () => {
+    rows.querySelectorAll(".lang-row").forEach((r) => r.classList.toggle("empty", filled(value) && !(value[r.dataset.lang] || "").trim()));
+    note.textContent = partial(value) ? "⚠ не всі мови заповнені: порожні мови покажуть англійський або інший наявний текст" : "";
+  };
+  const note = h("span", { class: "partial" });
+  for (const lang of LANGS) {
+    const control = multiline
+      ? h("textarea", { maxlength: max, "aria-label": `${label || key} (${lang})`, value: value[lang] || "" })
+      : h("input", { type: "text", maxlength: max, "aria-label": `${label || key} (${lang})`, value: value[lang] || "" });
+    control.addEventListener("input", () => { value[lang] = control.value; paint(); touch(); });
+    rows.append(h("div", { class: "lang-row", "data-lang": lang }, h("b", {}, lang), control));
+  }
+  wrap.append(...[label ? h("label", {}, label) : null, rows, note].filter(Boolean));
+  paint();
+  return wrap;
+}
+
+const textField = (obj, key, label, max = 200) => h("div", { class: "field" }, label ? h("label", {}, label) : null,
+  h("input", { type: "text", maxlength: max, value: obj[key] || "", oninput: (e) => { obj[key] = e.target.value; touch(); } }));
+
+function imageUrl(ref) {
+  if (!ref) return "";
+  if (ref.startsWith("u:")) return `${API}?action=file&id=${ref.slice(2)}`;
+  return `/site-assets/${ref.replace(/^assets\//, "")}`;
+}
+
+function imageField(obj, key, label, kind = "image") {
+  const holder = h("div", { class: "row" });
+  const paint = () => {
+    const ref = obj[key] || "";
+    holder.replaceChildren(...[
+      kind === "image" && ref ? h("img", { class: "thumb", src: imageUrl(ref), alt: "" }) : null,
+      h("span", { class: "muted mono" }, ref ? (ref.startsWith("u:") ? (S.uploads.find((u) => u.ref === ref)?.name || ref) : ref) : (kind === "model" ? "заводська модель або немає" : "не вибрано")),
+      h("button", { class: "btn small", type: "button", onclick: async () => { const r = await pickFile(kind, ref); if (r !== null) { obj[key] = r; touch(); paint(); } } }, "Обрати…"),
+      ref ? h("button", { class: "btn small", type: "button", onclick: () => { obj[key] = ""; touch(); paint(); } }, "Прибрати") : null].filter(Boolean));
+  };
+  paint();
+  return h("div", { class: "field" }, label ? h("label", {}, label) : null, holder);
+}
+
+function pickFile(kind, current) {
+  return new Promise((resolve) => {
+    const dlg = h("dialog", { "aria-label": "Вибір файлу" });
+    let result = null;
+    const grid = h("div", { class: "grid" });
+    const msg = h("div", { class: "msg err", hidden: true });
+    const pick = (ref) => { result = ref; dlg.close(); };
+    const paint = () => {
+      grid.replaceChildren(
+        h("button", { class: "tile", type: "button", onclick: () => pick("") }, h("span", { class: "muted" }, "—"), "Без файлу"),
+        ...(kind === "image" ? S.catalog.factoryImages.map((ref) => h("button", { class: `tile${ref === current ? " sel" : ""}`, type: "button", onclick: () => pick(ref) },
+          h("img", { class: "thumb", src: imageUrl(ref), alt: "" }), h("span", { class: "mono" }, ref.replace("assets/", "")))) : []),
+        ...S.uploads.filter((u) => u.kind === kind).map((u) => h("button", { class: `tile${u.ref === current ? " sel" : ""}`, type: "button", onclick: () => pick(u.ref) },
+          kind === "image" ? h("img", { class: "thumb", src: imageUrl(u.ref), alt: "" }) : h("span", { class: "thumb", style: "display:grid;place-items:center" }, "3D"), h("span", { class: "mono" }, u.name))));
+    };
+    const file = h("input", { type: "file", accept: kind === "image" ? "image/jpeg,image/png,image/webp,image/avif" : ".glb,model/gltf-binary", onchange: async () => {
+      msg.hidden = true;
+      if (!file.files[0]) return;
+      try { const r = await uploadFile(file.files[0]); pick(r.item.ref); } catch (e) { msg.textContent = e.message; msg.hidden = false; }
+    } });
+    dlg.append(h("h3", {}, kind === "image" ? "Оберіть зображення" : "Оберіть 3D-модель (.glb)"),
+      h("p", { class: "muted" }, kind === "image" ? "JPEG, PNG, WebP або AVIF до 5 МБ. SVG не приймається." : "Один файл glTF Binary (.glb) до 8 МБ, дані вбудовані в файл."),
+      h("div", { class: "field" }, h("label", {}, "Завантажити новий файл"), file), msg, grid,
+      h("div", { class: "row", style: "margin-top:14px" }, h("button", { class: "btn", type: "button", onclick: () => dlg.close() }, "Скасувати")));
+    dlg.addEventListener("close", () => { dlg.remove(); resolve(result); });
+    paint();
+    document.body.append(dlg);
+    dlg.showModal();
+  });
+}
+
+async function uploadFile(file) {
+  const r = await api("upload", { method: "POST", raw: file, headers: { "X-Filename": encodeURIComponent(file.name), "Content-Type": "application/octet-stream" } });
+  S.uploads = r.uploads;
+  return r;
+}
+
+/* ---------- block editor (pages and extra home sections) ---------- */
+function newBlock(type) {
+  return { id: uid("b-"), type, enabled: true, anchor: "", fields: clone(S.catalog.blocks[type].example) };
+}
+
+function fieldEditor(spec, values) {
+  const label = uk(spec.label) + (spec.required ? " *" : "");
+  switch (spec.type) {
+    case "text": return i18nField(values, spec.key, { max: spec.max || 200, label });
+    case "longtext": return i18nField(values, spec.key, { multiline: true, max: spec.max || 800, label });
+    case "plain": return textField(values, spec.key, label, spec.max || 200);
+    case "bool": return h("div", { class: "field" }, toggle(uk(spec.label), !!values[spec.key], (v) => { values[spec.key] = v; }));
+    case "select": return h("div", { class: "field" }, h("label", {}, label), h("select", { onchange: (e) => { values[spec.key] = e.target.value; touch(); } },
+      spec.options.map((o) => h("option", { value: o, selected: values[spec.key] === o }, spec.key === "icon" ? o : ({ right: "праворуч", left: "ліворуч", line: "лінія", space: "відступ", dots: "крапки" }[o] || o)))));
+    case "image": return imageField(values, spec.key, label);
+    case "link": {
+      values[spec.key] ||= { text: { uk: "", en: "", de: "" }, href: "" };
+      return h("div", { class: "field" }, h("label", {}, label), h("div", { class: "sub" },
+        i18nField(values[spec.key], "text", { max: 60, label: "Текст кнопки" }),
+        textField(values[spec.key], "href", "Адреса (/s/сторінка/, #якір, https://…, mailto:…)", 300)));
+    }
+    case "form": return h("div", { class: "field" }, h("label", {}, label), h("select", { onchange: (e) => { values[spec.key] = e.target.value; touch(); } },
+      h("option", { value: "" }, "— оберіть форму —"), Object.entries(S.draft.forms).map(([id, f]) => h("option", { value: id, selected: values[spec.key] === id }, uk(f.title) || id))));
+    case "list": return listEditor(spec, values);
+    default: return null;
+  }
+}
+
+function listEditor(spec, values) {
+  const items = (values[spec.key] ||= []);
+  const box = h("div", { class: "field" }, h("label", {}, uk(spec.label) + (spec.required ? " *" : "")));
+  const body = h("div", { class: "stack" });
+  const paint = () => {
+    body.replaceChildren(...items.map((item, i) => h("div", { class: "card" },
+      h("div", { class: "block-head" }, h("span", { class: "title" }, `#${i + 1}`),
+        h("button", { class: "btn small", type: "button", disabled: i === 0, "aria-label": "Вгору", onclick: () => { [items[i - 1], items[i]] = [items[i], items[i - 1]]; touch(); paint(); } }, "↑"),
+        h("button", { class: "btn small", type: "button", disabled: i === items.length - 1, "aria-label": "Вниз", onclick: () => { [items[i + 1], items[i]] = [items[i], items[i + 1]]; touch(); paint(); } }, "↓"),
+        h("button", { class: "btn small danger", type: "button", onclick: () => { items.splice(i, 1); touch(); paint(); } }, "Видалити")),
+      h("div", { class: "block-body" }, spec.fields.map((f) => fieldEditor(f, item))))),
+    items.length < (spec.max || 20) ? h("button", { class: "btn small", type: "button", onclick: () => { items.push(blankItem(spec.fields)); touch(); paint(); } }, "+ Додати елемент") : null);
+  };
+  paint();
+  box.append(body);
+  return box;
+}
+
+function blankItem(fields) {
+  const o = {};
+  for (const f of fields) o[f.key] = f.type === "list" ? [] : f.type === "bool" ? false : f.type === "link" ? { text: { uk: "", en: "", de: "" }, href: "" } : ["text", "longtext"].includes(f.type) ? { uk: "", en: "", de: "" } : f.type === "select" ? f.options[0] : "";
+  return o;
+}
+
+function blockEditor(blocks, { onChange } = {}) {
+  const wrap = h("div", { class: "stack" });
+  const open = new Set();
+  let dragged = null;
+  const paint = () => {
+    wrap.replaceChildren(...blocks.map((b, i) => {
+      const spec = S.catalog.blocks[b.type];
+      const card = h("div", { class: `card${b.enabled ? "" : " off"}`, draggable: "true" });
+      card.addEventListener("dragstart", (e) => { dragged = i; e.dataTransfer.effectAllowed = "move"; });
+      card.addEventListener("dragover", (e) => { if (dragged !== null) { e.preventDefault(); card.classList.add("drop-before"); } });
+      card.addEventListener("dragleave", () => card.classList.remove("drop-before"));
+      card.addEventListener("drop", (e) => { e.preventDefault(); card.classList.remove("drop-before"); if (dragged !== null && dragged !== i) { const [m] = blocks.splice(dragged, 1); blocks.splice(i, 0, m); dragged = null; touch(); paint(); } });
+      card.addEventListener("dragend", () => { dragged = null; });
+      const move = (d) => () => { const j = i + d; [blocks[i], blocks[j]] = [blocks[j], blocks[i]]; touch(); paint(); };
+      const isOpen = open.has(b.id);
+      card.append(h("div", { class: "block-head" },
+        h("span", { class: "title", onclick: () => { isOpen ? open.delete(b.id) : open.add(b.id); paint(); } }, `${isOpen ? "▾" : "▸"} ${uk(spec.label)}`, h("span", { class: "muted" }, ` — ${blockSummary(b, spec)}`)),
+        toggle("Увімкнено", b.enabled, (v) => { b.enabled = v; paint(); }),
+        h("button", { class: "btn small", type: "button", disabled: i === 0, "aria-label": "Блок вгору", onclick: move(-1) }, "↑"),
+        h("button", { class: "btn small", type: "button", disabled: i === blocks.length - 1, "aria-label": "Блок вниз", onclick: move(1) }, "↓"),
+        h("button", { class: "btn small", type: "button", onclick: () => { const c = clone(b); c.id = uid("b-"); blocks.splice(i + 1, 0, c); touch(); paint(); } }, "Дублювати"),
+        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити блок?")) { blocks.splice(i, 1); touch(); paint(); } } }, "Видалити")));
+      if (isOpen) {
+        card.append(h("div", { class: "block-body" }, spec.fields.map((f) => fieldEditor(f, b.fields)),
+          textField(b, "anchor", "Якір (необов'язково, a-z, 0-9, «-»): на нього можна вести посилання як #якір", 40)));
+      }
+      return card;
+    }), addBlockControl(blocks, paint, open));
+    onChange?.();
+  };
+  paint();
+  return wrap;
+}
+
+function blockSummary(b, spec) {
+  const first = spec.fields.find((f) => ["text", "longtext"].includes(f.type));
+  const text = first ? uk(b.fields[first.key]) : "";
+  return text.length > 60 ? text.slice(0, 57) + "…" : (text || "без назви");
+}
+
+function addBlockControl(blocks, paint, open) {
+  const select = h("select", { "aria-label": "Тип блока" }, Object.entries(S.catalog.blocks).map(([type, spec]) => h("option", { value: type }, uk(spec.label))));
+  return h("div", { class: "row" }, select, h("button", { class: "btn", type: "button", onclick: () => {
+    const b = newBlock(select.value); blocks.push(b); open.add(b.id); touch(); paint();
+  } }, "+ Додати блок"));
+}
+
+/* ---------- views ---------- */
+const VIEWS = {
+  sections(main) {
+    main.append(...head("Розділи головної сторінки", "Вимкнений розділ не потрапляє в HTML публічного сайту."));
+    for (const s of S.catalog.sections) {
+      const on = S.draft.sections[s.id] !== false;
+      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
+        toggle(s.label, on, (v) => { S.draft.sections[s.id] = v; card.classList.toggle("off", !v); })));
+      if (s.id === "hero") card.append(h("div", { style: "margin-top:10px" }, imageField(S.draft.images, "hero", "Картинка першого екрана (замість ілюстрації)")));
+      main.append(card);
+    }
+  },
+
+  services(main) {
+    main.append(...head("Послуги", "Вмикайте й вимикайте послуги, додавайте власні з шаблону. Тексти заводських послуг редагуються в розділі «Тексти»."));
+    for (const s of S.catalog.factory.services) {
+      main.append(h("div", { class: "card" }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v))));
+    }
+    S.draft.extra.services.forEach((s, i) => {
+      main.append(h("div", { class: "card" }, h("div", { class: "row between" },
+        toggle(uk(s.title) || "Нова послуга", !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
+        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити послугу?")) { S.draft.extra.services.splice(i, 1); touch(); rerender(); } } }, "Видалити")),
+      h("div", { class: "block-body", style: "margin-top:12px" },
+        h("div", { class: "field" }, h("label", {}, "Іконка"), h("select", { onchange: (e) => { s.icon = e.target.value; touch(); } }, S.catalog.icons.map((x) => h("option", { value: x, selected: s.icon === x }, x)))),
+        i18nField(s, "title", { max: 80, label: "Назва" }), i18nField(s, "text", { multiline: true, max: 300, label: "Опис" }),
+        h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` }))))));
+    });
+    main.append(templateButton("service", "Додати послугу з шаблону"));
+  },
+
+  projects(main) {
+    main.append(...head("Картки проєктів", "Фото й 3D-моделі підставляються без правки коду. Модель з'являється лише якщо 3D-галерею ввімкнено у «Віджетах»."));
+    const rows = [...S.catalog.factory.projects.map((p) => ({ ...p, extra: false })), ...S.draft.extra.projects.map((p) => ({ id: p.id, title: p.title, extra: true, ref: p }))];
+    for (const p of rows) {
+      const on = !S.draft.disabled.projects.includes(p.id);
+      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
+        toggle(uk(p.title) || "Новий проєкт", on, (v) => { setDisabled("projects", p.id, !v); card.classList.toggle("off", !v); }),
+        p.extra ? h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити картку?")) { S.draft.extra.projects.splice(S.draft.extra.projects.indexOf(p.ref), 1); touch(); rerender(); } } }, "Видалити") : null));
+      const body = h("div", { class: "block-body", style: "margin-top:12px" });
+      if (p.extra) {
+        body.append(
+          h("div", { class: "field" }, h("label", {}, "Категорія"), h("select", { onchange: (e) => { p.ref.category = e.target.value; touch(); } }, S.catalog.factory.categories.map((c) => h("option", { value: c.id, selected: p.ref.category === c.id }, uk(c.label))))),
+          i18nField(p.ref, "title", { max: 80, label: "Назва" }), i18nField(p.ref, "summary", { multiline: true, max: 300, label: "Опис" }), i18nField(p.ref, "status", { max: 40, label: "Статус" }),
+          h("div", { class: "field" }, h("label", {}, "Теги через кому"), h("input", { type: "text", value: p.ref.tags.join(", "), oninput: (e) => { p.ref.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })),
+          imageField(p.ref, "image", "Фото / ілюстрація"), imageField(p.ref, "model", "3D-модель (.glb)", "model"));
+      } else {
+        S.draft.images.projects[p.id] ??= ""; S.draft.images.models[p.id] ??= "";
+        body.append(imageField(S.draft.images.projects, p.id, "Замінити фото / ілюстрацію"), imageField(S.draft.images.models, p.id, "Замінити 3D-модель (.glb)", "model"));
+      }
+      card.append(body);
+      main.append(card);
+    }
+    main.append(templateButton("project", "Додати картку проєкту з шаблону"));
+  },
+
+  "home-blocks"(main) {
+    main.append(...head("Додаткові розділи головної", "Блоки, додані з шаблонів або з бібліотеки, з'являються на головній перед розділом контактів."));
+    main.append(blockEditor(S.draft.extra.home));
+    main.append(h("div", { class: "row" }, ...Object.entries(S.catalog.templates.sections).map(([id, label]) => templateButton("section", `Розділ із шаблону: ${uk(label)}`, id))));
+  },
+
+  widgets(main) {
+    main.append(...head("Віджети й візуальні ефекти"));
+    for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; })));
+    main.append(h("h2", { style: "margin-top:22px" }, "Ефекти"));
+    for (const e of S.catalog.effects) main.append(h("div", { class: "card" }, toggle(e.label, S.draft.effects[e.id] !== false, (v) => { S.draft.effects[e.id] = v; })));
+  },
+
+  texts(main) {
+    main.append(...head("Тексти трьома мовами", "Змінений текст зберігається поверх заводського; порожня мова показує іншу наявну. Позначка ⚠ — не всі мови заповнені."));
+    const groups = Object.keys(S.catalog.texts);
+    const sel = h("select", { "aria-label": "Група текстів" }, groups.map((g) => h("option", { value: g }, g)));
+    const search = h("input", { type: "text", placeholder: "Пошук за текстом або ключем…", "aria-label": "Пошук" });
+    const list = h("div", { class: "stack" });
+    const paint = () => {
+      const q = search.value.trim().toLowerCase();
+      const rows = Object.entries(S.catalog.texts[sel.value]).filter(([path, v]) => !q || path.toLowerCase().includes(q) || LANGS.some((l) => (S.draft.texts[path]?.[l] ?? v[l] ?? "").toLowerCase().includes(q)));
+      list.replaceChildren(...rows.slice(0, 80).map(([path, factory]) => {
+        const holder = { v: S.draft.texts[path] ? { ...S.draft.texts[path] } : { ...factory } };
+        const card = h("div", { class: "card" }, h("div", { class: "row between" }, h("span", { class: "mono muted" }, path),
+          h("button", { class: "btn small", type: "button", onclick: () => { delete S.draft.texts[path]; touch(); paint(); } }, "До заводського")));
+        const field = i18nField(holder, "v", { multiline: (factory.en || factory.uk || "").length > 70, max: 2000 });
+        field.addEventListener("input", () => { S.draft.texts[path] = { ...holder.v }; touch(); });
+        card.append(field);
+        return card;
+      }), ...(rows.length > 80 ? [h("p", { class: "muted" }, `Показано 80 із ${rows.length}: уточніть пошук.`)] : []));
+    };
+    sel.addEventListener("change", paint); search.addEventListener("input", paint);
+    main.append(h("div", { class: "row" }, h("div", { class: "grow" }, sel), h("div", { class: "grow" }, search)), list);
+    paint();
+  },
+
+  pages(main) {
+    main.append(...head("Сторінки", "Нова сторінка створюється із шаблону й отримує адресу /s/<адреса>/. Адреса: a-z, 0-9 та «-»."));
+    if (!S.draft.pages.length) main.append(h("p", { class: "muted" }, "Сторінок ще немає."));
+    S.draft.pages.forEach((p, i) => main.append(h("div", { class: `card${p.enabled ? "" : " off"}` }, h("div", { class: "row between" },
+      h("div", {}, h("strong", {}, uk(p.title) || "(без назви)"), h("span", { class: "mono muted" }, `  /s/${p.slug}/`)),
+      h("div", { class: "row" }, toggle("Увімкнено", p.enabled, (v) => { p.enabled = v; rerender(); }), toggle("У меню", p.inNav, (v) => { p.inNav = v; }),
+        h("button", { class: "btn small", type: "button", onclick: () => go("page", p.id) }, "Редагувати"),
+        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити сторінку?")) { S.draft.pages.splice(i, 1); touch(); rerender(); } } }, "Видалити"))))));
+    main.append(h("h2", { style: "margin-top:22px" }, "Нова сторінка з шаблону"), h("div", { class: "row" },
+      ...Object.entries(S.catalog.templates.pages).map(([id, label]) => templateButton("page", uk(label), id, (newId) => go("page", newId)))));
+  },
+
+  page(main, id) {
+    const p = S.draft.pages.find((x) => x.id === id);
+    if (!p) return go("pages");
+    main.append(h("button", { class: "btn small", type: "button", onclick: () => go("pages") }, "← До списку"), ...head(uk(p.title) || "Сторінка"));
+    main.append(h("div", { class: "card" }, h("div", { class: "block-body" },
+      h("div", { class: "field" }, h("label", {}, "Адреса (/s/…/)"), h("input", { type: "text", maxlength: 48, value: p.slug, oninput: (e) => { p.slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""); e.target.value = p.slug; touch(); } })),
+      i18nField(p, "title", { max: 120, label: "Назва (меню, заголовок вкладки)" }), i18nField(p, "description", { multiline: true, max: 300, label: "Опис для пошуку" }),
+      h("div", { class: "row" }, toggle("Увімкнено", p.enabled, (v) => { p.enabled = v; }), toggle("Показувати в меню", p.inNav, (v) => { p.inNav = v; })))));
+    main.append(h("h2", { style: "margin-top:22px" }, "Блоки"), blockEditor(p.blocks));
+  },
+
+  forms(main) {
+    main.append(...head("Форми", "Форми з цього розділу вставляються блоком «Форма» й надсилаються на /api/form. Стандартна форма контактів на головній не змінюється (її тексти — у «Текстах»)."));
+    const ids = Object.keys(S.draft.forms);
+    if (!ids.length) main.append(h("p", { class: "muted" }, "Власних форм ще немає."));
+    for (const id of ids) main.append(formCard(id, S.draft.forms[id]));
+    main.append(h("h2", { style: "margin-top:22px" }, "Нова форма з шаблону"), h("div", { class: "row" },
+      ...Object.entries(S.catalog.templates.forms).map(([tid, label]) => templateButton("form", uk(label), tid))));
+  },
+
+  async files(main) {
+    main.append(...head("Файли", "Зображення (JPEG/PNG/WebP/AVIF до 5 МБ) і 3D-моделі .glb (до 8 МБ). Невикористані файли зникають автоматично за добу; використані в чернетці чи збірках видалити не можна."));
+    const msg = h("div", { class: "msg err", hidden: true });
+    const input = h("input", { type: "file", multiple: true, accept: "image/jpeg,image/png,image/webp,image/avif,.glb", onchange: async () => {
+      const problems = [];
+      for (const f of input.files) { try { await uploadFile(f); } catch (e) { problems.push(`${f.name}: ${e.message}`); } }
+      rerender();                                     // redraws the list; the messages are shown in the fresh view
+      const fresh = $(".main .msg.err");
+      if (fresh && problems.length) { fresh.textContent = problems.join(" · "); fresh.hidden = false; }
+    } });
+    main.append(h("div", { class: "card" }, h("div", { class: "field" }, h("label", {}, "Завантажити"), input), msg));
+    const grid = h("div", { class: "grid" });
+    for (const u of S.uploads) grid.append(h("div", { class: "tile" }, u.kind === "image" ? h("img", { class: "thumb", src: imageUrl(u.ref), alt: "" }) : h("span", { class: "thumb", style: "display:grid;place-items:center" }, "3D"),
+      h("span", { class: "mono" }, u.name), h("span", { class: "muted" }, `${(u.size / 1048576).toFixed(2)} МБ`),
+      h("button", { class: "btn small danger", type: "button", onclick: async () => { try { const r = await api("delete-upload", { method: "POST", body: { id: u.id } }); S.uploads = r.uploads; rerender(); } catch (e) { fail(e); } } }, "Видалити")));
+    main.append(S.uploads.length ? grid : h("p", { class: "muted" }, "Файлів ще немає."));
+  },
+
+  builds(main) {
+    main.append(...head("Версії й публікація", "Зберігаються 20 останніх збірок. «Відкотити чернетку» повертає редактор до стану цієї збірки; публікація виконується з основного ПК."));
+    const st = S.status;
+    if (st.built) main.append(publishBox(st.built));
+    const table = h("table", {}, h("thead", {}, h("tr", {}, ["Версія", "Файлів", "Розмір", "Стан", ""].map((t) => h("th", {}, t)))));
+    const tb = h("tbody");
+    for (const b of S.builds) tb.append(h("tr", {}, h("td", { class: "mono" }, b.id), h("td", {}, String(b.files)), h("td", {}, `${(b.bytes / 1048576).toFixed(2)} МБ`),
+      h("td", {}, [b.current ? "поточна" : "", b.published ? "опублікована" : ""].filter(Boolean).join(", ") || "—"),
+      h("td", { class: "row" },
+        h("button", { class: "btn small", type: "button", onclick: async () => { try { const r = await api("preview", { method: "POST", body: { id: b.id } }); S.status = r.status; window.open(r.status.previewUrl, "_blank", "noopener"); await refreshStatus(); rerender(); } catch (e) { fail(e); } } }, "Перегляд"),
+        h("button", { class: "btn small", type: "button", onclick: () => rollback(b.id) }, "Відкотити чернетку"),
+        h("button", { class: "btn small", type: "button", onclick: () => main.prepend(publishBox(b.id)) }, "Команда публікації"))));
+    table.append(tb);
+    main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
+  },
+};
+
+function setDisabled(kind, id, off) {
+  const list = S.draft.disabled[kind];
+  const at = list.indexOf(id);
+  if (off && at < 0) list.push(id);
+  if (!off && at >= 0) list.splice(at, 1);
+  touch();
+}
+
+function templateButton(kind, label, id = "", then) {
+  return h("button", { class: "btn", type: "button", onclick: async () => {
+    await save();
+    try {
+      const r = await api("template", { method: "POST", body: { kind, id, rev: S.draft.rev } });
+      S.draft = r.draft; S.save = "saved"; updateChips();
+      toast("Додано з шаблону");
+      then ? then(r.newId) : rerender();
+    } catch (e) { fail(e); }
+  } }, `+ ${label}`);
+}
+
+function formCard(id, form) {
+  const card = h("div", { class: "card" });
+  const body = h("div", { class: "block-body", style: "margin-top:12px" });
+  const paint = () => {
+    body.replaceChildren(i18nField(form, "title", { max: 120, label: "Назва форми" }), i18nField(form, "intro", { multiline: true, max: 400, label: "Вступний текст" }),
+      h("div", { class: "field" }, h("label", {}, "Поля"), ...form.fields.map((f, i) => h("div", { class: "card" },
+        h("div", { class: "block-head" }, h("span", { class: "title mono" }, f.key),
+          h("button", { class: "btn small", type: "button", disabled: i === 0, "aria-label": "Поле вгору", onclick: () => { [form.fields[i - 1], form.fields[i]] = [form.fields[i], form.fields[i - 1]]; touch(); paint(); } }, "↑"),
+          h("button", { class: "btn small", type: "button", disabled: i === form.fields.length - 1, "aria-label": "Поле вниз", onclick: () => { [form.fields[i + 1], form.fields[i]] = [form.fields[i], form.fields[i + 1]]; touch(); paint(); } }, "↓"),
+          h("button", { class: "btn small danger", type: "button", onclick: () => { form.fields.splice(i, 1); touch(); paint(); } }, "Видалити")),
+        h("div", { class: "block-body" },
+          h("div", { class: "row" },
+            h("div", { class: "field grow" }, h("label", {}, "Ключ (a-z, 0-9, _)"), h("input", { type: "text", maxlength: 24, value: f.key, oninput: (e) => { f.key = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""); e.target.value = f.key; touch(); } })),
+            h("div", { class: "field grow" }, h("label", {}, "Тип"), h("select", { onchange: (e) => { f.type = e.target.value; if (f.type === "select") f.options ||= []; touch(); paint(); } },
+              [["text", "Рядок"], ["email", "Email"], ["tel", "Телефон"], ["textarea", "Довгий текст"], ["select", "Список"], ["checkbox", "Прапорець"]].map(([v, l]) => h("option", { value: v, selected: f.type === v }, l)))),
+            toggle("Обов'язкове", f.required, (v) => { f.required = v; })),
+          i18nField(f, "label", { max: 120, label: "Підпис" }),
+          f.type === "select" ? h("div", { class: "field" }, h("label", {}, "Варіанти"), ...(f.options ||= []).map((o, n) => h("div", { class: "card" }, i18nField(f.options, n, { max: 80, label: `Варіант ${n + 1}` }),
+            h("button", { class: "btn small danger", type: "button", onclick: () => { f.options.splice(n, 1); touch(); paint(); } }, "Видалити варіант"))),
+            h("button", { class: "btn small", type: "button", onclick: () => { f.options.push({ uk: "", en: "", de: "" }); touch(); paint(); } }, "+ Варіант")) : null))),
+        form.fields.length < 20 ? h("button", { class: "btn small", type: "button", onclick: () => { form.fields.push({ key: "field" + (form.fields.length + 1), type: "text", label: { uk: "", en: "", de: "" }, required: false, max: 200 }); touch(); paint(); } }, "+ Поле") : null),
+      h("div", { class: "row" }, toggle("Потрібна згода на обробку даних", form.consentRequired, (v) => { form.consentRequired = v; })),
+      i18nField(form, "consent", { max: 300, label: "Текст згоди" }), i18nField(form, "submit", { max: 40, label: "Текст кнопки" }), i18nField(form, "success", { max: 300, label: "Повідомлення про успіх" }));
+  };
+  paint();
+  card.append(h("div", { class: "row between" }, h("strong", {}, `${uk(form.title) || id} `, h("span", { class: "mono muted" }, `(${id})`)),
+    h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити форму? Блоки, що на неї посилаються, треба буде виправити.")) { delete S.draft.forms[id]; touch(); rerender(); } } }, "Видалити")), body);
+  return card;
+}
+
+/* ---------- build, publish, rollback ---------- */
+function problemsDialog(problems) {
+  const dlg = h("dialog", { "aria-label": "Помилки перевірки" }, h("h3", {}, `Пакет не зібрано: ${problems.length} ${problems.length === 1 ? "помилка" : "помилок"}`),
+    h("ul", { class: "problems" }, problems.map((p) => h("li", {}, h("strong", {}, p.where), ": ", p.message))),
+    h("div", { class: "row", style: "margin-top:14px" }, h("button", { class: "btn primary", type: "button", onclick: () => dlg.close() }, "Закрити")));
+  dlg.addEventListener("close", () => dlg.remove());
+  document.body.append(dlg); dlg.showModal();
+}
+
+function publishBox(id) {
+  const cmd = `./deploy-from-radxa.sh ${id}`;
+  const input = h("input", { type: "text", readonly: true, value: cmd, "aria-label": "Команда публікації", onfocus: (e) => e.target.select() });
+  return h("div", { class: "card" }, h("strong", {}, "Опублікувати цю версію"),
+    h("p", { class: "muted" }, "Адмінка сама не публікує: на основному ПК виконайте команду нижче (ключі Cloudflare лишаються там)."),
+    h("div", { class: "copybox" }, input, h("button", { class: "btn", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(cmd); toast("Скопійовано"); } catch { input.select(); toast("Виділіть і скопіюйте вручну", "warn"); } } }, "Копіювати")));
+}
+
+async function buildNow() {
+  await save();
+  const button = $("#btn-build"); button.disabled = true; button.textContent = "Збираю…";
+  try {
+    const r = await api("build", { method: "POST", body: {} });
+    S.status = r.status; S.builds = r.builds; updateChips();
+    toast(`Збірку ${r.result.id} готово (${r.result.files} файлів). Перегляньте й опублікуйте з основного ПК.`);
+    go("builds");
+  } catch (e) {
+    if (e.data?.problems) problemsDialog(e.data.problems); else fail(e);
+  } finally { button.disabled = false; button.textContent = "Зібрати пакет"; }
+}
+
+async function rollback(id) {
+  if (!confirm("Повернути чернетку до стану цієї збірки? Поточні незібрані зміни буде замінено.")) return;
+  try {
+    const r = await api("rollback", { method: "POST", body: { id } });
+    S.draft = r.draft; S.status = r.status; S.builds = r.builds; S.save = "saved"; updateChips();
+    toast("Чернетку повернуто до вибраної версії");
+    rerender();
+  } catch (e) { fail(e); }
+}
+
+/* ---------- start ---------- */
+async function start() {
+  try {
+    const r = await api("bootstrap");
+    Object.assign(S, { draft: r.draft, catalog: r.catalog, status: r.status, uploads: r.uploads, builds: r.builds, save: "saved", conflict: false });
+    shell();
+    go(S.view.name, S.view.arg);
+  } catch (e) { if (!e.handled) $("#app").replaceChildren(h("p", { class: "boot" }, `Не вдалося завантажити: ${e.message}`)); }
+}
+
+start();

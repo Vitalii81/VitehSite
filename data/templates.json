@@ -1,0 +1,1294 @@
+{
+ "version": 1,
+ "service": {
+  "label": {
+   "uk": "Послуга",
+   "en": "Service",
+   "de": "Leistung"
+  },
+  "item": {
+   "icon": "code",
+   "title": {
+    "uk": "Нова послуга",
+    "en": "New service",
+    "de": "Neue Leistung"
+   },
+   "text": {
+    "uk": "Коротко опишіть, що входить у послугу.",
+    "en": "Briefly describe what the service includes.",
+    "de": "Beschreiben Sie kurz, was die Leistung umfasst."
+   },
+   "points": [
+    {
+     "uk": "Перший пункт",
+     "en": "First point",
+     "de": "Erster Punkt"
+    },
+    {
+     "uk": "Другий пункт",
+     "en": "Second point",
+     "de": "Zweiter Punkt"
+    },
+    {
+     "uk": "Третій пункт",
+     "en": "Third point",
+     "de": "Dritter Punkt"
+    }
+   ]
+  }
+ },
+ "project": {
+  "label": {
+   "uk": "Картка проєкту",
+   "en": "Project card",
+   "de": "Projektkarte"
+  },
+  "item": {
+   "category": "software",
+   "image": "assets/product-dashboard.svg",
+   "model": "",
+   "title": {
+    "uk": "Новий проєкт",
+    "en": "New project",
+    "de": "Neues Projekt"
+   },
+   "summary": {
+    "uk": "Один-два речення про проєкт.",
+    "en": "One or two sentences about the project.",
+    "de": "Ein bis zwei Sätze zum Projekt."
+   },
+   "status": {
+    "uk": "Концепт",
+    "en": "Concept",
+    "de": "Konzept"
+   },
+   "tags": [
+    "Tag"
+   ]
+  }
+ },
+ "sections": {
+  "about": {
+   "label": {
+    "uk": "Про нас (текст із зображенням)",
+    "en": "About us (text with image)",
+    "de": "Über uns (Text mit Bild)"
+   },
+   "blocks": [
+    {
+     "type": "text_image",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Про нас",
+       "en": "About us",
+       "de": "Über uns"
+      },
+      "title": {
+       "uk": "Невелика команда, чіткий результат",
+       "en": "A small team with a clear result",
+       "de": "Kleines Team, klares Ergebnis"
+      },
+      "body": {
+       "uk": "Ми розробляємо програми та пристрої.\n\n- Прозорі етапи\n- Зрозумілі терміни",
+       "en": "We build software and devices.\n\n- Transparent steps\n- Honest timelines",
+       "de": "Wir entwickeln Software und Geräte.\n\n- Transparente Schritte\n- Ehrliche Zeitpläne"
+      },
+      "image": "assets/hero-illustration.svg",
+      "alt": {
+       "uk": "Ілюстрація",
+       "en": "Illustration",
+       "de": "Illustration"
+      },
+      "side": "right"
+     }
+    }
+   ]
+  },
+  "cta": {
+   "label": {
+    "uk": "Заклик до дії",
+    "en": "Call to action",
+    "de": "Handlungsaufforderung"
+   },
+   "blocks": [
+    {
+     "type": "cta",
+     "enabled": true,
+     "fields": {
+      "title": {
+       "uk": "Готові обговорити проєкт?",
+       "en": "Ready to discuss your project?",
+       "de": "Bereit, Ihr Projekt zu besprechen?"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "button": {
+       "text": {
+        "uk": "Написати нам",
+        "en": "Write to us",
+        "de": "Schreiben Sie uns"
+       },
+       "href": "/#contact"
+      }
+     }
+    }
+   ]
+  },
+  "gallery": {
+   "label": {
+    "uk": "Галерея фото",
+    "en": "Photo gallery",
+    "de": "Fotogalerie"
+   },
+   "blocks": [
+    {
+     "type": "gallery",
+     "enabled": true,
+     "fields": {
+      "title": {
+       "uk": "Галерея",
+       "en": "Gallery",
+       "de": "Galerie"
+      },
+      "items": [
+       {
+        "image": "assets/product-pcb.svg",
+        "alt": {
+         "uk": "Плата",
+         "en": "Circuit board",
+         "de": "Leiterplatte"
+        },
+        "caption": {
+         "uk": "",
+         "en": "",
+         "de": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "pages": {
+  "service": {
+   "label": {
+    "uk": "Послуга",
+    "en": "Service",
+    "de": "Leistung"
+   },
+   "title": {
+    "uk": "Назва послуги",
+    "en": "Service name",
+    "de": "Name der Leistung"
+   },
+   "description": {
+    "uk": "Опис послуги для пошуку.",
+    "en": "Service description for search engines.",
+    "de": "Leistungsbeschreibung für Suchmaschinen."
+   },
+   "blocks": [
+    {
+     "type": "hero",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Послуга",
+       "en": "Service",
+       "de": "Leistung"
+      },
+      "title": {
+       "uk": "Назва послуги",
+       "en": "Service name",
+       "de": "Name der Leistung"
+      },
+      "lead": {
+       "uk": "Коротко про те, що пропонуєте.",
+       "en": "A short sentence about what you offer.",
+       "de": "Ein kurzer Satz dazu, was Sie anbieten."
+      },
+      "primary": {
+       "text": {
+        "uk": "Зв'язатися",
+        "en": "Get in touch",
+        "de": "Kontakt aufnehmen"
+       },
+       "href": "/#contact"
+      },
+      "secondary": {
+       "text": {
+        "uk": "Детальніше",
+        "en": "Learn more",
+        "de": "Mehr erfahren"
+       },
+       "href": ""
+      },
+      "image": "",
+      "alt": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      }
+     }
+    },
+    {
+     "type": "text_image",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Про нас",
+       "en": "About us",
+       "de": "Über uns"
+      },
+      "title": {
+       "uk": "Невелика команда, чіткий результат",
+       "en": "A small team with a clear result",
+       "de": "Kleines Team, klares Ergebnis"
+      },
+      "body": {
+       "uk": "Ми розробляємо програми та пристрої.\n\n- Прозорі етапи\n- Зрозумілі терміни",
+       "en": "We build software and devices.\n\n- Transparent steps\n- Honest timelines",
+       "de": "Wir entwickeln Software und Geräte.\n\n- Transparente Schritte\n- Ehrliche Zeitpläne"
+      },
+      "image": "assets/hero-illustration.svg",
+      "alt": {
+       "uk": "Ілюстрація",
+       "en": "Illustration",
+       "de": "Illustration"
+      },
+      "side": "right"
+     }
+    },
+    {
+     "type": "steps",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Процес",
+       "en": "Process",
+       "de": "Ablauf"
+      },
+      "title": {
+       "uk": "Як ми працюємо",
+       "en": "How we work",
+       "de": "So arbeiten wir"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "items": [
+       {
+        "title": {
+         "uk": "Знайомство",
+         "en": "Discovery",
+         "de": "Kennenlernen"
+        },
+        "text": {
+         "uk": "Розбираємо задачу.",
+         "en": "We unpack the task.",
+         "de": "Wir klären die Aufgabe."
+        }
+       },
+       {
+        "title": {
+         "uk": "Розробка",
+         "en": "Build",
+         "de": "Umsetzung"
+        },
+        "text": {
+         "uk": "Короткі ітерації з демо.",
+         "en": "Short iterations with demos.",
+         "de": "Kurze Iterationen mit Demos."
+        }
+       },
+       {
+        "title": {
+         "uk": "Передача",
+         "en": "Handover",
+         "de": "Übergabe"
+        },
+        "text": {
+         "uk": "Код і документація.",
+         "en": "Code and documentation.",
+         "de": "Code und Dokumentation."
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "faq",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "FAQ",
+       "en": "FAQ",
+       "de": "FAQ"
+      },
+      "title": {
+       "uk": "Запитання",
+       "en": "Questions",
+       "de": "Fragen"
+      },
+      "items": [
+       {
+        "q": {
+         "uk": "З чого почати?",
+         "en": "Where do we start?",
+         "de": "Womit beginnen wir?"
+        },
+        "a": {
+         "uk": "Напишіть нам коротко про задачу.",
+         "en": "Send us a short description of your task.",
+         "de": "Schicken Sie uns eine kurze Beschreibung Ihrer Aufgabe."
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "cta",
+     "enabled": true,
+     "fields": {
+      "title": {
+       "uk": "Готові обговорити проєкт?",
+       "en": "Ready to discuss your project?",
+       "de": "Bereit, Ihr Projekt zu besprechen?"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "button": {
+       "text": {
+        "uk": "Написати нам",
+        "en": "Write to us",
+        "de": "Schreiben Sie uns"
+       },
+       "href": "/#contact"
+      }
+     }
+    }
+   ]
+  },
+  "landing": {
+   "label": {
+    "uk": "Лендінг продукту",
+    "en": "Product landing",
+    "de": "Produkt-Landingpage"
+   },
+   "title": {
+    "uk": "Назва продукту",
+    "en": "Product name",
+    "de": "Produktname"
+   },
+   "description": {
+    "uk": "Опис продукту для пошуку.",
+    "en": "Product description for search engines.",
+    "de": "Produktbeschreibung für Suchmaschinen."
+   },
+   "blocks": [
+    {
+     "type": "hero",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Нова сторінка",
+       "en": "New page",
+       "de": "Neue Seite"
+      },
+      "title": {
+       "uk": "Заголовок сторінки",
+       "en": "Page headline",
+       "de": "Seitenüberschrift"
+      },
+      "lead": {
+       "uk": "Коротко про те, що пропонуєте.",
+       "en": "A short sentence about what you offer.",
+       "de": "Ein kurzer Satz dazu, was Sie anbieten."
+      },
+      "primary": {
+       "text": {
+        "uk": "Зв'язатися",
+        "en": "Get in touch",
+        "de": "Kontakt aufnehmen"
+       },
+       "href": "/#contact"
+      },
+      "secondary": {
+       "text": {
+        "uk": "Детальніше",
+        "en": "Learn more",
+        "de": "Mehr erfahren"
+       },
+       "href": ""
+      },
+      "image": "",
+      "alt": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      }
+     }
+    },
+    {
+     "type": "services",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Послуги",
+       "en": "Services",
+       "de": "Leistungen"
+      },
+      "title": {
+       "uk": "Що ми робимо",
+       "en": "What we do",
+       "de": "Was wir tun"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "items": [
+       {
+        "icon": "code",
+        "title": {
+         "uk": "Програмне забезпечення",
+         "en": "Software",
+         "de": "Software"
+        },
+        "text": {
+         "uk": "Веб, API та інтеграції під ваші процеси.",
+         "en": "Web, APIs and integrations for your workflows.",
+         "de": "Web, APIs und Integrationen für Ihre Abläufe."
+        }
+       },
+       {
+        "icon": "chip",
+        "title": {
+         "uk": "Електроніка",
+         "en": "Electronics",
+         "de": "Elektronik"
+        },
+        "text": {
+         "uk": "Від схеми до прототипу та малої серії.",
+         "en": "From schematic to prototype and small series.",
+         "de": "Vom Schaltplan zum Prototyp und zur Kleinserie."
+        }
+       },
+       {
+        "icon": "agent",
+        "title": {
+         "uk": "AI-агенти",
+         "en": "AI agents",
+         "de": "KI-Agenten"
+        },
+        "text": {
+         "uk": "Автоматизація рутини під вашим контролем.",
+         "en": "Automating routine work under your control.",
+         "de": "Routine automatisieren, unter Ihrer Kontrolle."
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "gallery3d",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "3D",
+       "en": "3D",
+       "de": "3D"
+      },
+      "title": {
+       "uk": "Подивіться зблизька",
+       "en": "Take a closer look",
+       "de": "Aus der Nähe betrachten"
+      },
+      "lead": {
+       "uk": "Крутіть моделі пальцем або мишею.",
+       "en": "Rotate the models with your finger or mouse.",
+       "de": "Drehen Sie die Modelle mit Finger oder Maus."
+      }
+     }
+    },
+    {
+     "type": "pricing",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Співпраця",
+       "en": "Engagement",
+       "de": "Zusammenarbeit"
+      },
+      "title": {
+       "uk": "Формати роботи",
+       "en": "Ways to work together",
+       "de": "Formen der Zusammenarbeit"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "items": [
+       {
+        "title": {
+         "uk": "Воркшоп",
+         "en": "Workshop",
+         "de": "Workshop"
+        },
+        "price": {
+         "uk": "За запитом",
+         "en": "On request",
+         "de": "Auf Anfrage"
+        },
+        "text": {
+         "uk": "- Аналіз вимог\n- Концепція",
+         "en": "- Requirements analysis\n- Concept",
+         "de": "- Anforderungsanalyse\n- Konzept"
+        },
+        "featured": false
+       },
+       {
+        "title": {
+         "uk": "Проєкт",
+         "en": "Project",
+         "de": "Projekt"
+        },
+        "price": {
+         "uk": "За запитом",
+         "en": "On request",
+         "de": "Auf Anfrage"
+        },
+        "text": {
+         "uk": "- Фіксований обсяг\n- Демо на кожному етапі",
+         "en": "- Fixed scope\n- Demos at every stage",
+         "de": "- Fester Umfang\n- Demos in jeder Phase"
+        },
+        "featured": true
+       }
+      ]
+     }
+    },
+    {
+     "type": "faq",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "FAQ",
+       "en": "FAQ",
+       "de": "FAQ"
+      },
+      "title": {
+       "uk": "Запитання",
+       "en": "Questions",
+       "de": "Fragen"
+      },
+      "items": [
+       {
+        "q": {
+         "uk": "З чого почати?",
+         "en": "Where do we start?",
+         "de": "Womit beginnen wir?"
+        },
+        "a": {
+         "uk": "Напишіть нам коротко про задачу.",
+         "en": "Send us a short description of your task.",
+         "de": "Schicken Sie uns eine kurze Beschreibung Ihrer Aufgabe."
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "form",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Контакт",
+       "en": "Contact",
+       "de": "Kontakt"
+      },
+      "title": {
+       "uk": "Напишіть нам",
+       "en": "Write to us",
+       "de": "Schreiben Sie uns"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "form": ""
+     }
+    },
+    {
+     "type": "cta",
+     "enabled": true,
+     "fields": {
+      "title": {
+       "uk": "Готові обговорити проєкт?",
+       "en": "Ready to discuss your project?",
+       "de": "Bereit, Ihr Projekt zu besprechen?"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "button": {
+       "text": {
+        "uk": "Написати нам",
+        "en": "Write to us",
+        "de": "Schreiben Sie uns"
+       },
+       "href": "/#contact"
+      }
+     }
+    }
+   ]
+  },
+  "about": {
+   "label": {
+    "uk": "Про нас",
+    "en": "About us",
+    "de": "Über uns"
+   },
+   "title": {
+    "uk": "Про нас",
+    "en": "About us",
+    "de": "Über uns"
+   },
+   "description": {
+    "uk": "Хто ми і як працюємо.",
+    "en": "Who we are and how we work.",
+    "de": "Wer wir sind und wie wir arbeiten."
+   },
+   "blocks": [
+    {
+     "type": "hero",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Про нас",
+       "en": "About us",
+       "de": "Über uns"
+      },
+      "title": {
+       "uk": "Ми будуємо корисні речі",
+       "en": "We build useful things",
+       "de": "Wir bauen nützliche Dinge"
+      },
+      "lead": {
+       "uk": "Коротко про те, що пропонуєте.",
+       "en": "A short sentence about what you offer.",
+       "de": "Ein kurzer Satz dazu, was Sie anbieten."
+      },
+      "primary": {
+       "text": {
+        "uk": "Зв'язатися",
+        "en": "Get in touch",
+        "de": "Kontakt aufnehmen"
+       },
+       "href": "/#contact"
+      },
+      "secondary": {
+       "text": {
+        "uk": "Детальніше",
+        "en": "Learn more",
+        "de": "Mehr erfahren"
+       },
+       "href": ""
+      },
+      "image": "",
+      "alt": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      }
+     }
+    },
+    {
+     "type": "text_image",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Про нас",
+       "en": "About us",
+       "de": "Über uns"
+      },
+      "title": {
+       "uk": "Невелика команда, чіткий результат",
+       "en": "A small team with a clear result",
+       "de": "Kleines Team, klares Ergebnis"
+      },
+      "body": {
+       "uk": "Ми розробляємо програми та пристрої.\n\n- Прозорі етапи\n- Зрозумілі терміни",
+       "en": "We build software and devices.\n\n- Transparent steps\n- Honest timelines",
+       "de": "Wir entwickeln Software und Geräte.\n\n- Transparente Schritte\n- Ehrliche Zeitpläne"
+      },
+      "image": "assets/hero-illustration.svg",
+      "alt": {
+       "uk": "Ілюстрація",
+       "en": "Illustration",
+       "de": "Illustration"
+      },
+      "side": "right"
+     }
+    },
+    {
+     "type": "steps",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Процес",
+       "en": "Process",
+       "de": "Ablauf"
+      },
+      "title": {
+       "uk": "Як ми працюємо",
+       "en": "How we work",
+       "de": "So arbeiten wir"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "items": [
+       {
+        "title": {
+         "uk": "Знайомство",
+         "en": "Discovery",
+         "de": "Kennenlernen"
+        },
+        "text": {
+         "uk": "Розбираємо задачу.",
+         "en": "We unpack the task.",
+         "de": "Wir klären die Aufgabe."
+        }
+       },
+       {
+        "title": {
+         "uk": "Розробка",
+         "en": "Build",
+         "de": "Umsetzung"
+        },
+        "text": {
+         "uk": "Короткі ітерації з демо.",
+         "en": "Short iterations with demos.",
+         "de": "Kurze Iterationen mit Demos."
+        }
+       },
+       {
+        "title": {
+         "uk": "Передача",
+         "en": "Handover",
+         "de": "Übergabe"
+        },
+        "text": {
+         "uk": "Код і документація.",
+         "en": "Code and documentation.",
+         "de": "Code und Dokumentation."
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "cta",
+     "enabled": true,
+     "fields": {
+      "title": {
+       "uk": "Готові обговорити проєкт?",
+       "en": "Ready to discuss your project?",
+       "de": "Bereit, Ihr Projekt zu besprechen?"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "button": {
+       "text": {
+        "uk": "Написати нам",
+        "en": "Write to us",
+        "de": "Schreiben Sie uns"
+       },
+       "href": "/#contact"
+      }
+     }
+    }
+   ]
+  },
+  "contacts": {
+   "label": {
+    "uk": "Контакти",
+    "en": "Contacts",
+    "de": "Kontakt"
+   },
+   "title": {
+    "uk": "Контакти",
+    "en": "Contact",
+    "de": "Kontakt"
+   },
+   "description": {
+    "uk": "Як з нами зв'язатися.",
+    "en": "How to reach us.",
+    "de": "So erreichen Sie uns."
+   },
+   "blocks": [
+    {
+     "type": "hero",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Контакт",
+       "en": "Contact",
+       "de": "Kontakt"
+      },
+      "title": {
+       "uk": "Зв'яжіться з нами",
+       "en": "Get in touch",
+       "de": "Nehmen Sie Kontakt auf"
+      },
+      "lead": {
+       "uk": "Коротко про те, що пропонуєте.",
+       "en": "A short sentence about what you offer.",
+       "de": "Ein kurzer Satz dazu, was Sie anbieten."
+      },
+      "primary": {
+       "text": {
+        "uk": "Зв'язатися",
+        "en": "Get in touch",
+        "de": "Kontakt aufnehmen"
+       },
+       "href": "/#contact"
+      },
+      "secondary": {
+       "text": {
+        "uk": "Детальніше",
+        "en": "Learn more",
+        "de": "Mehr erfahren"
+       },
+       "href": ""
+      },
+      "image": "",
+      "alt": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      }
+     }
+    },
+    {
+     "type": "form",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Контакт",
+       "en": "Contact",
+       "de": "Kontakt"
+      },
+      "title": {
+       "uk": "Напишіть нам",
+       "en": "Write to us",
+       "de": "Schreiben Sie uns"
+      },
+      "lead": {
+       "uk": "",
+       "en": "",
+       "de": ""
+      },
+      "form": ""
+     }
+    }
+   ]
+  },
+  "blank": {
+   "label": {
+    "uk": "Порожня",
+    "en": "Blank",
+    "de": "Leer"
+   },
+   "title": {
+    "uk": "Нова сторінка",
+    "en": "New page",
+    "de": "Neue Seite"
+   },
+   "description": {
+    "uk": "",
+    "en": "",
+    "de": ""
+   },
+   "blocks": [
+    {
+     "type": "text_image",
+     "enabled": true,
+     "fields": {
+      "eyebrow": {
+       "uk": "Про нас",
+       "en": "About us",
+       "de": "Über uns"
+      },
+      "title": {
+       "uk": "Невелика команда, чіткий результат",
+       "en": "A small team with a clear result",
+       "de": "Kleines Team, klares Ergebnis"
+      },
+      "body": {
+       "uk": "Ми розробляємо програми та пристрої.\n\n- Прозорі етапи\n- Зрозумілі терміни",
+       "en": "We build software and devices.\n\n- Transparent steps\n- Honest timelines",
+       "de": "Wir entwickeln Software und Geräte.\n\n- Transparente Schritte\n- Ehrliche Zeitpläne"
+      },
+      "image": "assets/hero-illustration.svg",
+      "alt": {
+       "uk": "Ілюстрація",
+       "en": "Illustration",
+       "de": "Illustration"
+      },
+      "side": "right"
+     }
+    }
+   ]
+  }
+ },
+ "forms": {
+  "project_request": {
+   "label": {
+    "uk": "Запит на проєкт",
+    "en": "Project request",
+    "de": "Projektanfrage"
+   },
+   "form": {
+    "title": {
+     "uk": "Запит на проєкт",
+     "en": "Project request",
+     "de": "Projektanfrage"
+    },
+    "intro": {
+     "uk": "Опишіть задачу.",
+     "en": "Describe your task.",
+     "de": "Beschreiben Sie Ihre Aufgabe."
+    },
+    "fields": [
+     {
+      "key": "name",
+      "type": "text",
+      "label": {
+       "uk": "Ім'я",
+       "en": "Name",
+       "de": "Name"
+      },
+      "required": true,
+      "max": 120
+     },
+     {
+      "key": "email",
+      "type": "email",
+      "label": {
+       "uk": "Email",
+       "en": "Email",
+       "de": "E-Mail"
+      },
+      "required": true,
+      "max": 254
+     },
+     {
+      "key": "type",
+      "type": "select",
+      "label": {
+       "uk": "Тип проєкту",
+       "en": "Project type",
+       "de": "Projekttyp"
+      },
+      "required": false,
+      "options": [
+       {
+        "uk": "Програмне забезпечення",
+        "en": "Software",
+        "de": "Software"
+       },
+       {
+        "uk": "Електронний пристрій",
+        "en": "Electronic device",
+        "de": "Elektronisches Gerät"
+       },
+       {
+        "uk": "Інтеграція AI-агента",
+        "en": "AI-agent integration",
+        "de": "KI-Agenten-Integration"
+       },
+       {
+        "uk": "Інше",
+        "en": "Other",
+        "de": "Sonstiges"
+       }
+      ]
+     },
+     {
+      "key": "budget",
+      "type": "text",
+      "label": {
+       "uk": "Орієнтовний бюджет",
+       "en": "Approximate budget",
+       "de": "Ungefähres Budget"
+      },
+      "required": false,
+      "max": 60
+     },
+     {
+      "key": "message",
+      "type": "textarea",
+      "label": {
+       "uk": "Опис задачі",
+       "en": "Project description",
+       "de": "Projektbeschreibung"
+      },
+      "required": true,
+      "max": 2000
+     }
+    ],
+    "consent": {
+     "uk": "Я погоджуюсь на обробку даних для відповіді на запит.",
+     "en": "I agree to my data being processed to answer this request.",
+     "de": "Ich bin mit der Verarbeitung meiner Daten zur Beantwortung der Anfrage einverstanden."
+    },
+    "consentRequired": true,
+    "submit": {
+     "uk": "Надіслати",
+     "en": "Send",
+     "de": "Senden"
+    },
+    "success": {
+     "uk": "Дякуємо! Ми відповімо найближчим часом.",
+     "en": "Thank you! We will get back to you shortly.",
+     "de": "Vielen Dank! Wir melden uns in Kürze."
+    },
+    "toEmail": true
+   }
+  },
+  "repair": {
+   "label": {
+    "uk": "Ремонт електроніки",
+    "en": "Electronics repair",
+    "de": "Elektronik-Reparatur"
+   },
+   "form": {
+    "title": {
+     "uk": "Ремонт електроніки",
+     "en": "Electronics repair",
+     "de": "Elektronik-Reparatur"
+    },
+    "intro": {
+     "uk": "Опишіть пристрій і несправність.",
+     "en": "Describe the device and the fault.",
+     "de": "Beschreiben Sie Gerät und Fehler."
+    },
+    "fields": [
+     {
+      "key": "name",
+      "type": "text",
+      "label": {
+       "uk": "Ім'я",
+       "en": "Name",
+       "de": "Name"
+      },
+      "required": true,
+      "max": 120
+     },
+     {
+      "key": "email",
+      "type": "email",
+      "label": {
+       "uk": "Email",
+       "en": "Email",
+       "de": "E-Mail"
+      },
+      "required": true,
+      "max": 254
+     },
+     {
+      "key": "phone",
+      "type": "tel",
+      "label": {
+       "uk": "Телефон (необов'язково)",
+       "en": "Phone (optional)",
+       "de": "Telefon (optional)"
+      },
+      "required": false,
+      "max": 40
+     },
+     {
+      "key": "device",
+      "type": "text",
+      "label": {
+       "uk": "Пристрій і модель",
+       "en": "Device and model",
+       "de": "Gerät und Modell"
+      },
+      "required": true,
+      "max": 120
+     },
+     {
+      "key": "message",
+      "type": "textarea",
+      "label": {
+       "uk": "Що сталося",
+       "en": "What happened",
+       "de": "Was ist passiert"
+      },
+      "required": true,
+      "max": 2000
+     },
+     {
+      "key": "backup",
+      "type": "checkbox",
+      "label": {
+       "uk": "Дані на пристрої можна втратити",
+       "en": "Data on the device may be lost",
+       "de": "Daten auf dem Gerät dürfen verloren gehen"
+      },
+      "required": false
+     }
+    ],
+    "consent": {
+     "uk": "Я погоджуюсь на обробку даних для відповіді на запит.",
+     "en": "I agree to my data being processed to answer this request.",
+     "de": "Ich bin mit der Verarbeitung meiner Daten zur Beantwortung der Anfrage einverstanden."
+    },
+    "consentRequired": true,
+    "submit": {
+     "uk": "Надіслати",
+     "en": "Send",
+     "de": "Senden"
+    },
+    "success": {
+     "uk": "Дякуємо! Ми відповімо найближчим часом.",
+     "en": "Thank you! We will get back to you shortly.",
+     "de": "Vielen Dank! Wir melden uns in Kürze."
+    },
+    "toEmail": true
+   }
+  },
+  "consultation": {
+   "label": {
+    "uk": "Консультація",
+    "en": "Consultation",
+    "de": "Beratung"
+   },
+   "form": {
+    "title": {
+     "uk": "Запис на консультацію",
+     "en": "Book a consultation",
+     "de": "Beratungstermin buchen"
+    },
+    "intro": {
+     "uk": "Оберіть тему й зручний час.",
+     "en": "Pick a topic and a good time.",
+     "de": "Wählen Sie Thema und Zeitfenster."
+    },
+    "fields": [
+     {
+      "key": "name",
+      "type": "text",
+      "label": {
+       "uk": "Ім'я",
+       "en": "Name",
+       "de": "Name"
+      },
+      "required": true,
+      "max": 120
+     },
+     {
+      "key": "email",
+      "type": "email",
+      "label": {
+       "uk": "Email",
+       "en": "Email",
+       "de": "E-Mail"
+      },
+      "required": true,
+      "max": 254
+     },
+     {
+      "key": "topic",
+      "type": "select",
+      "label": {
+       "uk": "Тема",
+       "en": "Topic",
+       "de": "Thema"
+      },
+      "required": true,
+      "options": [
+       {
+        "uk": "Архітектура",
+        "en": "Architecture",
+        "de": "Architektur"
+       },
+       {
+        "uk": "Електроніка",
+        "en": "Electronics",
+        "de": "Elektronik"
+       },
+       {
+        "uk": "AI-агенти",
+        "en": "AI agents",
+        "de": "KI-Agenten"
+       }
+      ]
+     },
+     {
+      "key": "when",
+      "type": "text",
+      "label": {
+       "uk": "Зручний час",
+       "en": "Preferred time",
+       "de": "Wunschzeit"
+      },
+      "required": false,
+      "max": 120
+     },
+     {
+      "key": "message",
+      "type": "textarea",
+      "label": {
+       "uk": "Коментар",
+       "en": "Comment",
+       "de": "Kommentar"
+      },
+      "required": false,
+      "max": 2000
+     }
+    ],
+    "consent": {
+     "uk": "Я погоджуюсь на обробку даних для відповіді на запит.",
+     "en": "I agree to my data being processed to answer this request.",
+     "de": "Ich bin mit der Verarbeitung meiner Daten zur Beantwortung der Anfrage einverstanden."
+    },
+    "consentRequired": true,
+    "submit": {
+     "uk": "Надіслати",
+     "en": "Send",
+     "de": "Senden"
+    },
+    "success": {
+     "uk": "Дякуємо! Ми відповімо найближчим часом.",
+     "en": "Thank you! We will get back to you shortly.",
+     "de": "Vielen Dank! Wir melden uns in Kürze."
+    },
+    "toEmail": true
+   }
+  }
+ }
+}
