@@ -5,14 +5,14 @@
     "image": "assets/product-controller.svg",
     "model": "assets/models/cronos-controller-v2.glb",
     "title": {
-      "uk": "Cronos Controller, остання версія",
-      "en": "Cronos Controller, latest version",
-      "de": "Cronos Controller, aktuelle Version"
+      "uk": "Контролер виробничого процесу, остання версія",
+      "en": "Production-process controller, latest version",
+      "de": "Steuerung für Produktionsprozesse, aktuelle Version"
     },
     "summary": {
-      "uk": "Корпус контролера з великим сенсорним екраном без кнопок, логотипом ViTeh на нижній кришці та круглим роз'ємом. 3D-модель зі збереженого проєкту Blender; екран із фото реального пристрою.",
-      "en": "Controller enclosure with a large touchscreen, no buttons, the ViTeh mark on the lower cover and a round connector. 3D model from the original Blender project; the screen is taken from a photo of the real unit.",
-      "de": "Controller-Gehäuse mit großem Touchscreen ohne Tasten, ViTeh-Logo auf der unteren Abdeckung und rundem Steckverbinder. 3D-Modell aus dem Blender-Originalprojekt; der Bildschirm stammt aus einem Foto des echten Geräts."
+      "uk": "Контролер для керування й автоматизації виробничого процесу: двигун, датчики, пресети й таймінги. Великий сенсорний екран без кнопок, логотип ViTeh на нижній кришці, круглий роз'єм. 3D-модель зі збереженого проєкту Blender; екран із фото реального пристрою.",
+      "en": "A controller for managing and automating a production process: motor, sensors, presets and timings. Large touchscreen with no buttons, the ViTeh mark on the lower cover and a round connector. 3D model from the original Blender project; the screen is taken from a photo of the real unit.",
+      "de": "Ein Controller zur Steuerung und Automatisierung eines Produktionsprozesses: Motor, Sensoren, Presets und Zeitabläufe. Großer Touchscreen ohne Tasten, ViTeh-Logo auf der unteren Abdeckung und runder Steckverbinder. 3D-Modell aus dem Blender-Originalprojekt; der Bildschirm stammt aus einem Foto des echten Geräts."
     },
     "status": {
       "uk": "Прототип",
@@ -34,14 +34,14 @@
     "model": "assets/models/cronos-controller-v1.glb",
     "poster": "assets/posters/cronos-controller-v1",
     "title": {
-      "uk": "Cronos Controller, перша версія",
-      "en": "Cronos Controller, first version",
-      "de": "Cronos Controller, erste Version"
+      "uk": "Контролер виробничого процесу, перша версія",
+      "en": "Production-process controller, first version",
+      "de": "Steuerung für Produktionsprozesse, erste Version"
     },
     "summary": {
-      "uk": "Перша версія корпусу: невеликий дисплей, кнопки керування, чорна кришка та металевий роз'єм збоку. 3D-модель зі збереженого проєкту Blender.",
-      "en": "The first enclosure version: a small display, control buttons, a black cover and a metal connector on the side. 3D model from the original Blender project.",
-      "de": "Die erste Gehäuseversion: kleines Display, Bedientasten, schwarze Abdeckung und ein Metallsteckverbinder an der Seite. 3D-Modell aus dem Blender-Originalprojekt."
+      "uk": "Перша версія корпусу контролера процесу: невеликий дисплей, кнопки керування, чорна кришка та металевий роз'єм збоку. 3D-модель зі збереженого проєкту Blender.",
+      "en": "The first enclosure version of the process controller: a small display, control buttons, a black cover and a metal connector on the side. 3D model from the original Blender project.",
+      "de": "Die erste Gehäuseversion der Prozesssteuerung: kleines Display, Bedientasten, schwarze Abdeckung und ein Metallsteckverbinder an der Seite. 3D-Modell aus dem Blender-Originalprojekt."
     },
     "status": {
       "uk": "Прототип",
