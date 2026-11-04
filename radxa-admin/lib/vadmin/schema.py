@@ -35,6 +35,7 @@ class Context:
         self.templates = read_json(os.path.join(data, "templates.json"), {}) or {}
         self.site = read_json(os.path.join(data, "site.json"), {}) or {}
         self.products = read_json(os.path.join(data, "products.json"), []) or []
+        self.portfolio_images = read_json(os.path.join(data, "portfolio-images.json"), []) or []
         self.uploads = (read_json(paths.uploads_index, {}) or {}).get("items", {})
 
     def categories(self):
@@ -254,7 +255,7 @@ def editable_texts(site):
 
 def empty_draft():
     return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": []}, "widgets": {}, "effects": {}, "texts": {},
-            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
+            "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}},
             "pages": [], "forms": {}}
 
 
@@ -292,6 +293,10 @@ def sanitize(raw, ctx):
     for key, check, known in (("projects", image_ref, known_p), ("models", upload_model_ref, known_p), ("serviceModels", upload_model_ref, known_s)):
         src = imgs.get(key) if isinstance(imgs.get(key), dict) else {}
         d["images"][key] = {pid: check(v, ctx) for pid, v in src.items() if pid in known and check(v, ctx)}
+    # project-archive image slots, keyed "<slug>/<slot>" exactly as in data/portfolio-images.json; only uploaded images (u:...) may fill a slot
+    known_slots = {"%s/%s" % (m.get("slug"), m.get("slot")) for m in ctx.portfolio_images if isinstance(m, dict)}
+    src = imgs.get("portfolio") if isinstance(imgs.get("portfolio"), dict) else {}
+    d["images"]["portfolio"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in src.items()) if k in known_slots and v.startswith("u:")}
 
     pages, seen = [], set()
     for p in (raw.get("pages") if isinstance(raw.get("pages"), list) else [])[:LIMITS["pages"]]:

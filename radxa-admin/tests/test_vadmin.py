@@ -382,6 +382,26 @@ class BuildTests(unittest.TestCase):
         self.assertIn('data-vform="consultation"', self.w.read(r["id"], "s/landing/index.html"))
         self.assertNotIn('href="#top"', self.w.read(r["id"], "s/landing/index.html"), "the footer logo leads home, not to a missing anchor")
 
+    def test_project_archive_ships_and_an_uploaded_picture_fills_a_slot(self):
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        factory = json.loads(self.w.read(r["id"], "data/portfolio-images.json"))
+        self.assertEqual(factory, json.load(open(os.path.join(REPO, "data/portfolio-images.json"), encoding="utf-8")), "an empty draft keeps the factory manifest")
+        self.assertTrue(self.w.read(r["id"], "data/portfolio.json"))
+        pub = self.w.site(r["id"])
+        self.assertFalse([f for _, _, fs in os.walk(os.path.join(pub, "assets/portfolio")) for f in fs if not f.endswith(".pdf")], "no placeholder or slot files in the package")
+        self.assertFalse(os.path.exists(os.path.join(pub, "tools")))
+        img = uploads.store(self.w.paths, png(), "board.png")
+        d = self.w.draft()
+        d["images"]["portfolio"] = {"prometheus-controller/board-photo": img["ref"], "no-such/slot": img["ref"], "can-helper/window": "assets/product-pcb.svg"}
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        by = {"%s/%s" % (m["slug"], m["slot"]): m for m in json.loads(self.w.read(r["id"], "data/portfolio-images.json"))}
+        self.assertEqual((by["prometheus-controller/board-photo"]["status"], by["prometheus-controller/board-photo"]["file"]), ("final", "assets/u/" + img["file"]))
+        self.assertEqual(by["can-helper/window"]["status"], "placeholder", "only uploaded images may fill a slot")
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "assets/u", img["file"])))
+
     def test_uploads_replace_images_and_models(self):
         ctx, d = self.w.ctx(), self.w.draft()
         img = uploads.store(self.w.paths, png(), "hero photo.png")

@@ -465,6 +465,8 @@ function render() {
   renderLegal();
   renderPageHead();
   renderHead();
+  window.vitehRender = { site: state.site, lang: state.lang };      // hook for assets/portfolio.js (optional enhancement)
+  document.dispatchEvent(new CustomEvent("viteh:render", { detail: window.vitehRender }));
   const year = $("#year");
   if (year) year.textContent = String(new Date().getFullYear());
 }

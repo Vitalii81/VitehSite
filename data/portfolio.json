@@ -1,0 +1,276 @@
+{
+  "projects": [
+    {
+      "slug": "prometheus-controller",
+      "category": "electronics",
+      "years": "2022–2023",
+      "title": {
+        "uk": "Prometheus: плата керування",
+        "en": "Prometheus: control board",
+        "de": "Prometheus: Steuerplatine"
+      },
+      "summary": {
+        "uk": "Плата керування на STM32G070 (KiCad) для кавового обладнання, виготовлена під замовлення: ModBus RTU, ізольований RS-485, 7 аналогових виходів 0–10 В, входи термопар K і 4–20 мА, 10 дискретних входів/виходів, монтаж на DIN-рейку, живлення 15–28 В.",
+        "en": "A control board on the STM32G070 (KiCad) for coffee equipment, made to order: ModBus RTU, isolated RS-485, 7 analogue outputs 0–10 V, K-type thermocouple and 4–20 mA inputs, 10 digital inputs/outputs, DIN-rail mounting, 15–28 V supply.",
+        "de": "Eine Steuerplatine auf Basis des STM32G070 (KiCad) für Kaffeemaschinen, im Kundenauftrag gefertigt: ModBus RTU, isoliertes RS-485, 7 Analogausgänge 0–10 V, Eingänge für K-Thermoelemente und 4–20 mA, 10 digitale Ein-/Ausgänge, Hutschienenmontage, 15–28 V Versorgung."
+      },
+      "tags": [
+        "STM32G070",
+        "KiCad",
+        "ModBus RTU",
+        "RS-485"
+      ],
+      "slots": [
+        "board-photo",
+        "board-photo-2",
+        "kicad-render"
+      ]
+    },
+    {
+      "slug": "signal-modules",
+      "category": "electronics",
+      "years": "2022–2023",
+      "title": {
+        "uk": "Signal1: модулі 380 і 382",
+        "en": "Signal1: modules 380 and 382",
+        "de": "Signal1: Module 380 und 382"
+      },
+      "summary": {
+        "uk": "Прошивка двох плат на STM32 (модулі 380 і 382): меню, ModBus (архів, регістри, тривоги, календар), діаграма станів і тестові скріншоти ModBus-інструмента.",
+        "en": "Firmware for two STM32 boards (modules 380 and 382): menu, ModBus (archive, registers, alarms, calendar), a state diagram and test screenshots of a ModBus tool.",
+        "de": "Firmware für zwei STM32-Platinen (Module 380 und 382): Menü, ModBus (Archiv, Register, Alarme, Kalender), Zustandsdiagramm und Test-Screenshots eines ModBus-Werkzeugs."
+      },
+      "tags": [
+        "STM32",
+        "ModBus",
+        "Firmware"
+      ],
+      "slots": [
+        "state-diagram",
+        "modbus-test-1",
+        "modbus-test-2"
+      ]
+    },
+    {
+      "slug": "ev-charge-bridge",
+      "category": "ev",
+      "years": "2023–2025",
+      "title": {
+        "uk": "ChargeBridge: обмін із зарядною станцією EV",
+        "en": "ChargeBridge: EV charging-station link",
+        "de": "ChargeBridge: Anbindung an EV-Ladestation"
+      },
+      "summary": {
+        "uk": "Плата й ПЗ для обміну з зарядною станцією електромобіля за GB/T 27930-2015 (CAN) на ESP32/ESP32-S3. Плата розроблена в Altium; пристрій працює без інтерфейсу користувача, тому показано 3D-рендери плат і адаптера.",
+        "en": "A board and software for talking to an electric-vehicle charging station over GB/T 27930-2015 (CAN) on ESP32/ESP32-S3. The board was designed in Altium; the device has no user interface, so 3D renders of the boards and the adapter are shown.",
+        "de": "Platine und Software für die Kommunikation mit einer Ladestation für Elektrofahrzeuge nach GB/T 27930-2015 (CAN) auf ESP32/ESP32-S3. Die Platine wurde in Altium entworfen; das Gerät hat keine Benutzeroberfläche, daher werden 3D-Renderings der Platinen und des Adapters gezeigt."
+      },
+      "tags": [
+        "ESP32-S3",
+        "CAN",
+        "GB/T 27930",
+        "Altium"
+      ],
+      "slots": [
+        "pcb-3d-top",
+        "pcb-3d",
+        "adapter-3d-top",
+        "adapter-3d-bottom"
+      ]
+    },
+    {
+      "slug": "counter-boards",
+      "category": "electronics",
+      "years": "2024–2025",
+      "title": {
+        "uk": "Counter: плати V2.x",
+        "en": "Counter: V2.x boards",
+        "de": "Counter: Platinen V2.x"
+      },
+      "summary": {
+        "uk": "Плати «Counter» версії V2.x на ESP32 із силовими ключами; показано версії V2.3 і V2.4.",
+        "en": "«Counter» boards, version V2.x, on an ESP32 with power switches; versions V2.3 and V2.4 are shown.",
+        "de": "«Counter»-Platinen, Version V2.x, auf ESP32 mit Leistungsschaltern; gezeigt werden die Versionen V2.3 und V2.4."
+      },
+      "tags": [
+        "ESP32",
+        "PCB",
+        "Altium"
+      ],
+      "slots": [
+        "v23-top",
+        "v24-top"
+      ]
+    },
+    {
+      "slug": "can-helper",
+      "category": "software",
+      "years": "2022",
+      "title": {
+        "uk": "CanHelper",
+        "en": "CanHelper",
+        "de": "CanHelper"
+      },
+      "summary": {
+        "uk": "Інструмент для роботи з CAN/OBD в авто (Tesla та інші) на C# WPF для Windows і окремий міні-хелпер ON/OFF.",
+        "en": "A CAN/OBD tool for cars (Tesla and others) written in C# WPF for Windows, plus a separate ON/OFF mini helper.",
+        "de": "Ein CAN/OBD-Werkzeug für Fahrzeuge (Tesla und andere) in C# WPF für Windows sowie ein separater EIN/AUS-Mini-Helfer."
+      },
+      "tags": [
+        "C#",
+        "WPF",
+        "CAN",
+        "OBD"
+      ],
+      "slots": [
+        "window",
+        "device"
+      ]
+    },
+    {
+      "slug": "toyota-hv-monitor",
+      "category": "hmi",
+      "years": "2025",
+      "title": {
+        "uk": "Монітор гібридної батареї Toyota Prius",
+        "en": "Toyota Prius hybrid-battery monitor",
+        "de": "Toyota-Prius-Hybridbatterie-Monitor"
+      },
+      "summary": {
+        "uk": "Графічний монітор CAN-даних Prius на Qt6 для Linux (OrangePi Zero 2W): HV-батарея, напруги модулів, швидкість і температура, симуляція за логом. Також пристрій із сенсорним екраном на LVGL.",
+        "en": "A graphical CAN-data monitor for the Prius on Qt6 for Linux (OrangePi Zero 2W): HV battery, module voltages, speed and temperature, simulation from a log. Also a touchscreen device on LVGL.",
+        "de": "Ein grafischer CAN-Daten-Monitor für den Prius mit Qt6 unter Linux (OrangePi Zero 2W): HV-Batterie, Modulspannungen, Geschwindigkeit und Temperatur, Simulation aus einem Log. Außerdem ein Touchscreen-Gerät mit LVGL."
+      },
+      "tags": [
+        "Qt6",
+        "LVGL",
+        "CAN",
+        "Linux"
+      ],
+      "slots": [
+        "app-1",
+        "app-2",
+        "device-photo"
+      ]
+    },
+    {
+      "slug": "lvgl-smartwatch",
+      "category": "hmi",
+      "years": "2026-05",
+      "title": {
+        "uk": "Прототип смарт-годинника на LVGL",
+        "en": "LVGL smartwatch prototype",
+        "de": "Smartwatch-Prototyp mit LVGL"
+      },
+      "summary": {
+        "uk": "Прототип смарт-годинника на LVGL: головний екран з іконками, список файлів і календар.",
+        "en": "A smartwatch prototype on LVGL: a home screen with icons, a file list and a calendar.",
+        "de": "Ein Smartwatch-Prototyp mit LVGL: Startbildschirm mit Symbolen, Dateiliste und Kalender."
+      },
+      "tags": [
+        "LVGL",
+        "HMI"
+      ],
+      "slots": [
+        "home",
+        "files",
+        "calendar"
+      ]
+    },
+    {
+      "slug": "fontcreator-image2lcd",
+      "category": "software",
+      "years": "2015–2022",
+      "title": {
+        "uk": "Утиліта зображень і шрифтів для LCD",
+        "en": "Image and font tool for LCDs",
+        "de": "Bild- und Schriftwerkzeug für LCDs"
+      },
+      "summary": {
+        "uk": "Утиліта на C# для перетворення зображень і шрифтів у формат для LCD-дисплеїв.",
+        "en": "A C# utility that converts images and fonts into formats for LCD displays.",
+        "de": "Ein C#-Werkzeug, das Bilder und Schriften in Formate für LCD-Displays umwandelt."
+      },
+      "tags": [
+        "C#",
+        "WinForms",
+        "LCD"
+      ],
+      "slots": [
+        "window"
+      ]
+    },
+    {
+      "slug": "lancontrol-qt6",
+      "category": "software",
+      "years": "2025",
+      "title": {
+        "uk": "LANControl на Qt6",
+        "en": "LANControl on Qt6",
+        "de": "LANControl mit Qt6"
+      },
+      "summary": {
+        "uk": "Керування класом або мережею ПК на Qt6/C++ для Windows: master і slave, блокування, редактор Python.",
+        "en": "Control of a classroom or a network of PCs in Qt6/C++ for Windows: master and slave, locking, a Python editor.",
+        "de": "Steuerung eines Klassenraums oder PC-Netzwerks in Qt6/C++ für Windows: Master und Slave, Sperren, Python-Editor."
+      },
+      "tags": [
+        "Qt6",
+        "C++",
+        "Windows"
+      ],
+      "slots": [
+        "master",
+        "slave"
+      ]
+    },
+    {
+      "slug": "lancontrol-slint",
+      "category": "software",
+      "years": "2025–2026",
+      "title": {
+        "uk": "LANControl на Rust і Slint",
+        "en": "LANControl on Rust and Slint",
+        "de": "LANControl mit Rust und Slint"
+      },
+      "summary": {
+        "uk": "Той самий застосунок для керування класом або мережею ПК, написаний на Rust із інтерфейсом Slint.",
+        "en": "The same classroom and PC-network control application, written in Rust with a Slint interface.",
+        "de": "Dieselbe Anwendung zur Steuerung von Klassenraum und PC-Netzwerk, geschrieben in Rust mit Slint-Oberfläche."
+      },
+      "tags": [
+        "Rust",
+        "Slint",
+        "Windows"
+      ],
+      "slots": [
+        "master",
+        "chat",
+        "lessons"
+      ]
+    },
+    {
+      "slug": "dmm-modbus-tools",
+      "category": "software",
+      "years": "",
+      "title": {
+        "uk": "Утиліти ModBus для DMM",
+        "en": "ModBus tools for DMM",
+        "de": "ModBus-Werkzeuge für DMM"
+      },
+      "summary": {
+        "uk": "Утиліти на C# для ModBus і модулів DMM, з графіками.",
+        "en": "C# utilities for ModBus and DMM modules, with charts.",
+        "de": "C#-Werkzeuge für ModBus und DMM-Module, mit Diagrammen."
+      },
+      "tags": [
+        "C#",
+        "ModBus",
+        "DMM"
+      ],
+      "slots": [
+        "window"
+      ]
+    }
+  ]
+}

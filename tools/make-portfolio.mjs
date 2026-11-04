@@ -1,6 +1,7 @@
 // Builds the engineering portfolio PDF (A4) with a local headless Chrome. A development tool: only its output (assets/portfolio/*.pdf) ships.
 //   node tools/make-portfolio.mjs [--chrome /path/to/chrome] [--slots] [--no-renders]
-//   --slots       adds the "2022-2025" mock-up page with empty slots for the owner (never in the published PDF)
+//   --slots       draws still-missing project pictures as red PLACEHOLDER boxes (run tools/make-portfolio-placeholders.mjs first); never for the published PDF
+//   --final       fails when any project picture slot is still a placeholder
 //   --no-renders  keep tools/portfolio/img/cronos-v*.jpg as they are instead of re-rendering them from the GLB files
 // Needs Chrome/Chromium (software WebGL is fine). No npm packages: it speaks the DevTools protocol over node's built-in WebSocket.
 // Inputs: tools/portfolio/img/*.jpg (photos and screenshots already approved for publication), data/site.json (service names, so PDF and site agree),
@@ -107,8 +108,23 @@ page("07 / SERVICES", "What I offer", "The same service names as on viteh.org, e
   `<div class="svc">${services.map((s) => `<div class="card"><h4>${esc(s.title)}</h4><p>${esc(s.text)}</p><p class="skills">${esc(s.points.join(" · "))}</p></div>`).join("")}</div>
    <p class="note">Desktop and cross-platform apps (C# WinForms/WPF, Qt, GTK, Swift): earlier projects on these platforms were not preserved and are not shown as case studies. They are offered as custom development together with AI agents; current examples are the Android client, a Rust/Slint application, web tools and a voice assistant.</p>`);
 
-if (flag("--slots")) page("08 / PROJECTS 2022–2025", "Projects 2022–2025 (mock-up)", "Empty slots for the owner: nothing here is published until the owner supplies and confirms the material.",
-  `<div class="svc">${["Project 1", "Project 2", "Project 3", "Project 4", "Project 5", "High-voltage EV charger controller (Chinese and European charging protocols)"].map((t) => `<div class="card slot"><h4>${esc(t)}</h4><p>Name · photo · role · technologies · result: to be added by the owner.</p></div>`).join("")}</div>`);
+/* Projects 2022-2025: texts from data/portfolio.json, pictures from data/portfolio-images.json. A "final" slot is shown; a "placeholder" slot is left out of
+   the public PDF, shown with a red PLACEHOLDER marker with --slots, and makes --final fail (so a PDF with missing pictures cannot be released unnoticed). */
+const archive = JSON.parse(readFileSync(join(root, "data/portfolio.json"), "utf8")).projects;
+const slotManifest = JSON.parse(readFileSync(join(root, "data/portfolio-images.json"), "utf8"));
+const cats = Object.fromEntries(site.work.archive.categories.map((c) => [c.id, c.label.en]));
+const pendingSlots = [];
+const archiveCard = (p) => {
+  const shots = (p.slots || []).map((slot) => slotManifest.find((m) => m.slug === p.slug && m.slot === slot)).filter(Boolean).flatMap((m) => {
+    if (m.status === "final") return [`<figure style="flex:${(m.ratio.split(":")[0] / m.ratio.split(":")[1]).toFixed(2)} 1 0"><img src="/${m.file}" alt="${esc(m.alt.en)}"></figure>`];
+    pendingSlots.push(`${m.slug}/${m.slot}`);
+    return flag("--slots") ? [`<figure style="flex:${(m.ratio.split(":")[0] / m.ratio.split(":")[1]).toFixed(2)} 1 0" class="ph"><img src="/tools/portfolio/placeholders/${m.slug}/${m.slot}.webp" alt=""><figcaption>PLACEHOLDER</figcaption></figure>`] : [];
+  }).slice(0, 3);
+  return `<div class="card arch"><p class="skills">${esc(cats[p.category] || p.category)}${p.years ? " · " + esc(p.years) : ""}</p><h4>${esc(p.title.en)}</h4>${shots.length ? `<div class="shots n${shots.length}">${shots.join("")}</div>` : ""}<p>${esc(p.summary.en)}</p><p class="skills">${esc(p.tags.join(" · "))}</p></div>`;
+};
+for (let i = 0; i < archive.length; i += 4) page(`07A / PROJECTS 2022–2025`, i ? "Projects 2022–2025, continued" : "Projects 2022–2025", i ? "More boards, firmware and programs from the project archive." : site.work.archive.lead.en,
+  `<div class="svc arch-grid">${archive.slice(i, i + 4).map(archiveCard).join("")}</div>${i + 4 >= archive.length ? '<p class="note">Roles, customers and results are available on request.</p>' : ""}`);
+if (flag("--final") && pendingSlots.length) { console.error(`--final: ${pendingSlots.length} image slot(s) are still placeholders: ${pendingSlots.join(", ")}`); process.exit(1); }
 
 page("08 / EMBEDDED R&D", "Embedded Systems & HMI", "Research, experiments and prototypes are part of my applied engineering expertise, not just future product ideas.",
   `<div class="cols">${cards([
@@ -168,7 +184,8 @@ figcaption { font-size: 8pt; margin-top: 1.2mm; }
 .cols .card { margin-bottom: 3mm; }
 .svc .card { margin-bottom: 2.4mm; padding: 2.6mm 3.6mm; font-size: 8.2pt; line-height: 1.38; } .svc .card h4 { margin-bottom: .6mm; } .svc .card p { margin-bottom: 1mm; } .svc .skills { font-size: 7.4pt; }
 .svc { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4mm; }
-.card.slot { border: .3mm dashed var(--muted); background: transparent; }
+.arch-grid { align-items: start; } .arch .shots { display: flex; gap: 1.5mm; margin: 1.5mm 0 2mm; height: 26mm; } .arch figure { margin: 0; position: relative; min-width: 0; overflow: hidden; border-radius: 1mm; } .arch figure img { width: 100%; height: 100%; object-fit: cover; max-height: none; border-radius: 0; background: #0e1a30; }
+.ph figcaption { position: absolute; left: 0; right: 0; bottom: 0; background: #b3261e; color: #fff; font: 700 6pt monospace; letter-spacing: .1em; padding: .4mm 1mm; margin: 0; }
 .two { display: grid; grid-template-columns: 1fr 1.1fr; gap: 8mm; align-items: start; } .two img { max-height: 190mm; object-fit: contain; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; } .grid2 img { max-height: 80mm; object-fit: contain; background: #0e1a30; }
 .webrow { display: grid; grid-template-columns: 3fr 1fr 1fr; gap: 3mm; align-items: start; margin-bottom: 2mm; }
