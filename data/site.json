@@ -804,6 +804,57 @@
       "uk": "Інженерне портфоліо (PDF)",
       "en": "Engineering portfolio (PDF)",
       "de": "Engineering-Portfolio (PDF)"
+    },
+    "archive": {
+      "title": {
+        "uk": "Проєкти 2022–2025",
+        "en": "Projects 2022–2025",
+        "de": "Projekte 2022–2025"
+      },
+      "lead": {
+        "uk": "Плати, прошивки та програми з архіву проєктів. Деталі, ролі й результати — за запитом.",
+        "en": "Boards, firmware and programs from the project archive. Details, roles and results on request.",
+        "de": "Platinen, Firmware und Programme aus dem Projektarchiv. Details, Rollen und Ergebnisse auf Anfrage."
+      },
+      "all": {
+        "uk": "Усі",
+        "en": "All",
+        "de": "Alle"
+      },
+      "categories": [
+        {
+          "id": "electronics",
+          "label": {
+            "uk": "Електроніка",
+            "en": "Electronics",
+            "de": "Elektronik"
+          }
+        },
+        {
+          "id": "software",
+          "label": {
+            "uk": "Програми",
+            "en": "Software",
+            "de": "Software"
+          }
+        },
+        {
+          "id": "ev",
+          "label": {
+            "uk": "Зарядка EV",
+            "en": "EV charging",
+            "de": "EV-Laden"
+          }
+        },
+        {
+          "id": "hmi",
+          "label": {
+            "uk": "LVGL / HMI",
+            "en": "LVGL / HMI",
+            "de": "LVGL / HMI"
+          }
+        }
+      ]
     }
   },
   "stack": {

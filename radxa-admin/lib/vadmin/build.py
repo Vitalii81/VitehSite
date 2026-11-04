@@ -186,6 +186,19 @@ def merged_products(draft, ctx, assets):
     return out
 
 
+def merged_portfolio_images(draft, ctx, assets):
+    """The image manifest of the project archive. A slot filled in the admin (an uploaded image) becomes "final" and points at the upload;
+    every other slot keeps its factory status. Placeholder files never exist in the package, so a placeholder slot shows nothing to visitors."""
+    out = []
+    for m in copy.deepcopy(ctx.portfolio_images):
+        ref = draft["images"].get("portfolio", {}).get("%s/%s" % (m.get("slug"), m.get("slot")))
+        if ref:
+            m["file"] = assets.url(ref).lstrip("/")
+            m["status"] = "final"
+        out.append(m)
+    return out
+
+
 def forms_for_worker(draft):
     """What worker/forms.mjs needs to validate a submission. Labels are English (uk as fallback) for the notification mail."""
     out = {}
@@ -352,6 +365,9 @@ def build(paths, ctx=None):
         products = merged_products(draft, ctx, assets)
         write_json(os.path.join(site_dir, "data", "site.json"), site)
         write_json(os.path.join(site_dir, "data", "products.json"), products)
+        if ctx.portfolio_images and os.path.isfile(os.path.join(paths.src, "data", "portfolio.json")):
+            shutil.copyfile(os.path.join(paths.src, "data", "portfolio.json"), os.path.join(site_dir, "data", "portfolio.json"))
+            write_json(os.path.join(site_dir, "data", "portfolio-images.json"), merged_portfolio_images(draft, ctx, assets))
 
         shell_parts = page_parts(paths.src)
         header, footer = prepare_shell(shell_parts, draft)

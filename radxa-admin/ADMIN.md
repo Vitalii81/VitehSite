@@ -174,3 +174,11 @@ radxa-admin/
 data/blocks.json        бібліотека блоків і схеми полів       data/templates.json   шаблони (послуга, картка, розділ, сторінки, форми)
 worker/forms.mjs        перевірка заявок з форм адмінки      assets/blocks.css, assets/forms.js   стилі й скрипт згенерованих сторінок
 ```
+
+
+## Project archive 2022–2025 (pictures)
+
+The archive in "Projects" is shipped with every build (`data/portfolio.json`, `data/portfolio-images.json`). Each picture slot (`<project>/<slot>`) is empty (`placeholder`) until
+a picture exists; visitors then see nothing for that slot. In the draft, `images.portfolio["<slug>/<slot>"]` accepts only an image from your uploads (`u:...`): the build copies it
+to `assets/u/`, points the slot at it and sets it to `final`. Unknown slots and non-uploaded paths are dropped by the sanitiser. Alt texts and statuses of factory slots are edited in
+`data/portfolio-images.json` (or with `node tools/portfolio-images.mjs <folder>` on the main PC); a slot filled in the admin takes the alt text of the factory entry.

@@ -37,6 +37,8 @@ This site is independent from NanoKVM and from the OTA file server.
 | `tools/models/`, `tools/make-env.mjs`, `tools/make-posters.mjs`, `tools/poster.html` | Model generator modules, lighting map and poster tools |
 | `docs/3d-quality/` | Before/after screenshots of the models (not published by the deploy) |
 | `assets/portfolio/*.pdf`, `tools/make-portfolio.mjs`, `tools/portfolio/img/` | Engineering portfolio (A4 PDF) and its reproducible build (`node tools/make-portfolio.mjs`, needs Chrome; `--slots` adds a mock-up page for the owner, never published); linked from Projects and Contact |
+| `data/portfolio.json`, `data/portfolio-images.json`, `assets/portfolio.js`, `assets/portfolio/<slug>/<slot>.webp` | Project archive 2022–2025 inside "Projects": texts, the image-slot manifest (`placeholder` / `final`), the renderer and the final pictures |
+| `tools/make-portfolio-placeholders.mjs`, `tools/portfolio-images.mjs`, `tools/lib/headless.mjs` | Marked placeholder pictures (git-ignored, never deployed) and the one-command importer for the owner's pictures |
 | `docs/portfolio-mapping.md` | Site service ↔ portfolio page ↔ evidence table and the list of unpublished `[confirm]` items |
 | `assets/vendor/` | Local third-party code: `<model-viewer>`; version, SHA-256 and licence in `assets/vendor/README.md` |
 | `tools/make-models.mjs` | Dependency-free generator of the demo GLB models |
@@ -182,3 +184,18 @@ package; Wrangler will state this if it is missing.
 - The contact form is a demo and sends nothing. Connect it to email, Telegram or a small backend when ready.
 - Example projects in `data/products.json` are demo content; replace them with real case studies.
 - Content is rendered by JavaScript. For stronger SEO, consider pre-rendering per language at build time.
+
+## Project archive 2022–2025: how to add the pictures
+
+Slots are listed in `data/portfolio-images.json` (`status: "placeholder"` until a picture arrives). Visitors never see a placeholder: the slot is simply skipped.
+Preview with the red PLACEHOLDER boxes: `node tools/make-portfolio-placeholders.mjs`, then open `index.html?slots` on a local server.
+
+Put the finished pictures in one folder (as `<folder>/<slug>/<slot>.jpg`, `<slug>-<slot>.png`, or under the original file name from `source_hint`) and run:
+
+```bash
+node tools/portfolio-images.mjs ~/my-pictures
+```
+
+The importer crops to the slot ratio (rejects a picture that is more than 15 % off), compresses to WebP + JPEG of at most 200 KB, writes `assets/portfolio/<slug>/<slot>.*` and sets the slot to `final`.
+Then rebuild the PDF: `node tools/make-portfolio.mjs --final` (fails while any slot is still a placeholder; `--slots` draws the missing ones as PLACEHOLDER boxes for review).
+Privacy is the owner's last check: crop photos to the device, no names, addresses, IP/MAC, passwords or contracts, test data only in Windows screenshots.

@@ -1,0 +1,353 @@
+[
+  {
+    "slug": "prometheus-controller",
+    "slot": "board-photo",
+    "file": "assets/portfolio/prometheus-controller/board-photo.webp",
+    "alt": {
+      "uk": "Prometheus: плата керування: Фото плати",
+      "en": "Prometheus: control board: Board photo",
+      "de": "Prometheus: Steuerplatine: Foto der Platine"
+    },
+    "ratio": "16:9",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/coffee/photo_2023-03-05_14-09-31.jpg"
+  },
+  {
+    "slug": "prometheus-controller",
+    "slot": "board-photo-2",
+    "file": "assets/portfolio/prometheus-controller/board-photo-2.webp",
+    "alt": {
+      "uk": "Prometheus: плата керування: Фото плати, другий кадр",
+      "en": "Prometheus: control board: Board photo, second shot",
+      "de": "Prometheus: Steuerplatine: Foto der Platine, zweite Aufnahme"
+    },
+    "ratio": "3:2",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/coffee/photo_2023-03-05_14-52-17.jpg"
+  },
+  {
+    "slug": "prometheus-controller",
+    "slot": "kicad-render",
+    "file": "assets/portfolio/prometheus-controller/kicad-render.webp",
+    "alt": {
+      "uk": "Prometheus: плата керування: 3D-рендер із KiCad",
+      "en": "Prometheus: control board: KiCad 3D render",
+      "de": "Prometheus: Steuerplatine: 3D-Rendering aus KiCad"
+    },
+    "ratio": "3:2",
+    "status": "placeholder",
+    "source_hint": "render from the KiCad project Coffee_machine/CoffeeBoardPCB (owner)"
+  },
+  {
+    "slug": "signal-modules",
+    "slot": "state-diagram",
+    "file": "assets/portfolio/signal-modules/state-diagram.webp",
+    "alt": {
+      "uk": "Signal1: модулі 380 і 382: Діаграма станів",
+      "en": "Signal1: modules 380 and 382: State diagram",
+      "de": "Signal1: Module 380 und 382: Zustandsdiagramm"
+    },
+    "ratio": "9:8",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/signal/StateDiagram.jpg"
+  },
+  {
+    "slug": "signal-modules",
+    "slot": "modbus-test-1",
+    "file": "assets/portfolio/signal-modules/modbus-test-1.webp",
+    "alt": {
+      "uk": "Signal1: модулі 380 і 382: Тест ModBus, архів",
+      "en": "Signal1: modules 380 and 382: ModBus test, archive",
+      "de": "Signal1: Module 380 und 382: ModBus-Test, Archiv"
+    },
+    "ratio": "16:9",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/signal/TeastArhive.jpg"
+  },
+  {
+    "slug": "signal-modules",
+    "slot": "modbus-test-2",
+    "file": "assets/portfolio/signal-modules/modbus-test-2.webp",
+    "alt": {
+      "uk": "Signal1: модулі 380 і 382: Тест ModBus, захист",
+      "en": "Signal1: modules 380 and 382: ModBus test, protection",
+      "de": "Signal1: Module 380 und 382: ModBus-Test, Schutz"
+    },
+    "ratio": "2:1",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/signal/TestSecure.jpg"
+  },
+  {
+    "slug": "ev-charge-bridge",
+    "slot": "pcb-3d-top",
+    "file": "assets/portfolio/ev-charge-bridge/pcb-3d-top.webp",
+    "alt": {
+      "uk": "ChargeBridge: обмін із зарядною станцією EV: Плата, 3D-вигляд зверху",
+      "en": "ChargeBridge: EV charging-station link: Board, 3D top view",
+      "de": "ChargeBridge: Anbindung an EV-Ladestation: Platine, 3D-Ansicht oben"
+    },
+    "ratio": "3:2",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/charger/ChargeBridgeMain.PcbDocN01_3D_Top.jpg"
+  },
+  {
+    "slug": "ev-charge-bridge",
+    "slot": "pcb-3d",
+    "file": "assets/portfolio/ev-charge-bridge/pcb-3d.webp",
+    "alt": {
+      "uk": "ChargeBridge: обмін із зарядною станцією EV: Плата, 3D-вигляд",
+      "en": "ChargeBridge: EV charging-station link: Board, 3D view",
+      "de": "ChargeBridge: Anbindung an EV-Ladestation: Platine, 3D-Ansicht"
+    },
+    "ratio": "16:7",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/charger/ChargeBridgeMain.PcbDocN01_3D.jpg"
+  },
+  {
+    "slug": "ev-charge-bridge",
+    "slot": "adapter-3d-top",
+    "file": "assets/portfolio/ev-charge-bridge/adapter-3d-top.webp",
+    "alt": {
+      "uk": "ChargeBridge: обмін із зарядною станцією EV: Адаптер, 3D зверху",
+      "en": "ChargeBridge: EV charging-station link: Adapter, 3D top",
+      "de": "ChargeBridge: Anbindung an EV-Ladestation: Adapter, 3D oben"
+    },
+    "ratio": "2:1",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/counter/YELLOW-BEET_3D_Top.jpg"
+  },
+  {
+    "slug": "ev-charge-bridge",
+    "slot": "adapter-3d-bottom",
+    "file": "assets/portfolio/ev-charge-bridge/adapter-3d-bottom.webp",
+    "alt": {
+      "uk": "ChargeBridge: обмін із зарядною станцією EV: Адаптер, 3D знизу",
+      "en": "ChargeBridge: EV charging-station link: Adapter, 3D bottom",
+      "de": "ChargeBridge: Anbindung an EV-Ladestation: Adapter, 3D unten"
+    },
+    "ratio": "2:1",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/counter/YELLOW-BEET_3D_Bottom.jpg"
+  },
+  {
+    "slug": "counter-boards",
+    "slot": "v23-top",
+    "file": "assets/portfolio/counter-boards/v23-top.webp",
+    "alt": {
+      "uk": "Counter: плати V2.x: Плата V2.3, вигляд зверху",
+      "en": "Counter: V2.x boards: Board V2.3, top view",
+      "de": "Counter: Platinen V2.x: Platine V2.3, Ansicht oben"
+    },
+    "ratio": "1:2",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/counter/PCB_V2.3_Top.jpg"
+  },
+  {
+    "slug": "counter-boards",
+    "slot": "v24-top",
+    "file": "assets/portfolio/counter-boards/v24-top.webp",
+    "alt": {
+      "uk": "Counter: плати V2.x: Плата V2.4, вигляд зверху",
+      "en": "Counter: V2.x boards: Board V2.4, top view",
+      "de": "Counter: Platinen V2.x: Platine V2.4, Ansicht oben"
+    },
+    "ratio": "1:2",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/counter/PCB_V2.4.1-2_Top.jpg"
+  },
+  {
+    "slug": "can-helper",
+    "slot": "window",
+    "file": "assets/portfolio/can-helper/window.webp",
+    "alt": {
+      "uk": "CanHelper: Вікно програми",
+      "en": "CanHelper: Application window",
+      "de": "CanHelper: Programmfenster"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/tools2022/CanHelper.jpg"
+  },
+  {
+    "slug": "can-helper",
+    "slot": "device",
+    "file": "assets/portfolio/can-helper/device.webp",
+    "alt": {
+      "uk": "CanHelper: Пристрій",
+      "en": "CanHelper: Device",
+      "de": "CanHelper: Gerät"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/tools2022/CAN_Command.jpg"
+  },
+  {
+    "slug": "toyota-hv-monitor",
+    "slot": "app-1",
+    "file": "assets/portfolio/toyota-hv-monitor/app-1.webp",
+    "alt": {
+      "uk": "Монітор гібридної батареї Toyota Prius: Застосунок, екран 1",
+      "en": "Toyota Prius hybrid-battery monitor: Application, screen 1",
+      "de": "Toyota-Prius-Hybridbatterie-Monitor: Anwendung, Bildschirm 1"
+    },
+    "ratio": "4:3",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/toyota/toyota-app-1.jpg"
+  },
+  {
+    "slug": "toyota-hv-monitor",
+    "slot": "app-2",
+    "file": "assets/portfolio/toyota-hv-monitor/app-2.webp",
+    "alt": {
+      "uk": "Монітор гібридної батареї Toyota Prius: Застосунок, екран 2",
+      "en": "Toyota Prius hybrid-battery monitor: Application, screen 2",
+      "de": "Toyota-Prius-Hybridbatterie-Monitor: Anwendung, Bildschirm 2"
+    },
+    "ratio": "4:3",
+    "status": "placeholder",
+    "source_hint": "portfolio-source/6-projects-2022-2025/toyota/toyota-app-3.jpg"
+  },
+  {
+    "slug": "toyota-hv-monitor",
+    "slot": "device-photo",
+    "file": "assets/portfolio/toyota-hv-monitor/device-photo.webp",
+    "alt": {
+      "uk": "Монітор гібридної батареї Toyota Prius: Фото пристрою",
+      "en": "Toyota Prius hybrid-battery monitor: Device photo",
+      "de": "Toyota-Prius-Hybridbatterie-Monitor: Foto des Geräts"
+    },
+    "ratio": "4:3",
+    "status": "placeholder",
+    "source_hint": "photo of the device (owner, later; crop to the device)"
+  },
+  {
+    "slug": "lvgl-smartwatch",
+    "slot": "home",
+    "file": "assets/portfolio/lvgl-smartwatch/home.webp",
+    "alt": {
+      "uk": "Прототип смарт-годинника на LVGL: Головний екран",
+      "en": "LVGL smartwatch prototype: Home screen",
+      "de": "Smartwatch-Prototyp mit LVGL: Startbildschirm"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "photo from the Fedora file disk, 2026-05 (owner; crop to the device)"
+  },
+  {
+    "slug": "lvgl-smartwatch",
+    "slot": "files",
+    "file": "assets/portfolio/lvgl-smartwatch/files.webp",
+    "alt": {
+      "uk": "Прототип смарт-годинника на LVGL: Список файлів",
+      "en": "LVGL smartwatch prototype: File list",
+      "de": "Smartwatch-Prototyp mit LVGL: Dateiliste"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "photo from the Fedora file disk, 2026-05 (owner; crop to the device)"
+  },
+  {
+    "slug": "lvgl-smartwatch",
+    "slot": "calendar",
+    "file": "assets/portfolio/lvgl-smartwatch/calendar.webp",
+    "alt": {
+      "uk": "Прототип смарт-годинника на LVGL: Календар",
+      "en": "LVGL smartwatch prototype: Calendar",
+      "de": "Smartwatch-Prototyp mit LVGL: Kalender"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "photo from the Fedora file disk, 2026-05 (owner; crop to the device)"
+  },
+  {
+    "slug": "fontcreator-image2lcd",
+    "slot": "window",
+    "file": "assets/portfolio/fontcreator-image2lcd/window.webp",
+    "alt": {
+      "uk": "Утиліта зображень і шрифтів для LCD: Вікно програми",
+      "en": "Image and font tool for LCDs: Application window",
+      "de": "Bild- und Schriftwerkzeug für LCDs: Programmfenster"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "Windows screenshot with test data (owner)"
+  },
+  {
+    "slug": "lancontrol-qt6",
+    "slot": "master",
+    "file": "assets/portfolio/lancontrol-qt6/master.webp",
+    "alt": {
+      "uk": "LANControl на Qt6: Вікно master",
+      "en": "LANControl on Qt6: Master window",
+      "de": "LANControl mit Qt6: Master-Fenster"
+    },
+    "ratio": "16:10",
+    "status": "placeholder",
+    "source_hint": "Windows screenshot with test data (owner)"
+  },
+  {
+    "slug": "lancontrol-qt6",
+    "slot": "slave",
+    "file": "assets/portfolio/lancontrol-qt6/slave.webp",
+    "alt": {
+      "uk": "LANControl на Qt6: Вікно slave",
+      "en": "LANControl on Qt6: Slave window",
+      "de": "LANControl mit Qt6: Slave-Fenster"
+    },
+    "ratio": "16:10",
+    "status": "placeholder",
+    "source_hint": "Windows screenshot with test data (owner)"
+  },
+  {
+    "slug": "lancontrol-slint",
+    "slot": "master",
+    "file": "assets/portfolio/lancontrol-slint/master.webp",
+    "alt": {
+      "uk": "LANControl на Rust і Slint: Вікно master",
+      "en": "LANControl on Rust and Slint: Master window",
+      "de": "LANControl mit Rust und Slint: Master-Fenster"
+    },
+    "ratio": "16:10",
+    "status": "placeholder",
+    "source_hint": "screenshot or slint-viewer render, test data (owner)"
+  },
+  {
+    "slug": "lancontrol-slint",
+    "slot": "chat",
+    "file": "assets/portfolio/lancontrol-slint/chat.webp",
+    "alt": {
+      "uk": "LANControl на Rust і Slint: Чат",
+      "en": "LANControl on Rust and Slint: Chat",
+      "de": "LANControl mit Rust und Slint: Chat"
+    },
+    "ratio": "16:10",
+    "status": "placeholder",
+    "source_hint": "screenshot or slint-viewer render, test data (owner)"
+  },
+  {
+    "slug": "lancontrol-slint",
+    "slot": "lessons",
+    "file": "assets/portfolio/lancontrol-slint/lessons.webp",
+    "alt": {
+      "uk": "LANControl на Rust і Slint: Уроки",
+      "en": "LANControl on Rust and Slint: Lessons",
+      "de": "LANControl mit Rust und Slint: Lektionen"
+    },
+    "ratio": "16:10",
+    "status": "placeholder",
+    "source_hint": "screenshot or slint-viewer render, test data (owner)"
+  },
+  {
+    "slug": "dmm-modbus-tools",
+    "slot": "window",
+    "file": "assets/portfolio/dmm-modbus-tools/window.webp",
+    "alt": {
+      "uk": "Утиліти ModBus для DMM: Вікно програми",
+      "en": "ModBus tools for DMM: Application window",
+      "de": "ModBus-Werkzeuge für DMM: Programmfenster"
+    },
+    "ratio": "1:1",
+    "status": "placeholder",
+    "source_hint": "Windows screenshot with test data (owner)"
+  }
+]
