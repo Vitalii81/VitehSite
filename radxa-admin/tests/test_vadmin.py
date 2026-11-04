@@ -980,8 +980,80 @@ class EditPageTests(Base):
                 self.assertNotIn("edit-", name)
                 if name.rsplit(".", 1)[-1] in ("html", "js", "css", "json", "xml"):
                     text = read_file(os.path.join(root, name))
-                    for needle in ("edit-overlay", "edit-core", "ve-boot", "ve-site", "ve-edit", "VEdit"):
+                    for needle in ("edit-overlay", "edit-core", "preview-tip", "vpv-", "VPreview", "ve-boot", "ve-site", "ve-edit", "VEdit"):
                         self.assertNotIn(needle, text, "%s in %s" % (needle, name))
+
+
+class PreviewTests(unittest.TestCase):
+    """The hover previews of the admin: every id the admin lists has words and a picture (or a live demo), and the files are small."""
+    WEB = os.path.join(REPO, "radxa-admin", "web")
+    MAX_BYTES = 40 * 1024
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manifest = read_json_file(os.path.join(cls.WEB, "previews", "manifest.json"))
+        cls.w = World()
+        cls.catalog = api.catalog(cls.w.paths, schema.Context(cls.w.paths))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.w.close()
+
+    def expected_keys(self):
+        c = self.catalog
+        keys = ["section:%s" % s["id"] for s in c["sections"]]
+        keys += ["service:%s" % s["id"] for s in c["factory"]["services"]] + ["service:custom"]
+        keys += ["project:%s" % p["id"] for p in c["factory"]["projects"]] + ["project:custom"]
+        keys += ["block:%s" % t for t in c["blocks"]]
+        keys += ["effect:%s" % e["id"] for e in c["effects"]] + ["widget:%s" % w["id"] for w in c["widgets"]]
+        return keys
+
+    def test_every_listed_item_has_a_preview_entry_and_no_entry_is_orphaned(self):
+        keys = self.expected_keys()
+        self.assertEqual(sorted(keys), sorted(self.manifest), "manifest and the admin's lists differ")
+        self.assertEqual(set(schema.EFFECTS), {k.split(":")[1] for k in keys if k.startswith("effect:")})
+        self.assertEqual(set(schema.WIDGETS), {k.split(":")[1] for k in keys if k.startswith("widget:")})
+
+    def test_every_entry_has_words_and_a_picture_or_a_demo(self):
+        for key, entry in self.manifest.items():
+            kind = key.split(":")[0]
+            self.assertTrue(entry.get("image") or entry.get("demo"), "%s has neither a picture nor a demo" % key)
+            if kind in ("section", "block", "effect", "widget") or key.endswith(":custom"):      # factory cards show their own title and text
+                self.assertGreater(len(entry.get("title", "")), 2, key)
+                self.assertGreater(len(entry.get("text", "")), 20, key)
+            if kind == "effect":
+                self.assertIn(entry.get("demo"), ("float", "reveal"), key)
+            else:
+                self.assertTrue(entry.get("image"), key)
+
+    def test_factory_cards_get_their_words_from_the_catalog(self):
+        for s in self.catalog["factory"]["services"]:
+            self.assertTrue(s["title"] and s["text"], s["id"])
+        for p in self.catalog["factory"]["projects"]:
+            self.assertTrue(p["title"] and p["summary"], p["id"])
+
+    def test_pictures_exist_are_webp_and_small(self):
+        for key, entry in self.manifest.items():
+            if not entry.get("image"):
+                continue
+            path = os.path.normpath(os.path.join(self.WEB, entry["image"]))
+            self.assertTrue(path.startswith(os.path.join(self.WEB, "previews") + os.sep), "%s points outside previews/" % key)
+            self.assertTrue(os.path.isfile(path), "%s: %s is missing (node tools/make-admin-previews.mjs)" % (key, entry["image"]))
+            with open(path, "rb") as fh:
+                head = fh.read(12)
+            self.assertTrue(head[:4] == b"RIFF" and head[8:12] == b"WEBP", "%s is not a WebP" % entry["image"])
+            self.assertLessEqual(os.path.getsize(path), self.MAX_BYTES, entry["image"])
+
+    def test_every_picture_in_the_folder_is_used(self):
+        used = {os.path.basename(e["image"]) for e in self.manifest.values() if e.get("image")}
+        have = {n for n in os.listdir(os.path.join(self.WEB, "previews")) if n.endswith(".webp")}
+        self.assertEqual(have - used, set(), "unused previews: delete them or add them to the manifest")
+
+    def test_the_admin_pages_load_the_preview_files(self):
+        index = read_file(os.path.join(self.WEB, "index.html"))
+        self.assertLess(index.index("preview-tip.js"), index.index("admin.js"), "VPreview must exist before admin.js runs")
+        self.assertIn("preview-tip.css", index)
+        self.assertIn("preview-tip.js", read_file(os.path.join(REPO, "radxa-admin", "install-on-radxa.sh")), "the installer cache-busts the new files")
 
 
 class OrderTests(unittest.TestCase):

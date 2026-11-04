@@ -143,6 +143,10 @@ const rerender = () => go(S.view.name, S.view.arg);
 
 /* ---------- reusable editors ---------- */
 const head = (title, lead) => [h("h2", {}, title), lead ? h("p", { class: "lead" }, lead) : null].filter(Boolean);
+/** Hover / focus / long-press preview (preview-tip.js) on `node`, plus an eye button for touch and keyboard users. Returns the button to place in the row. */
+const preview = (node, key, fallback) => { VPreview.attach(node, key, fallback); return VPreview.eyeButton(node, key, fallback); };
+/** The top row of a card: the given controls and the eye button; the whole row is the hover/focus target (not the card, whose fields would pop it up while typing). */
+const cardHead = (key, fallback, ...controls) => { const row = h("div", { class: "row between" }); row.append(...controls.flat(), preview(row, key, fallback)); return row; };
 const toggle = (label, checked, onchange, extra) => h("label", { class: "switch" }, h("input", { type: "checkbox", checked, onchange: (e) => { onchange(e.target.checked); touch(); } }), label, extra);
 
 function i18nField(obj, key, { multiline = false, max = 400, label } = {}) {
@@ -294,13 +298,16 @@ function blockEditor(blocks, { onChange } = {}) {
       card.addEventListener("dragend", () => { dragged = null; });
       const move = (d) => () => { const j = i + d; [blocks[i], blocks[j]] = [blocks[j], blocks[i]]; touch(); paint(); };
       const isOpen = open.has(b.id);
-      card.append(h("div", { class: "block-head" },
+      const headRow = h("div", { class: "block-head" });
+      headRow.append(
         h("span", { class: "title", onclick: () => { isOpen ? open.delete(b.id) : open.add(b.id); paint(); } }, `${isOpen ? "▾" : "▸"} ${uk(spec.label)}`, h("span", { class: "muted" }, ` — ${blockSummary(b, spec)}`)),
         toggle("Увімкнено", b.enabled, (v) => { b.enabled = v; paint(); }),
         h("button", { class: "btn small", type: "button", disabled: i === 0, "aria-label": "Блок вгору", onclick: move(-1) }, "↑"),
         h("button", { class: "btn small", type: "button", disabled: i === blocks.length - 1, "aria-label": "Блок вниз", onclick: move(1) }, "↓"),
         h("button", { class: "btn small", type: "button", onclick: () => { const c = clone(b); c.id = uid("b-"); blocks.splice(i + 1, 0, c); touch(); paint(); } }, "Дублювати"),
-        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити блок?")) { blocks.splice(i, 1); touch(); paint(); } } }, "Видалити")));
+        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити блок?")) { blocks.splice(i, 1); touch(); paint(); } } }, "Видалити"),
+        preview(headRow, `block:${b.type}`, { title: uk(spec.label) }));
+      card.append(headRow);
       if (isOpen) {
         card.append(h("div", { class: "block-body" }, spec.fields.map((f) => fieldEditor(f, b.fields)),
           textField(b, "anchor", "Якір (необов'язково, a-z, 0-9, «-»): на нього можна вести посилання як #якір", 40)));
@@ -321,9 +328,14 @@ function blockSummary(b, spec) {
 
 function addBlockControl(blocks, paint, open) {
   const select = h("select", { "aria-label": "Тип блока" }, Object.entries(S.catalog.blocks).map(([type, spec]) => h("option", { value: type }, uk(spec.label))));
-  return h("div", { class: "row" }, select, h("button", { class: "btn", type: "button", onclick: () => {
+  const row = h("div", { class: "row" });
+  const key = () => `block:${select.value}`;
+  VPreview.attach(select, key, {});         // the pop-up follows the selected type; the eye button shows it on touch screens and from the keyboard
+  select.addEventListener("change", () => { if (VPreview.isOpen()) VPreview.hide(); });
+  row.append(select, VPreview.eyeButton(select, key, {}, "тип блока"), h("button", { class: "btn", type: "button", onclick: () => {
     const b = newBlock(select.value); blocks.push(b); open.add(b.id); touch(); paint();
   } }, "+ Додати блок"));
+  return row;
 }
 
 /* ---------- views ---------- */
@@ -332,8 +344,8 @@ const VIEWS = {
     main.append(...head("Розділи головної сторінки", "Вимкнений розділ не потрапляє в HTML публічного сайту."));
     for (const s of S.catalog.sections) {
       const on = S.draft.sections[s.id] !== false;
-      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
-        toggle(s.label, on, (v) => { S.draft.sections[s.id] = v; card.classList.toggle("off", !v); })));
+      const card = h("div", { class: `card${on ? "" : " off"}` });
+      card.append(cardHead(`section:${s.id}`, { title: s.label }, toggle(s.label, on, (v) => { S.draft.sections[s.id] = v; card.classList.toggle("off", !v); })));
       if (s.id === "hero") card.append(h("div", { style: "margin-top:10px" }, imageField(S.draft.images, "hero", "Картинка першого екрана (замість ілюстрації)")));
       main.append(card);
     }
@@ -344,18 +356,22 @@ const VIEWS = {
     for (const s of S.catalog.factory.services) {
       S.draft.images.serviceModels ||= {};
       S.draft.images.serviceModels[s.id] ??= "";
-      main.append(h("div", { class: "card" }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
-        h("div", { style: "margin-top:10px" }, imageField(S.draft.images.serviceModels, s.id, s.model ? "Замінити 3D-модель послуги (.glb)" : "Додати 3D-модель послуги (.glb)", "model"))));
+      const card = h("div", { class: "card" });
+      card.append(cardHead(`service:${s.id}`, { title: uk(s.title), text: uk(s.text) }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v))),
+        h("div", { style: "margin-top:10px" }, imageField(S.draft.images.serviceModels, s.id, s.model ? "Замінити 3D-модель послуги (.glb)" : "Додати 3D-модель послуги (.glb)", "model")));
+      main.append(card);
     }
     S.draft.extra.services.forEach((s, i) => {
-      main.append(h("div", { class: "card" }, h("div", { class: "row between" },
+      const card = h("div", { class: "card" });
+      main.append(card);
+      card.append(cardHead("service:custom", { title: uk(s.title) || "Нова послуга" },
         toggle(uk(s.title) || "Нова послуга", !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
         h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити послугу?")) { S.draft.extra.services.splice(i, 1); touch(); rerender(); } } }, "Видалити")),
       h("div", { class: "block-body", style: "margin-top:12px" },
         h("div", { class: "field" }, h("label", {}, "Іконка"), h("select", { onchange: (e) => { s.icon = e.target.value; touch(); } }, S.catalog.icons.map((x) => h("option", { value: x, selected: s.icon === x }, x)))),
         i18nField(s, "title", { max: 80, label: "Назва" }), i18nField(s, "text", { multiline: true, max: 300, label: "Опис" }),
         imageField(s, "model", "3D-модель послуги (.glb)", "model"),
-        h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` }))))));
+        h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` })))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));
   },
@@ -387,7 +403,7 @@ const VIEWS = {
     const rows = [...S.catalog.factory.projects.map((p) => ({ ...p, extra: false })), ...S.draft.extra.projects.map((p) => ({ id: p.id, title: p.title, extra: true, ref: p }))];
     for (const p of rows) {
       const on = !S.draft.disabled.projects.includes(p.id);
-      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead(p.extra ? "project:custom" : `project:${p.id}`, { title: uk(p.title) || "Новий проєкт", text: p.extra ? "" : uk(p.summary) },
         toggle(uk(p.title) || "Новий проєкт", on, (v) => { setDisabled("projects", p.id, !v); card.classList.toggle("off", !v); }),
         p.extra ? h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити картку?")) { S.draft.extra.projects.splice(S.draft.extra.projects.indexOf(p.ref), 1); touch(); rerender(); } } }, "Видалити") : null));
       const body = h("div", { class: "block-body", style: "margin-top:12px" });
@@ -415,9 +431,9 @@ const VIEWS = {
 
   widgets(main) {
     main.append(...head("Віджети й візуальні ефекти"));
-    for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; })));
+    for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, cardHead(`widget:${w.id}`, { title: w.label }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; }))));
     main.append(h("h2", { style: "margin-top:22px" }, "Ефекти"));
-    for (const e of S.catalog.effects) main.append(h("div", { class: "card" }, toggle(e.label, S.draft.effects[e.id] !== false, (v) => { S.draft.effects[e.id] = v; })));
+    for (const e of S.catalog.effects) main.append(h("div", { class: "card" }, cardHead(`effect:${e.id}`, { title: e.label }, toggle(e.label, S.draft.effects[e.id] !== false, (v) => { S.draft.effects[e.id] = v; }))));
   },
 
   texts(main) {

@@ -150,7 +150,7 @@ build_docroot() {
   rm -rf "$DOCROOT.new"; mkdir -p "$DOCROOT.new/cgi-bin" || die "cannot create $DOCROOT.new"
   cp -R "$APP/web/." "$DOCROOT.new/" || die "cannot copy the web files"
   v=$(date +%s)                                      # new URL per install so browsers and Cloudflare never serve a stale admin.js/admin.css
-  sed -i "s/admin\.js\"/admin.js?v=$v\"/; s/admin\.css\"/admin.css?v=$v\"/" "$DOCROOT.new/index.html"
+  sed -i "s/admin\.js\"/admin.js?v=$v\"/; s/admin\.css\"/admin.css?v=$v\"/; s/preview-tip\.js\"/preview-tip.js?v=$v\"/; s/preview-tip\.css\"/preview-tip.css?v=$v\"/" "$DOCROOT.new/index.html"
   cp -R "$STAGING/src/assets" "$DOCROOT.new/site-assets" || die "cannot copy the site assets for the editor"
   cp -R "$STAGING/src/assets" "$DOCROOT.new/assets" || die "cannot copy the site assets for the on-page editor"      # edit-page loads /assets/styles.css, app.js, ...
   {
