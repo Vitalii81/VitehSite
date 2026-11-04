@@ -406,7 +406,7 @@ class BuildTests(unittest.TestCase):
         r = build.build(self.w.paths)
         self.assertEqual(self.w.read(r["id"], "index.html").count('href="portfolio/"'), 2)
         self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "portfolio/index.html")))
-        self.assertTrue(os.path.isfile(os.path.join(self.w.site(r["id"]), "data/portfolio-page.json")))
+
         d = self.w.draft()
         d["widgets"]["portfolioLink"] = False
         self.w.save(d)
@@ -417,6 +417,26 @@ class BuildTests(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.w.site(r["id"]), "portfolio")), "the page is not shipped while its link is off")
         self.assertNotIn("portfolio-link", html)
         self.assertIn('id="contact"', html)
+
+    def test_portfolio_texts_are_editable_and_sections_can_be_switched_off(self):
+        ctx = self.w.ctx()
+        leaves = schema.editable_texts(ctx.site)
+        path = "portfolioPage.sections.0.title"
+        self.assertIn(path, leaves)
+        self.assertEqual(set(leaves[path]), {"uk", "en", "de"})
+        self.assertIn("portfolioPage:profile", api.catalog(self.w.paths, ctx)["texts"])
+        d = self.w.draft()
+        d["texts"][path] = {"uk": "Новий", "en": "New", "de": "Neu"}
+        d["disabled"]["portfolio"] = ["web", "no-such-section"]
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        site = json.loads(self.w.read(r["id"], "data/site.json"))
+        secs = site["portfolioPage"]["sections"]
+        self.assertEqual(secs[0]["title"]["de"], "Neu")
+        self.assertNotIn("web", [x["id"] for x in secs])
+        self.assertIn("android", [x["id"] for x in secs])
+        self.assertEqual(schema.sanitize(d, ctx)["disabled"]["portfolio"], ["web"], "unknown ids are dropped by the sanitiser")
 
     def test_uploads_replace_images_and_models(self):
         ctx, d = self.w.ctx(), self.w.draft()

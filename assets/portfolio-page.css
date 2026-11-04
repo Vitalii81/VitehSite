@@ -6,6 +6,7 @@ html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Inter, system-ui, "Segoe UI", Arial, sans-serif; }
 .pp-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem 1rem; background: var(--bg); border-bottom: 1px solid var(--line); }
 .pp-back, .pp-btn { color: var(--acc); font-weight: 600; text-decoration: none; }
+.pp-lang { display: inline-flex; gap: .2rem; margin-right: .4rem; } .pp-lang button { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: .4rem; padding: .25rem .5rem; font: inherit; font-size: .8rem; cursor: pointer; } .pp-lang button[aria-pressed="true"] { background: var(--acc); color: var(--bg); border-color: var(--acc); }
 .pp-btn { border: 1px solid var(--acc); background: transparent; border-radius: .5rem; padding: .35rem .8rem; font: inherit; font-weight: 600; cursor: pointer; margin-left: .4rem; }
 .pp-main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 .pp-cover { padding: 1rem 0 2rem; border-bottom: 3px solid var(--acc); margin-bottom: 1rem; }
@@ -21,7 +22,7 @@ h4 { color: var(--acc); font-size: .85rem; letter-spacing: .08em; margin: .9rem 
 p { margin: 0 0 .7rem; }
 .note { font-size: .88rem; }
 figure { margin: 0 0 1rem; } figure img { width: 100%; height: auto; display: block; border-radius: .4rem; background: var(--img); }
-figure.wide img { max-height: 28rem; object-fit: contain; }
+figure.wide img { max-height: 28rem; object-fit: contain; } figure.small img { max-height: 18rem; }
 figcaption { font-size: .8rem; margin-top: .3rem; }
 .card { background: var(--panel); border-radius: .6rem; padding: 1rem 1.2rem; margin-bottom: 1rem; break-inside: avoid; }
 .card.hi { border-left: .3rem solid var(--acc); } .card h4 { margin-top: 0; }
@@ -31,7 +32,7 @@ figcaption { font-size: .8rem; margin-top: .3rem; }
 .stack figure.wide img { max-height: 22rem; }
 .caps { display: grid; grid-template-columns: 1fr; gap: .2rem 1rem; margin: 0; } .caps dt { color: var(--acc); font-size: .85rem; letter-spacing: .08em; font-weight: 700; margin-top: .6rem; } .caps dd { margin: 0; }
 .roles { padding-left: 1.2rem; } .focus b { color: var(--acc); margin-right: .6rem; }
-.arch .shots { display: flex; gap: .3rem; margin: .4rem 0 .6rem; height: 7rem; } .arch figure { margin: 0; flex: 1 1 0; min-width: 0; overflow: hidden; border-radius: .3rem; } .arch figure img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.arch .shots { display: flex; gap: .3rem; margin: .4rem 0 .6rem; height: 7rem; } .ph figcaption { position: absolute; left: 0; right: 0; bottom: 0; background: #b3261e; color: #fff; font: 700 .65rem monospace; padding: .1rem .3rem; margin: 0; } .arch figure { position: relative; margin: 0; flex: 1 1 0; min-width: 0; overflow: hidden; border-radius: .3rem; } .arch figure img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
 @media (min-width: 42rem) { .two { grid-template-columns: 1fr 1.1fr; } .grid2, .svc { grid-template-columns: 1fr 1fr; } .caps { grid-template-columns: 11rem 1fr; } .caps dt { margin-top: 0; } }
 @media print {
   @page { size: A4; margin: 14mm; }

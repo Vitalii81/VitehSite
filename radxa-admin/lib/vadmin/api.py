@@ -51,7 +51,13 @@ def catalog(paths, ctx):
     leaves = schema.editable_texts(ctx.site)
     groups = {}
     for path, value in leaves.items():
-        groups.setdefault(path.split(".")[0], {})[path] = value
+        parts = path.split(".")
+        key = parts[0]
+        if key == "portfolioPage" and len(parts) > 3 and parts[1] == "sections" and parts[2].isdigit():     # one group per portfolio section
+            key = "portfolioPage:" + str((ctx.site["portfolioPage"]["sections"][int(parts[2])]).get("id", parts[2]))
+        elif key == "portfolioPage":
+            key = "portfolioPage:" + parts[1]
+        groups.setdefault(key, {})[path] = value
     return {
         "langs": list(LANGS),
         "sections": [{"id": s, "label": SECTION_LABELS[s]} for s in schema.SECTION_IDS],
@@ -68,6 +74,7 @@ def catalog(paths, ctx):
             "services": [{"id": "s%d" % i, "title": it.get("title"), "icon": it.get("icon"), "model": bool(it.get("model"))} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
             "projects": [{"id": p["id"], "title": p.get("title"), "image": p.get("image"), "model": bool(p.get("model"))} for p in ctx.products],
             "categories": [{"id": c["id"], "label": c["label"]} for c in ctx.site.get("work", {}).get("categories", [])],
+            "portfolio": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
         },
         "texts": groups,
     }

@@ -182,3 +182,12 @@ The archive in "Projects" is shipped with every build (`data/portfolio.json`, `d
 a picture exists; visitors then see nothing for that slot. In the draft, `images.portfolio["<slug>/<slot>"]` accepts only an image from your uploads (`u:...`): the build copies it
 to `assets/u/`, points the slot at it and sets it to `final`. Unknown slots and non-uploaded paths are dropped by the sanitiser. Alt texts and statuses of factory slots are edited in
 `data/portfolio-images.json` (or with `node tools/portfolio-images.mjs <folder>` on the main PC); a slot filled in the admin takes the alt text of the factory entry.
+
+
+## Portfolio page (/portfolio/)
+
+The page and the PDF share one content source, `portfolioPage` in `data/site.json`: every text exists in uk/en/de. In the admin:
+- **Тексти → «portfolioPage:<розділ>»**: edit the texts of a section in all three languages (a missing translation falls back to English). The PDF is rebuilt on the main PC: `node tools/make-portfolio.mjs`.
+- **Портфоліо (сторінка)**: switch single sections off; the build removes them from the data (not hidden by CSS).
+- **Віджети й ефекти → «Портфоліо»**: ships or removes the page and its two links («Проєкти», «Контакти») together.
+Adding a brand-new section or picture still means editing `site.json` / `assets/portfolio/img/` in the repository.
