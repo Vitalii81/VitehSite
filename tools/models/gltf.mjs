@@ -39,6 +39,10 @@ export const materialDefs = (accent) => ({
   silk: { tex: "pcbSilk", alphaMode: "MASK", alphaCutoff: 0.5, doubleSided: false, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
   screenCronos: { tex: "screenCronos", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   screenLaptop: { tex: "screenLaptop", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
+  screenToyota: { tex: "screenToyota", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.18 } },
+  wireYellow: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#e6c229"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
+  wireGreen: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#2f9e4f"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
+  wireRed: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#c9382c"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
   labelCronos: { tex: "labelCronos", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.6 } },
 });
 
