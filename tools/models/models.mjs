@@ -283,10 +283,110 @@ export function serviceAi(scene) {
   scene.inst(base);
 }
 
+/* ---------- 6. project: IoT module (wireless module with a shielded radio, antenna trace, pads and LEDs) ---------- */
+export function iotModule(scene) {
+  const P = makeParts(scene);
+  const pcb = scene.part("module-pcb");
+  roundedBox(pcb.geo("accent"), { size: [4.6, 0.14, 2.8], r: 0.12, n: 2, at: [0, 0.07, 0] });
+  roundedBox(pcb.geo("graphite"), { size: [1.5, 0.012, 0.85], r: 0.02, n: 1, at: [1.55, 0.146, 0.0] });          // antenna keep-out
+  for (const [x, z] of [[-2.05, -1.15], [2.05, -1.15], [-2.05, 1.15], [2.05, 1.15]]) disc(pcb.geo("gold"), { rOut: 0.1, y: 0.148, seg: 18, at: [x, 0, z] });
+  scene.inst(pcb);
+  const can = scene.part("shield-can");                                                                       // RF shield: frame, lid and a stamped dimple
+  roundedBox(can.geo("steel"), { size: [1.7, 0.3, 1.5], r: 0.05, n: 2, at: [0, 0.29, 0] });
+  roundedBox(can.geo("alu"), { size: [1.58, 0.02, 1.38], r: 0.03, n: 1, at: [0, 0.445, 0] });
+  disc(can.geo("steel"), { rOut: 0.2, y: 0.458, seg: 28, at: [0, 0, 0] });
+  scene.inst(can, { at: [-1.0, 0.14, 0.05] });
+  const pad = scene.part("pad");
+  roundedBox(pad.geo("gold"), { size: [0.14, 0.02, 0.26], r: 0.02, n: 1, at: [0, 0.01, 0] });
+  for (let i = 0; i < 11; i++) for (const z of [-1.24, 1.24]) scene.inst(pad, { at: [-2.0 + i * 0.4, 0.14, z] });
+  const bar = scene.part("antenna-bar"), link = scene.part("antenna-link");
+  roundedBox(bar.geo("gold"), { size: [0.07, 0.016, 0.62], r: 0.012, n: 1, at: [0, 0.008, 0] });
+  roundedBox(link.geo("gold"), { size: [0.3, 0.016, 0.07], r: 0.012, n: 1, at: [0, 0.008, 0] });
+  for (let i = 0; i < 5; i++) scene.inst(bar, { at: [0.95 + i * 0.3, 0.147, 0.0 + (i % 2 ? 0.16 : -0.16)] });
+  for (let i = 0; i < 4; i++) scene.inst(link, { at: [1.1 + i * 0.3, 0.147, i % 2 ? -0.47 : 0.47] });
+  const usb = scene.part("usb-c");
+  roundedBox(usb.geo("steel"), { size: [0.85, 0.3, 0.78], r: 0.09, n: 2, at: [0, 0.15, 0] });
+  roundedBox(usb.geo("graphite"), { size: [0.06, 0.1, 0.5], r: 0.03, n: 1, at: [-0.4, 0.15, 0] });
+  scene.inst(usb, { at: [-2.1, 0.14, 0] });
+  scene.inst(P.soicBody, { at: [0.55, 0.14, -0.7] });
+  scene.inst(P.led("ledGreen"), { at: [0.45, 0.14, 0.95] });
+  scene.inst(P.led("ledAmber"), { at: [0.8, 0.14, 0.95] });
+  for (const [x, z] of [[0.25, -1.0], [0.25, -0.45], [0.95, -0.2], [0.55, 0.3]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, x > 0.5 ? Math.PI / 2 : 0, 0] });
+  for (const [x, z] of [[0.15, 0.4], [-0.3, 1.0]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
+}
+
+/* ---------- 7. project: device monitoring panel (a display with trends, tiles and a status bar) ---------- */
+function dashboardTextures(scene) {
+  const s = new Raster(512, 320, [13, 21, 24, 255]);
+  const rand = rng(7);
+  s.rect(0, 0, 512, 26, [20, 32, 36, 255]); s.text("DEVICES  ONLINE 24", 12, 8, 1.4, [190, 215, 210, 255]); s.disc(488, 13, 5, [76, 201, 173, 255]);
+  [[76, 201, 173], [240, 166, 90], [140, 156, 255]].forEach((c, i) => { const x = 14 + i * 108; s.rect(x, 38, 98, 46, [22, 36, 40, 255]); s.disc(x + 14, 53, 5, [...c, 255]); s.rect(x + 28, 49, 56, 6, [150, 170, 166, 255]); s.rect(x + 12, 68, 74, 8, [...c, 255]); });
+  s.rect(338, 38, 160, 46, [22, 36, 40, 255]); s.rect(352, 49, 50, 6, [150, 170, 166, 255]); s.text("OK", 352, 62, 2.4, [76, 201, 173, 255]);
+  s.rect(14, 96, 336, 200, [18, 29, 33, 255]); for (let i = 1; i < 5; i++) s.rect(14, 96 + i * 40, 336, 1, [36, 54, 58, 255]);
+  let px = 24, py = 240; for (let i = 1; i <= 16; i++) { const x = 24 + i * 20, y = 250 - Math.sin(i * 0.7) * 38 - i * 5 - rand() * 22; s.line(px, py, x, y, 3, [76, 201, 173, 255]); px = x; py = y; }
+  s.disc(px, py, 6, [255, 255, 255, 255]);
+  s.rect(362, 96, 136, 200, [18, 29, 33, 255]); [90, 140, 70, 170, 120].forEach((h, i) => s.rect(374 + i * 24, 286 - h, 16, h, [i === 3 ? 240 : 140, i === 3 ? 166 : 156, i === 3 ? 90 : 255, 255]));
+  s.rect(0, 304, 512, 16, [18, 86, 76, 255]); s.text("MQTT  OTA  ALERTS 0", 10, 308, 1, [210, 245, 238, 255]);
+  scene.texture("screenDash", s, { opaque: true });
+}
+
+export function deviceMonitor(scene) {
+  dashboardTextures(scene);
+  const stand = scene.part("stand");
+  roundedBox(stand.geo("alu"), { size: [2.6, 0.16, 1.7], r: 0.08, n: 2, at: [0, 0.08, 0.1] });
+  roundedBox(stand.geo("graphite"), { size: [0.55, 1.4, 0.3], r: 0.12, n: 2, at: [0, 0.86, -0.25] });
+  roundedBox(stand.geo("accent"), { size: [0.9, 0.025, 0.05], r: 0.012, n: 1, at: [0, 0.17, 0.85] });
+  scene.inst(stand);
+  const panel = scene.part("panel");
+  roundedBox(panel.geo("graphite"), { size: [5.8, 3.6, 0.24], r: 0.15, n: 3, at: [0, 0, 0] });
+  quadUV(panel.geo("screenDash", true), [[-2.7, -1.69, 0.126], [2.7, -1.69, 0.126], [2.7, 1.69, 0.126], [-2.7, 1.69, 0.126]], [0, 0, 1], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  roundedBox(panel.geo("accent"), { size: [0.5, 0.045, 0.02], r: 0.01, n: 1, at: [0, -1.74, 0.125] });
+  scene.inst(panel, { at: [0, 3.0, 0.0], rot: [-0.1, 0, 0] });
+  for (const [x, y, m] of [[-3.3, 1.4, "glow"], [3.3, 2.3, "amber"], [3.5, 0.6, "indigo"]]) { const node = scene.part(`node-${m}`); sphere(node.geo(m), { r: 0.22, seg: 24, rings: 12 }); scene.inst(node, { at: [x, y + 0.8, 0.6] }); }
+}
+
+/* ---------- 8. project: document AI assistant (a stack of documents read by a glowing assistant core) ---------- */
+function paperTextures(scene) {
+  const s = new Raster(256, 340, [244, 246, 244, 255]);
+  const rand = rng(11);
+  s.rect(20, 22, 110, 12, [27, 60, 100, 255]);
+  for (let i = 0; i < 17; i++) { const y = 54 + i * 16, w = 140 + Math.floor(rand() * 90); s.rect(20, y, Math.min(w, 216), 5, [110, 124, 130, 255]); }
+  s.rect(20, 150, 216, 14, [140, 156, 255, 90]);
+  scene.texture("paperDoc", s, { opaque: true });
+}
+
+export function agentAssistant(scene) {
+  paperTextures(scene);
+  const sheet = scene.part("sheet");
+  roundedBox(sheet.geo("plasticLight"), { size: [3.1, 0.06, 4.0], r: 0.04, n: 2, at: [0, 0.03, 0] });
+  const top = scene.part("sheet-top");
+  roundedBox(top.geo("plasticLight"), { size: [3.1, 0.06, 4.0], r: 0.04, n: 2, at: [0, 0.03, 0] });
+  quadUV(top.geo("paperDoc", true), [[-1.5, 0.0615, -1.95], [1.5, 0.0615, -1.95], [1.5, 0.0615, 1.95], [-1.5, 0.0615, 1.95]], [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  roundedBox(top.geo("accent"), { size: [0.5, 0.012, 0.16], r: 0.01, n: 1, at: [-0.95, 0.07, 1.62] });
+  [[0, 0, 0, 0], [0.14, 0.07, 0.05, 0.06], [-0.1, 0.14, -0.04, -0.05]].forEach(([x, y, z, r]) => scene.inst(sheet, { at: [x, y, z], rot: [0, r, 0] }));
+  scene.inst(top, { at: [0.05, 0.21, 0.02], rot: [0, 0.04, 0] });
+  const core = scene.part("assistant-core");
+  sphere(core.geo("glowIndigo"), { r: 0.55, seg: 40, rings: 20 });
+  const ring = scene.part("assistant-ring");
+  torus(ring.geo("chrome"), { R: 0.88, t: 0.04, seg: 56, tube: 12 });
+  scene.inst(core, { at: [1.55, 1.9, -0.2] });
+  scene.inst(ring, { at: [1.55, 1.9, -0.2], rot: [0.5, 0, 0.3] });
+  scene.inst(ring, { at: [1.55, 1.9, -0.2], rot: [-0.7, 0, -0.5], s: 1.12 });
+  const beam = scene.part("beam");
+  cylinder(beam.geo("glowIndigo"), { r: 0.03, h: 1, seg: 10, at: [0, 0.5, 0] });
+  const sat = (m, r) => { const p = scene.part(`sat-${m}`); sphere(p.geo(m), { r, seg: 28, rings: 14 }); return p; };
+  [[-0.9, 1.5, 0.9, "accent", 0.26], [0.3, 2.6, 0.7, "amber", 0.22], [2.5, 1.0, 0.9, "glow", 0.2]].forEach(([x, y, z, m, r]) => scene.inst(sat(m, r), { at: [x, y, z] }));
+  const a = [1.55, 1.9, -0.2], b = [0.05, 0.3, 0.02], d = b.map((v, i) => v - a[i]), len = Math.hypot(...d);
+  scene.inst(beam, { at: a, quat: quatBetween([0, 1, 0], d.map((v) => v / len)), s: [1, len, 1] });
+}
+
 export const MODEL_BUILDERS = {
   "custom-electronics": customElectronics,
   "sensor-node": sensorNode,
   "service-software": serviceSoftware,
   "service-electronics": serviceElectronics,
   "service-ai": serviceAi,
+  "iot-module": iotModule,
+  "device-monitor": deviceMonitor,
+  "agent-assistant": agentAssistant,
 };
