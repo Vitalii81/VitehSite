@@ -1,4 +1,4 @@
-// Lights up the display of the first controller model (assets/models/cronos-controller-v1.glb): three 4-digit seven-segment indicators.
+// Lights up the display of the first controller model (assets/models/cronos-controller-v1.glb): three 4-digit seven-segment indicators and yellow buttons.
 //   node tools/make-cronos-v1-display.mjs
 // Input : tools/sources/cronos-controller-v1.original.glb (the untouched export from the owner's Blender project, kept as the source).
 // Output: assets/models/cronos-controller-v1.glb = the same model plus a generated PNG texture on the "screen" material (base colour + emissive),
@@ -52,7 +52,7 @@ json.meshes.forEach((mesh) => mesh.primitives.forEach((p) => {
   for (let i = 0; i < pos.count; i++) {
     const x = bin.readFloatLE(po + i * 12), y = bin.readFloatLE(po + i * 12 + 4), z = bin.readFloatLE(po + i * 12 + 8);
     const isFace = y <= face;                                                                                    // the flat viewer-facing side of each glass slab (the outer one is what the eye sees)
-    const u = isFace ? 1 - (x - x0) / (x1 - x0) : 0.001, v = isFace ? 1 - (z - z0) / (z1 - z0) : 0.001;                 // flip u/v here if the digits ever come out mirrored
+    const u = isFace ? (x - x0) / (x1 - x0) : 0.001, v = isFace ? 1 - (z - z0) / (z1 - z0) : 0.001;                 // flip u/v here if the digits ever come out mirrored
     bin.writeFloatLE(Math.min(Math.max(u, 0.002), 0.998), uo + i * 8); bin.writeFloatLE(Math.min(Math.max(v, 0.002), 0.998), uo + i * 8 + 4);
     if (isFace) faces++;
   }
@@ -71,6 +71,7 @@ const tex = { index: json.textures.length - 1 };
 const mat = json.materials.find((m) => m.name === "screen");
 mat.pbrMetallicRoughness = { baseColorFactor: [1, 1, 1, 1], baseColorTexture: tex, metallicFactor: 0, roughnessFactor: 0.12 };
 mat.emissiveTexture = tex; mat.emissiveFactor = [1, 1, 1];
+json.materials.find((m) => m.name === "btn").pbrMetallicRoughness.baseColorFactor = [0.92, 0.66, 0.06, 1];   // the real unit has yellow buttons
 json.buffers[0].byteLength = bin.length;
 
 let js = Buffer.from(JSON.stringify(json), "utf8");
