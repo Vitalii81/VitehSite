@@ -170,3 +170,124 @@ test("save indicator over a typing session: type, leave the field, save", () => 
   s.state = "saved"; steps.push(C.saveIndicator(s));                       // save() succeeded
   assert.deepEqual(steps, ["dirty", "dirty", "saving", "saved"]);
 });
+
+// ---- the project gallery ("Замовні розробки", data/portfolio.json, kept in draft.portfolio) ----
+const gallerySource = JSON.parse(readFileSync(join(root, "data/portfolio.json"), "utf8")).projects;
+const factoryGallery = Object.fromEntries(gallerySource.map((p) => [p.slug, { title: p.title, summary: p.summary }]));
+const galleryEnv = (draft) => ({ draft, editable, factoryServices: site.services.items.length, factoryGallery });
+const ALL = gallerySource.map((p) => p.slug);
+const VISIBLE = gallerySource.filter((p) => !p.portfolioOnly).map((p) => p.slug);
+
+test("gallery texts: binding, read, write into draft.portfolio.items, caps", () => {
+  const d = newDraft();
+  const b = C.bindingFor({ card: "gallery", slug: "toyota-hv-monitor", field: "title" }, galleryEnv(d));
+  assert.equal(b.kind, "gallery");
+  assert.equal(C.readText(b, galleryEnv(d), "en"), gallerySource.find((p) => p.slug === "toyota-hv-monitor").title.en);
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "My title\n"), "My title");
+  assert.equal(d.portfolio.items["toyota-hv-monitor"].title.en, "My title");
+  assert.equal(d.portfolio.items["toyota-hv-monitor"].title.uk, gallerySource.find((p) => p.slug === "toyota-hv-monitor").title.uk, "other languages keep the factory text");
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "My title"), null, "no change, nothing written");
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "x".repeat(500)).length, 80);
+  const s = C.bindingFor({ card: "gallery", slug: "toyota-hv-monitor", field: "summary" }, galleryEnv(d));
+  assert.equal(C.writeText(s, galleryEnv(d), "de", "y".repeat(900)).length, 600);
+  for (const bad of [{ card: "gallery", slug: "nope", field: "title" }, { card: "gallery", slug: "../x", field: "title" }, { card: "gallery", slug: "toyota-hv-monitor", field: "years" }, { card: "gallery", slug: "toyota-hv-monitor", field: "__proto__" }]) {
+    assert.equal(C.bindingFor(bad, galleryEnv(d)), null, JSON.stringify(bad));
+  }
+});
+
+test("home selection vs portfolio content: separate switches, separate orders, slot images in draft.portfolio", () => {
+  const d = newDraft();
+  // the HOME page only hides/shows (draft.site.gallery); the portfolio switches items on/off (draft.portfolio.disabled)
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
+  assert.deepEqual(d.site.gallery.hidden, ["can-helper"]);
+  assert.equal(C.isOff(d, { type: "gallery", id: "can-helper" }), true);
+  assert.equal(C.isOff(d, { type: "portfolio", id: "can-helper" }), false, "hiding on the home page does not touch the portfolio");
+  assert.equal(d.portfolio?.disabled?.length ?? 0, 0);
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, true);
+  assert.deepEqual(d.site.gallery.hidden, []);
+  C.setEnabled(d, { type: "portfolio", id: "can-helper" }, false);
+  assert.deepEqual(d.portfolio.disabled, ["can-helper"]);
+  assert.deepEqual(d.site.gallery.hidden, [], "switching it off in the portfolio does not touch the home selection");
+  C.setEnabled(d, { type: "ppsection", id: "web" }, false);
+  assert.deepEqual(d.portfolio.disabledSections, ["web"]);
+  assert.equal(C.isOff(d, { type: "ppsection", id: "web" }), true);
+
+  const d2 = newDraft();
+  assert.equal(C.moveGallery(d2, VISIBLE[0], -1, VISIBLE, VISIBLE, "home"), false, "the first one cannot go up");
+  assert.equal(C.moveGallery(d2, VISIBLE[0], 1, VISIBLE, VISIBLE, "home"), true);
+  assert.ok(d2.site.gallery.order.indexOf(VISIBLE[1]) < d2.site.gallery.order.indexOf(VISIBLE[0]));
+  assert.equal(d2.portfolio?.order?.length ?? 0, 0, "the home order is not the portfolio order");
+  assert.equal(C.moveGallery(d2, VISIBLE[0], -1, VISIBLE, VISIBLE, "home"), true);
+  assert.deepEqual(d2.site.gallery.order, [], "back to the default is stored as nothing");
+  assert.equal(C.moveGallery(d2, ALL[0], 1, ALL, ALL, "portfolio"), true);
+  assert.ok(d2.portfolio.order.length === ALL.length);
+  assert.deepEqual(d2.site.gallery.order, [], "the portfolio order does not touch the home selection");
+  assert.ok(ALL.includes("prometheus-controller") && !VISIBLE.includes("prometheus-controller"));
+
+  C.setMedia(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "u:0123456789abcdef");
+  assert.equal(C.mediaRef(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }), "u:0123456789abcdef");
+  assert.equal(d2.portfolio.images["toyota-hv-monitor/device-photo"], "u:0123456789abcdef");
+  assert.equal(d2.images?.portfolio, undefined, "no picture of the portfolio lives in draft.images any more");
+  C.setMedia(d2, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "");
+  assert.deepEqual(d2.portfolio.images, {});
+  const boot = { factoryImages: ["assets/a.svg"], uploads: [{ kind: "image", ref: "u:0123456789abcdef", name: "a" }] };
+  assert.deepEqual(C.pickerItems("image", boot, true).map((i) => i.ref), ["u:0123456789abcdef"], "a gallery slot offers uploads only");
+  assert.equal(C.pickerItems("image", boot).length, 2);
+});
+
+// ---- factory project cards, tags, plain strings, categories (audit "everything is editable") ----
+const products = JSON.parse(readFileSync(join(root, "data/products.json"), "utf8"));
+const factoryProducts = Object.fromEntries(products.map((p) => [p.id, { title: p.title, summary: p.summary, status: p.status, tags: p.tags, category: p.category }]));
+const editablePlain = {};
+site.stack.groups.forEach((g, gi) => g.items.forEach((it, ii) => { if (typeof it === "string") editablePlain[`stack.groups.${gi}.items.${ii}`] = it; }));
+site.contact.details.forEach((d, i) => { if (typeof d.value === "string") editablePlain[`contact.details.${i}.value`] = d.value; });
+const fullEnv = (draft) => ({ draft, editable, factoryServices: site.services.items.length, factoryGallery, factoryProducts, editablePlain });
+
+test("a factory project card: title/summary/status go to draft.products, tags per chip, category", () => {
+  const d = newDraft();
+  const id = products[0].id;
+  const t = C.bindingFor({ card: "products", id, field: "title" }, fullEnv(d));
+  assert.equal(t.kind, "productText");
+  assert.equal(C.writeText(t, fullEnv(d), "uk", "Новий"), "Новий");
+  assert.equal(d.products[id].title.uk, "Новий");
+  assert.equal(d.products[id].title.en, products[0].title.en, "other languages keep the factory text");
+  assert.equal(C.bindingFor({ card: "products", id: "nope", field: "title" }, fullEnv(d)), null);
+  const tag = C.bindingFor({ card: "tag", id, index: 1 }, fullEnv(d));
+  assert.equal(C.readText(tag, fullEnv(d), "uk"), products[0].tags[1]);
+  assert.equal(C.writeText(tag, fullEnv(d), "uk", "Zephyr"), "Zephyr");
+  assert.deepEqual(d.products[id].tags, products[0].tags.map((x, i) => (i === 1 ? "Zephyr" : x)));
+  assert.equal(C.writeText(tag, fullEnv(d), "uk", ""), null, "an emptied tag is not saved");
+  assert.equal(C.bindingFor({ card: "tag", id: "nope", index: 0 }, fullEnv(d)), null);
+  const other = ["software", "hardware", "ai", "automation"].find((c) => c !== products[0].category);
+  C.setCategory(d, id, other, factoryProducts);
+  assert.equal(C.categoryOf(d, id, factoryProducts), other);
+  C.setCategory(d, id, products[0].category, factoryProducts);
+  assert.equal(d.products[id].category, undefined, "back to the factory category");
+});
+
+test("plain strings: stack items and contact values; only known paths", () => {
+  const d = newDraft();
+  const b = C.bindingFor({ plain: "stack.groups.0.items.0" }, fullEnv(d));
+  assert.equal(C.readText(b, fullEnv(d), "uk"), site.stack.groups[0].items[0]);
+  assert.equal(C.writeText(b, fullEnv(d), "en", "ESP32-S3"), "ESP32-S3");
+  assert.equal(d.plain["stack.groups.0.items.0"], "ESP32-S3");
+  assert.equal(C.writeText(b, fullEnv(d), "en", site.stack.groups[0].items[0]), site.stack.groups[0].items[0]);
+  assert.equal(d.plain["stack.groups.0.items.0"], undefined, "the factory value is not an override");
+  for (const bad of ["brand.name", "contact.details.0.href", "stack.groups.0.items.x", "__proto__"]) assert.equal(C.bindingFor({ plain: bad }, fullEnv(d)), null, bad);
+  const mail = C.bindingFor({ plain: "contact.details.0.value" }, fullEnv(d));
+  assert.equal(C.writeText(mail, fullEnv(d), "uk", "me@example.org"), "me@example.org");
+});
+
+test("gallery years and tags", () => {
+  const d = newDraft();
+  const slug = "can-helper";
+  const y = C.bindingFor({ card: "galleryYears", slug }, galleryEnv(d));
+  const g = { ...factoryGallery, [slug]: { ...factoryGallery[slug], years: "2022", tags: ["C#", "WPF"] } };
+  const env = { ...galleryEnv(d), factoryGallery: g };
+  assert.equal(C.writeText(y, env, "uk", "2023"), "2023");
+  assert.equal(d.portfolio.items[slug].years, "2023");
+  const t = C.bindingFor({ card: "galleryTag", slug, index: 0 }, env);
+  assert.equal(C.writeText(t, env, "uk", "C# 12"), "C# 12");
+  assert.deepEqual(d.portfolio.items[slug].tags, ["C# 12", "WPF"]);
+});

@@ -15,7 +15,7 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const lang = () => document.documentElement.lang;
-  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services });
+  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services, factoryGallery: boot.factoryGallery, factoryProducts: boot.factoryProducts, editablePlain: boot.editablePlain });
   const store = {
     get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* storage may be blocked */ } },
@@ -106,9 +106,12 @@
   function paintBar() {
     const problem = S.problems[0];
     bar.replaceChildren(...[
-      h("strong", { class: "ve-title" }, "Редагування"),
+      h("strong", { class: "ve-title" }, boot.page === "portfolio" ? "Редагування: портфоліо" : "Редагування"),
       h("span", { class: `ve-state ve-${shownState()}`, role: "status" }, stateLabel[shownState()] + (S.message ? `: ${S.message}` : "")),
       S.conflict ? h("button", { class: "ve-btn", type: "button", onclick: () => location.reload() }, "Оновити сторінку") : h("button", { class: "ve-btn", type: "button", onclick: () => { document.activeElement?.blur?.(); save(); } }, "Зберегти"),
+      h("button", { class: "ve-btn", type: "button", onclick: otherTexts }, "Інші тексти…"),
+      boot.page === "portfolio" ? h("a", { class: "ve-btn ve-link", href: pageUrl("home"), onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, "← Головна")
+        : h("a", { class: "ve-btn ve-link", href: pageUrl("portfolio"), onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, "Портфоліо →"),
       !boot.gallery ? h("span", { class: "ve-note" }, "3D вимкнено в чернетці: моделі не потраплять у збірку") : null,
       problem ? h("span", { class: "ve-note ve-warn", title: S.problems.map((p) => `${p.where}: ${p.message}`).join("\n") }, `Збірка не пройде: ${problem.message}`) : null,
       h("a", { class: "ve-btn ve-link", href: boot.adminUrl, onclick: async (e) => { e.preventDefault(); if (await flush()) location.href = boot.adminUrl; } }, "До адмінки (зібрати й опублікувати)"),
@@ -176,11 +179,32 @@
       attach($(".answer", d), { card: "faq", index, field: "a" });
     });
     $$("#contactDetails li").forEach((li, index) => attach($("small", li), { card: "contact", index, field: "label" }));
+    attach($("#archiveTitle"), { i18n: "work.archive.title" });          // the project gallery "Замовні розробки" (data/portfolio.json)
+    attach($("#archiveLead"), { i18n: "work.archive.lead" });
+    $$("#archiveGrid .archive-card[data-slug]").forEach((card) => {
+      const slug = card.dataset.slug;
+      attach($(".product-link", card), { i18n: "work.request" });                 // site texts only: the card's own text, years, tags and pictures are the portfolio's (edited there)
+      const cat = boot.archiveCategories.indexOf(boot.factoryGallery[slug]?.category);
+      if (cat >= 0) attach($(".product-meta .tag:not(.status)", card), { i18n: `work.archive.categories.${cat}.label` });
+    });
+    $$("#stackGrid .stack-group").forEach((group, gi) => {
+      attach($("h3", group), { i18n: `stack.groups.${gi}.title` });
+      $$("li", group).forEach((li, ii) => attach(li, { plain: `stack.groups.${gi}.items.${ii}` }));
+    });
+    $$("#contactDetails li").forEach((li, di) => {
+      const path = `contact.details.${di}.value`;
+      attach($("a, .val", li), Object.prototype.hasOwnProperty.call(boot.editable, path) ? { i18n: path } : { plain: path });
+      attach($(".demo-badge", li), { i18n: "contact.demoBadge" });
+    });
     $$("#productGrid .product-card[data-id]").forEach((card) => {
       const id = card.dataset.id;
       attach($("h3", card), { card: "products", id, field: "title" });
       attach($(".product-body > p", card), { card: "products", id, field: "summary" });
       attach($(".tag.status", card), { card: "products", id, field: "status" });
+      $$(".chips .chip", card).forEach((chip, index) => attach(chip, { card: "tag", id, index }));
+      attach($(".product-link", card), { i18n: "work.request" });
+      const cat = boot.categories.findIndex((c) => c.id === C.categoryOf(S.draft, id, boot.factoryProducts));
+      if (cat >= 0) attach($(".product-meta .tag:not(.status)", card), { i18n: `work.categories.${cat}.label` });
     });
   }
 
@@ -226,7 +250,7 @@
   }
 
   function pickMedia(target, kind) {
-    return pickerDialog(kind, C.mediaRef(S.draft, target)).then(async (ref) => {
+    return pickerDialog(kind, C.mediaRef(S.draft, target), target.type === "gallerySlot").then(async (ref) => {
       if (ref === null) return;
       C.setMedia(S.draft, target, ref);
       markDirty();
@@ -282,13 +306,99 @@
       const target = { type: "project", id };
       setOff(card, C.isOff(S.draft, target));
       barOf(card, { key: `project:${boot.factory.projects.includes(id) ? id : "custom"}`, fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("Показувати", target, card),
+        h("select", { class: "ve-btn", "aria-label": "Категорія картки", title: "Категорія", onchange: async (e) => { C.setCategory(S.draft, id, e.target.value, boot.factoryProducts); markDirty(); if (await flush()) reloadKeepingPlace(); } },
+          boot.categories.map((c) => h("option", { value: c.id, selected: c.id === C.categoryOf(S.draft, id, boot.factoryProducts) }, c.label?.[lang()] || c.label?.en || c.id))),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectImage", id }, "image") }, "Фото…"),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectModel", id }, "model") }, "3D…"));
     });
   }
 
+  const pageUrl = (page, hash = "") => `${API}?action=edit-page&page=${page}&lang=${lang()}${hash}`;
+  const gotoPage = async (url) => { if (await flush()) location.href = url; };
+  /** HOME page: the gallery cards only SELECT portfolio items (draft.site.gallery): show/hide and order on the home page. Content is edited in the portfolio. */
+  function bindGallery() {
+    const shown = boot.homeBase.filter((slug) => $(`#archiveGrid .archive-card[data-slug="${CSS.escape(slug)}"]`));
+    $$("#archiveGrid .archive-card[data-slug]").forEach((card) => {
+      const slug = card.dataset.slug;
+      const target = { type: "gallery", id: slug };
+      setOff(card, C.isOff(S.draft, target));
+      card.classList.add("ve-pad");
+      const at = shown.indexOf(slug);
+      const move = (dir, label) => h("button", {
+        class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${$("h3", card)?.textContent.trim() || slug}`, title: label,
+        disabled: at < 0 || (dir < 0 ? at === 0 : at === shown.length - 1) || null,
+        onclick: async () => { if (C.moveGallery(S.draft, slug, dir, boot.homeBase, boot.homeBase, "home")) { markDirty(); if (await flush()) reloadKeepingPlace(); } },
+      }, dir < 0 ? "▲" : "▼");
+      barOf(card, { key: "site:gallery", fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("На головній", target, card),
+        h("a", { class: "ve-btn", href: pageUrl("portfolio", `#${slug}`), title: "Текст, фото й порядок цієї картки редагуються в портфоліо", onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, "У портфоліо…"),
+        at >= 0 ? move(-1, "Вгору") : null, at >= 0 ? move(1, "Вниз") : null);
+    });
+    $$("#archiveGrid img[src*='/assets/u/']").forEach(fixUploadSrc);
+  }
+
+  function fixUploadSrc(img) {            // an uploaded picture is served by the admin's file action, not by a public path
+    const m = /\/assets\/u\/([0-9a-f]{16})\./.exec(img.getAttribute("src"));
+    if (m) img.setAttribute("src", `${API}?action=file&id=${m[1]}`);
+  }
+
+  /** PORTFOLIO page (/portfolio/): the portfolio's own content: texts (data-p), items (switch, order, pictures, title/summary/years/tags), sections (switch). */
+  function bindPortfolio() {
+    $$("#ppMain [data-p], #ppBar [data-p]").forEach((el) => attach(el, { i18n: el.dataset.p }));
+    const cards = $$("#ppMain .arch[data-slug]");
+    const all = boot.galleryOrder;
+    const order = (S.draft.portfolio.order?.length === all.length ? S.draft.portfolio.order : all).filter((slug) => cards.some((c) => c.dataset.slug === slug));
+    cards.forEach((card) => {
+      const slug = card.dataset.slug;
+      const target = { type: "portfolio", id: slug };
+      setOff(card, C.isOff(S.draft, target));
+      card.classList.add("ve-pad");
+      attach($('[data-f="title"]', card), { card: "gallery", slug, field: "title" });
+      attach($('[data-f="summary"]', card), { card: "gallery", slug, field: "summary" });
+      attach($('[data-f="years"]', card), { card: "galleryYears", slug });
+      $$('[data-f="tag"]', card).forEach((el) => attach(el, { card: "galleryTag", slug, index: Number(el.dataset.i) }));
+      const at = order.indexOf(slug);
+      const move = (dir, label) => h("button", {
+        class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${$('[data-f="title"]', card)?.textContent.trim() || slug}`, title: label,
+        disabled: at < 0 || (dir < 0 ? at === 0 : at === order.length - 1) || null,
+        onclick: async () => { if (C.moveGallery(S.draft, slug, dir, all, all, "portfolio")) { markDirty(); if (await flush()) reloadKeepingPlace(); } },
+      }, dir < 0 ? "▲" : "▼");
+      const slots = boot.factoryGallery[slug]?.slots || [];
+      barOf(card, { key: "portfolio:item", fallback: { title: $('[data-f="title"]', card)?.textContent.trim() } }, switchBox("У портфоліо", target, card),
+        ...slots.map((key, i) => h("button", { class: "ve-btn", type: "button", title: `Фото ${i + 1}: ${key}`, "aria-label": `Фото ${i + 1}`, onclick: () => pickMedia({ type: "gallerySlot", id: key }, "image") }, `🖼${i + 1}`)),
+        at >= 0 ? move(-1, "Вгору") : null, at >= 0 ? move(1, "Вниз") : null);
+    });
+    $$("#ppMain img").forEach(fixUploadSrc);
+    $$("#ppMain section[data-sec]").forEach((sec) => {
+      const target = { type: "ppsection", id: sec.dataset.sec };
+      setOff(sec, C.isOff(S.draft, target));
+      const title = boot.portfolioSections.find((x) => x.id === sec.dataset.sec)?.title;
+      barOf(sec, { key: "portfolio:section", fallback: { title: title?.[lang()] || title?.en || sec.dataset.sec } }, h("span", { class: "ve-name" }, sec.dataset.sec), switchBox("У портфоліо й PDF", target, sec));
+    });
+    if (location.hash.length > 1 && !bindPortfolio.focused) {
+      bindPortfolio.focused = true;
+      document.querySelector(`#ppMain .arch[data-slug="${CSS.escape(location.hash.slice(1))}"]`)?.scrollIntoView({ block: "center" });
+    }
+  }
+
+  /* ---------- texts that cannot be edited in place ---------- */
+  // Filter buttons (a click filters), <option>s of the form, the "3D" badge, the skip link, ARIA/theme labels and the page title/description are not editable where they sit.
+  const OTHER = /^(?:ui\.|meta\.|nav\.|work\.(?:all|categories\.\d+\.label|archive\.(?:all|categories\.\d+\.label))$|contact\.form\.(?:types|attachErrors)\.)/;
+  function otherTexts() {
+    const dlg = h("dialog", { class: "ve-ui ve-dialog", "aria-label": "Інші тексти" });
+    const rows = Object.keys(boot.editable).filter((path) => OTHER.test(path)).map((path) => {
+      const b = C.bindingFor({ i18n: path }, env());
+      return h("label", { class: "ve-field" }, h("span", { class: "ve-note" }, path),
+        h("input", { type: "text", value: C.readText(b, env(), lang()), onchange: (e) => { if (C.writeText(b, env(), lang(), e.target.value) !== null) markDirty(); } }));
+    });
+    dlg.append(h("h3", {}, "Інші тексти"), h("p", { class: "ve-note" }, `Мова: ${lang().toUpperCase()}. Підписи фільтрів, пункти списку форми, позначка 3D, інтерфейсні підписи, назва й опис сторінки.`),
+      h("div", { class: "ve-fields" }, rows), h("div", { class: "ve-row" }, h("button", { class: "ve-btn", type: "button", onclick: () => dlg.close() }, "Готово")));
+    dlg.addEventListener("close", async () => { dlg.remove(); if (S.dirty && await flush()) reloadKeepingPlace(); });
+    document.body.append(dlg);
+    dlg.showModal();
+  }
+
   /* ---------- the picker dialog ---------- */
-  function pickerDialog(kind, current) {
+  function pickerDialog(kind, current, uploadsOnly) {
     return new Promise((resolve) => {
       let result = null;
       const dlg = h("dialog", { class: "ve-ui ve-dialog", "aria-label": kind === "image" ? "Вибір зображення" : "Вибір 3D-моделі" });
@@ -297,7 +407,7 @@
       const pick = (ref) => { result = ref; dlg.close(); };
       const paint = () => grid.replaceChildren(
         h("button", { class: "ve-tile", type: "button", onclick: () => pick("") }, h("span", { class: "ve-thumb" }, "—"), h("span", {}, "Заводський варіант")),
-        ...C.pickerItems(kind, boot).map((item) => h("button", { class: `ve-tile${item.ref === current ? " ve-sel" : ""}`, type: "button", onclick: () => pick(item.ref) },
+        ...C.pickerItems(kind, boot, uploadsOnly).map((item) => h("button", { class: `ve-tile${item.ref === current ? " ve-sel" : ""}`, type: "button", onclick: () => pick(item.ref) },
           kind === "image" ? h("img", { class: "ve-thumb", src: C.imageSrc(item.ref, API), alt: "" }) : h("span", { class: "ve-thumb" }, "3D"), h("span", {}, item.label))));
       const input = h("input", { type: "file", accept: kind === "image" ? "image/jpeg,image/png,image/webp,image/avif" : ".glb,model/gltf-binary", "aria-label": "Завантажити новий файл" });
       input.addEventListener("change", async () => {
@@ -328,16 +438,18 @@
     bindTexts();
     bindSections();
     bindCards();
+    if (boot.page === "portfolio") bindPortfolio(); else bindGallery();
   }
   const schedule = () => { if (!queued) { queued = true; queueMicrotask(refresh); } };
 
   document.body.append(bar);
   paintBar();
   document.addEventListener("viteh:render", schedule);
-  for (const sel of ["#productGrid", "#serviceGrid"]) {            // the category filter re-creates the project cards without a render event
+  for (const sel of ["#productGrid", "#serviceGrid", "#archiveGrid"]) {            // the category filter re-creates the project cards without a render event
     const grid = $(sel);
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true });
   }
+  if (boot.page === "portfolio") { const main = $("#ppMain"); if (main) new MutationObserver(schedule).observe(main, { childList: true }); schedule(); }
   if (window.vitehRender) refresh();
   refreshProblems();
   const y = Number(store.get("ve.scroll"));

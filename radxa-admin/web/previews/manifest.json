@@ -205,5 +205,23 @@
   "title": "Портфоліо",
   "text": "Сторінка /portfolio/ та кнопка-посилання на неї в «Проєктах» і «Контактах».",
   "image": "previews/widget-portfolioLink.webp"
+ },
+ "project:toyota-hv-monitor": {
+  "image": "previews/project-toyota-hv-monitor.webp"
+ },
+ "portfolio:item": {
+  "title": "Елемент портфоліо",
+  "text": "Картка проєкту: назва, опис, роки, теги й до трьох фото. З неї збираються сторінка /portfolio/ і PDF; головна лише вибирає, які картки показати. Вимкнена картка зникає звідусіль.",
+  "image": "previews/portfolio-item.webp"
+ },
+ "site:gallery": {
+  "title": "Галерея на головній",
+  "text": "Підрозділ «Замовні розробки» на головній: тут лише вибір карток портфоліо (показати чи сховати) і їхній порядок. Тексти й фото беруться з портфоліо.",
+  "image": "previews/site-gallery.webp"
+ },
+ "portfolio:section": {
+  "title": "Розділ портфоліо",
+  "text": "Розділ сторінки /portfolio/ і PDF-портфоліо. Вимкнений розділ зникає зі сторінки й з PDF; тексти розділу редагуються в портфоліо.",
+  "image": "previews/portfolio-section.webp"
  }
 }

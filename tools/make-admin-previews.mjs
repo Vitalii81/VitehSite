@@ -27,9 +27,12 @@ const sampleHtml = (variant) => { if (!samples.has(variant)) samples.set(variant
 const SHOTS = {};
 for (const id of ["hero", "trust", "services", "ai", "process", "work", "stack", "pricing", "faq", "contact"]) SHOTS[`section:${id}`] = { page: "home", sel: id === "hero" ? "section.hero" : id === "trust" ? "section.trust" : `section#${id}`, height: 0.7 };
 for (let i = 0; i < 12; i++) SHOTS[`service:s${i}`] = { page: "home", sel: `#serviceGrid .card[data-s="${i}"]`, pad: 8 };
-for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
+for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node", "toyota-hv-monitor"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
 for (const t of ["hero", "services", "projects", "gallery3d", "agents", "steps", "stack", "pricing", "faq", "form", "text_image", "gallery", "cta"]) SHOTS[`block:${t}`] = { page: ["projects", "gallery3d"].includes(t) ? `sample:${t}` : "sample", sel: `#pv-${t}`, height: 0.7 };
 SHOTS["block:divider"] = { page: "sample", sel: "hr.divider", pad: 70 };
+SHOTS["portfolio:item"] = { page: "home", sel: '#archiveGrid .archive-card[data-slug="toyota-hv-monitor"]', pad: 8 };        // an item of the portfolio (data/portfolio.json)
+SHOTS["site:gallery"] = { page: "home", sel: "#archive", height: 0.8 };                                                          // the home page's selection of portfolio items
+SHOTS["portfolio:section"] = { page: "portfolio", sel: "#ppMain .pp-sec", pad: 8, height: 0.9 };                              // a section of /portfolio/ (and of the PDF)
 SHOTS["widget:gallery3d"] = { page: "home", sel: "#productGrid", height: 0.55 };
 SHOTS["widget:portfolioLink"] = { page: "home", sel: "#work .portfolio-link", pad: 40 };
 
@@ -67,9 +70,9 @@ await page("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-m
 const FREEZE = ".topbar,.to-top,[class*=back-to]{display:none!important}*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}";
 async function open(kind) {
   const [which, variant] = kind.split(":");
-  await page("Page.navigate", { url: `${base}/${which === "home" ? "index.html" : "__sample.html" + (variant ? "?b=" + variant : "")}` });
+  await page("Page.navigate", { url: `${base}/${which === "home" ? "index.html" : which === "portfolio" ? "portfolio/index.html" : "__sample.html" + (variant ? "?b=" + variant : "")}` });
   for (let i = 0; i < 80; i++) {                                  // the cards are drawn by app.js after data/*.json is fetched
-    const ready = await evaluate(`document.readyState === "complete" && !!document.querySelector("#serviceGrid .card") && !!document.querySelector("#productGrid .product-card")`);
+    const ready = await evaluate(which === "portfolio" ? `document.readyState === "complete" && !!document.querySelector("#ppMain .pp-sec")` : `document.readyState === "complete" && !!document.querySelector("#serviceGrid .card") && !!document.querySelector("#productGrid .product-card") && !!document.querySelector("#archiveGrid .archive-card")`);
     if (ready) break;
     await new Promise((r) => setTimeout(r, 250));
   }
