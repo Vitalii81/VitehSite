@@ -1139,6 +1139,66 @@ class PortfolioBuildTests(unittest.TestCase):
                         self.assertNotIn(needle, text, "%s in %s" % (needle, name))
 
 
+class PdfImageConversionTests(unittest.TestCase):
+    """A PNG with transparency (or 16 bit) is converted to JPEG on a white background for the PDF only; the standard library does it."""
+
+    def rgba_png(self, w=64, h=48):
+        raw = b"".join(b"\x00" + b"".join(bytes((x * 4 % 256, y * 5 % 256, 120, 0 if x < 16 else 255)) for x in range(w)) for y in range(h))
+        def chunk(t, d):
+            c = struct.pack(">I", len(d)) + t + d
+            return c + struct.pack(">I", zlib.crc32(t + d))
+        return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+
+    def test_alpha_png_becomes_a_valid_jpeg_with_a_white_background(self):
+        data = self.rgba_png()
+        self.assertIsNone(pdf.read_image(data), "PDF cannot embed it as it is")
+        jpeg = pdf.embeddable(data)
+        self.assertTrue(jpeg.startswith(b"\xff\xd8") and jpeg.endswith(b"\xff\xd9"))
+        self.assertEqual(pdf.read_image(jpeg)[:3], ("jpeg", 64, 48))
+        try:
+            import io
+            from PIL import Image
+        except ImportError:
+            return
+        img = Image.open(io.BytesIO(jpeg)).convert("RGB")
+        self.assertGreater(min(img.getpixel((4, 20))), 235, "transparent pixels are white")
+        r, g, b = img.getpixel((50, 10))
+        self.assertTrue(abs(r - 200) < 25 and abs(g - 50) < 25 and abs(b - 120) < 25, (r, g, b))
+
+    def test_webp_and_avif_stay_out_and_big_or_odd_pngs_do_not_crash(self):
+        self.assertIsNone(pdf.embeddable(b"RIFF\x00\x00\x00\x00WEBPVP8 "))
+        self.assertIsNone(pdf.embeddable(b"\x00\x00\x00\x1cftypavif" + b"\x00" * 20))
+        self.assertIsNone(pdf.embeddable(self.rgba_png()[:60]))
+        self.assertIsNone(pdf.embeddable(None))
+
+    def test_the_pdf_has_every_enabled_project_with_its_pictures_including_converted_uploads(self):
+        site = read_json_file(os.path.join(REPO, "data/site.json"))
+        projects = read_json_file(os.path.join(REPO, "data/portfolio.json"))["projects"]
+        manifest = read_json_file(os.path.join(REPO, "data/portfolio-images.json"))
+        up = self.rgba_png()
+        files = {"assets/u/aaaaaaaaaaaaaaaa.png": up}
+        manifest = [dict(m) for m in manifest]
+        for m in manifest:                                           # an upload (transparent PNG) fills a slot that is a placeholder in the factory
+            if (m["slug"], m["slot"]) == ("can-helper", "window"):
+                m.update(file="assets/u/aaaaaaaaaaaaaaaa.png", status="final", ratio="4:3")
+        read = lambda rel: files.get(rel) or (read_bytes(os.path.join(REPO, rel)) if os.path.isfile(os.path.join(REPO, rel)) else None)
+        count = lambda ps: portfolio_pdf.build_portfolio_pdf(site["portfolioPage"], site, ps, manifest, "en", read)[0].count(b"/Subtype /Image")
+        base = count([])
+        for slug in ("lvgl-smartwatch", "toyota-hv-monitor", "can-helper"):
+            proj = [p for p in projects if p["slug"] == slug]
+            slots = [m for m in manifest if m["slug"] == slug and m["slot"] in proj[0]["slots"] and m["status"] == "final"]
+            self.assertGreaterEqual(len(slots), 1, slug)
+            self.assertEqual(count(proj) - base, min(len(slots), 3), "every final picture of %s is in the PDF" % slug)
+        data, texts = portfolio_pdf.build_portfolio_pdf(site["portfolioPage"], site, projects, manifest, "en", read)
+        for p in projects:
+            self.assertTrue(any(p["title"]["en"] in t or t in p["title"]["en"] for t in texts), p["slug"])
+        text = pdf_text(data)
+        if text is not None:
+            flat = " ".join(text.split())
+            for p in projects:
+                self.assertIn(" ".join(p["title"]["en"].split()), flat, p["slug"])
+
+
 class PortfolioPdfTests(unittest.TestCase):
     """The standard-library PDF writer: real Cyrillic text, valid structure, pictures embedded as they are."""
 
@@ -1226,6 +1286,162 @@ def read_bytes(path):
     with open(path, "rb") as fh:
         return fh.read()
 
+
+
+class EditableEverythingGuard(unittest.TestCase):
+    """Owner's rule: everything a visitor can read on the site is editable. A visible text of data/site.json, data/products.json or the static
+    markup that is neither editable (draft.texts / draft.plain / draft.products) nor listed below, WITH the reason, fails here."""
+    NOT_TEXT = {"t", "id", "img", "type", "icon", "model", "poster", "orbit", "code", "url", "href", "demo", "slug", "category", "image"}      # markup switches, file names, ids: not visible text
+    EXEMPT_PLAIN = {
+        "languages": "names of the languages in the switch (Українська / English / Deutsch, UA / EN / DE): constants, each language is written in itself",
+        "brand.name": "the ViTeh wordmark: part of the logo markup, <title> suffixes, the mail subject of the Worker and the JSON-LD; changing it is a code change",
+    }
+    STATIC_EXEMPT = {
+        "ViTeh": "the wordmark (see brand.name)",
+        "This site needs JavaScript": "the <noscript> fallback must work without scripts, so it cannot come from site.json; it is shown only when scripts are off (never on a live page)",
+    }
+
+    def setUp(self):
+        self.site = read_json_file(os.path.join(REPO, "data/site.json"))
+        self.w = World()
+        self.addCleanup(self.w.close)
+        self.ctx = self.w.ctx()
+
+    def leaves(self, node, path):
+        if isinstance(node, dict) and node and all(k in ("uk", "en", "de") for k in node):
+            yield ".".join(path), True
+        elif isinstance(node, dict):
+            for k, v in node.items():
+                for x in self.leaves(v, path + [k]):
+                    yield x
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                for x in self.leaves(v, path + [str(i)]):
+                    yield x
+        elif isinstance(node, str) and path and path[-1] not in self.NOT_TEXT and node.strip():
+            yield ".".join(path), False
+
+    def test_every_visible_string_of_site_json_is_editable_or_explained(self):
+        texts, plain = schema.editable_texts(self.ctx.site), schema.editable_plain(self.ctx.site)
+        missing = []
+        for path, translated in self.leaves(self.site, []):
+            if translated and path in texts:
+                continue
+            if not translated and path in plain:
+                continue
+            if any(path == k or path.startswith(k + ".") for k in self.EXEMPT_PLAIN):
+                continue
+            missing.append(path)
+        self.assertEqual(missing, [], "not editable and not in EXEMPT_PLAIN (with a reason): %s" % missing[:10])
+
+    def test_every_exemption_has_a_reason(self):
+        for table in (self.EXEMPT_PLAIN, self.STATIC_EXEMPT):
+            for key, reason in table.items():
+                self.assertGreater(len(reason), 20, key)
+
+    def test_legal_pages_are_part_of_the_editable_texts(self):
+        texts = schema.editable_texts(self.ctx.site)
+        self.assertIn("legal.imprint.title", texts)
+        self.assertTrue(any(k.startswith("legal.privacy.sections.") for k in texts))
+
+    def test_every_text_field_of_a_factory_project_card_can_be_overridden(self):
+        first = self.ctx.products[0]
+        other = [c for c in self.ctx.categories() if c != first["category"]][0]
+        word = {"uk": "У", "en": "E", "de": "D"}
+        d = {"products": {first["id"]: {"title": word, "summary": word, "status": word, "tags": ["один", "two"], "category": other, "evil": 1}, "no-such": {"title": word}}}
+        clean = schema.sanitize(d, self.ctx)["products"]
+        self.assertEqual(list(clean), [first["id"]])
+        self.assertEqual(sorted(clean[first["id"]]), ["category", "status", "summary", "tags", "title"])
+        d["products"][first["id"]]["category"] = "../x"
+        self.assertNotIn("category", schema.sanitize(d, self.ctx)["products"][first["id"]], "only known categories")
+        self.assertEqual(schema.sanitize({"products": {first["id"]: {"title": first["title"], "tags": first["tags"]}}}, self.ctx)["products"], {}, "an unchanged value is not an override")
+
+    def test_plain_values_accept_only_known_paths_and_sync_the_link(self):
+        d = {"plain": {"contact.details.0.value": "me@example.org", "contact.details.1.value": "+49 30 1234567", "stack.groups.0.items.0": "ESP32-S3", "stack.groups.9.items.0": "x", "brand.name": "Evil", "contact.details.0.href": "javascript:alert(1)"}}
+        clean = schema.sanitize(d, self.ctx)["plain"]
+        self.assertEqual(sorted(clean), ["contact.details.0.value", "contact.details.1.value", "stack.groups.0.items.0"])
+        site = build.merged_site(schema.sanitize(d, self.ctx), self.ctx, render.Assets(self.ctx))
+        mail, phone = site["contact"]["details"][0], site["contact"]["details"][1]
+        self.assertEqual((mail["value"], mail["href"]), ("me@example.org", "mailto:me@example.org"))
+        self.assertEqual((phone["href"], phone["demo"]), ("tel:+49301234567", False), "a real number is no longer a demo")
+        self.assertEqual(site["stack"]["groups"][0]["items"][0], "ESP32-S3")
+        bad = build.merged_site(schema.sanitize({"plain": {"contact.details.0.value": "not an email <x>"}}, self.ctx), self.ctx, render.Assets(self.ctx))
+        self.assertEqual(bad["contact"]["details"][0]["href"], "mailto:info@viteh.org", "a value that is no e-mail address keeps the old link")
+
+    def test_static_markup_has_no_unexplained_visible_text(self):
+        html = read_file(os.path.join(REPO, "index.html"))
+        body = html[html.index("<body"):]
+        found = []
+        for m in re.finditer(r"<(\w+)([^>]*)>([^<>]*[A-Za-z\u0400-\u04ff]{2,}[^<>]*)</\1>", body):
+            if "data-i18n" not in m.group(2) and m.group(1) not in ("script", "style"):
+                found.append(m.group(3).strip())
+        for text in found:
+            self.assertTrue(any(text.startswith(k) for k in self.STATIC_EXEMPT), "static text without data-i18n and without an exemption: %r" % text)
+        app = read_file(os.path.join(REPO, "assets/app.js"))
+        for lit in re.findall(r"textContent\s*=\s*[\"'`]([^\"'`]*[A-Za-z]{3}[^\"'`]*)[\"'`]", app):
+            self.fail("app.js writes a literal text: %r" % lit)
+
+
+class AuditBuildTests(unittest.TestCase):
+    """The audit fields in a real build: factory project texts, plain values, legal texts; the factory site stays byte-identical when untouched."""
+
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def test_overrides_reach_the_package_and_nothing_else_changes(self):
+        d = self.w.draft()
+        d["products"] = {"iot-module": {"title": {"uk": "Мій IoT", "en": "My IoT", "de": "Mein IoT"}, "tags": ["BLE5"], "category": "software"}}
+        d["plain"] = {"contact.details.0.value": "me@example.org", "stack.groups.0.items.0": "ESP32-S3"}
+        d["texts"]["legal.imprint.title"] = {"uk": "Вихідні дані", "en": "Legal notice", "de": "Impressum neu"}
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        prod = dict((p["id"], p) for p in json.loads(self.w.read(r["id"], "data/products.json")))
+        factory = dict((p["id"], p) for p in read_json_file(os.path.join(REPO, "data/products.json")))
+        self.assertEqual(prod["iot-module"]["title"]["en"], "My IoT")
+        self.assertEqual((prod["iot-module"]["tags"], prod["iot-module"]["category"]), (["BLE5"], "software"))
+        self.assertEqual(prod["iot-module"]["summary"], factory["iot-module"]["summary"])
+        self.assertEqual(prod["sensor-node"], factory["sensor-node"], "other cards are untouched")
+        site = json.loads(self.w.read(r["id"], "data/site.json"))
+        self.assertEqual(site["contact"]["details"][0]["href"], "mailto:me@example.org")
+        self.assertEqual(site["stack"]["groups"][0]["items"][0], "ESP32-S3")
+        self.assertEqual(site["legal"]["imprint"]["title"]["en"], "Legal notice")
+
+    def test_empty_products_plain_and_legal_leave_the_factory_json_identical(self):
+        r = build.build(self.w.paths)
+        for rel in ("data/site.json", "data/products.json"):
+            self.assertEqual(read_json_file(os.path.join(self.w.src, rel)), json.loads(self.w.read(r["id"], rel)), rel)
+
+
+class EditPageAuditTests(EditPageTests):
+    def test_the_boot_data_carries_what_the_overlay_needs_for_the_new_bindings(self):
+        html = self.page()[2].decode()
+        boot = self.embedded(html, "ve-boot")
+        self.assertIn("iot-module", boot["factoryProducts"])
+        self.assertEqual(boot["factoryProducts"]["iot-module"]["tags"], read_json_file(os.path.join(REPO, "data/products.json"))[2]["tags"])
+        self.assertIn("stack.groups.0.items.0", boot["editablePlain"])
+        self.assertIn("contact.details.0.value", boot["editablePlain"])
+        self.assertTrue(boot["categories"] and boot["archiveCategories"])
+        self.assertIn("legal.imprint.title", boot["editable"])
+        self.assertIn("years", boot["factoryGallery"]["can-helper"])
+        self.assertIn("ui.gallery3d.badge", boot["editable"], "the 'other texts' dialog lists it")
+
+    def test_overlay_in_a_package_still_never_appears_with_the_new_fields(self):
+        d = self.w.draft()
+        d["products"] = {"iot-module": {"tags": ["x"]}}
+        d["plain"] = {"stack.groups.0.items.0": "ESP32-S3"}
+        self.save(d)
+        w = World(copy_src=True)
+        self.addCleanup(w.close)
+        w.save(d)
+        r = build.build(w.paths)
+        for root, _, names in os.walk(w.site(r["id"])):
+            for name in names:
+                if name.rsplit(".", 1)[-1] in ("html", "js", "css", "json"):
+                    text = read_file(os.path.join(root, name))
+                    for needle in ("ve-boot", "factoryProducts", "editablePlain", "edit-overlay", "VEdit", "otherTexts"):
+                        self.assertNotIn(needle, text, "%s in %s" % (needle, name))
 
 
 class PreviewTests(unittest.TestCase):

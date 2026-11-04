@@ -40,6 +40,9 @@
   const extraServices = (draft) => draft.extra?.services || [];
   const extraProjects = (draft) => draft.extra?.projects || [];
 
+  const own = (obj, key) => !!obj && typeof key === "string" && Object.prototype.hasOwnProperty.call(obj, key);
+  const PLAIN_PATH = /^(?:stack\.groups\.\d{1,2}\.items\.\d{1,2}|contact\.details\.\d{1,2}\.value)$/;
+  const SINGLE = ["plain", "tag", "galleryTag", "galleryYears"];           // bindings whose value has no translation
   const GALLERY_FIELDS = { title: MAX.galleryTitle, summary: MAX.gallerySummary };
   const gallery = (draft) => (draft.portfolio ||= { disabled: [], order: [], items: {} });
 
@@ -47,9 +50,17 @@
    *  (not in the draft's schema, a plain string, or a factory project card whose text is not part of the draft). */
   function bindingFor(desc, env) {
     if (desc && desc.card === "products") {
-      if (!["title", "summary", "status"].includes(desc.field) || !extraProjects(env.draft).some((p) => p.id === desc.id)) return null;
-      return { kind: "extraProject", id: desc.id, field: desc.field, key: `project:${desc.id}:${desc.field}` };
+      if (!["title", "summary", "status"].includes(desc.field)) return null;
+      if (extraProjects(env.draft).some((p) => p.id === desc.id)) return { kind: "extraProject", id: desc.id, field: desc.field, key: `project:${desc.id}:${desc.field}` };
+      if (own(env.factoryProducts, desc.id)) return { kind: "productText", id: desc.id, field: desc.field, key: `product:${desc.id}:${desc.field}` };      // a factory card: overrides live in draft.products
+      return null;
     }
+    if (desc && typeof desc.plain === "string") {           // a visible string without translation: stack items, e-mail, phone
+      return PLAIN_PATH.test(desc.plain) && own(env.editablePlain, desc.plain) ? { kind: "plain", path: desc.plain, key: `plain:${desc.plain}` } : null;
+    }
+    if (desc && desc.card === "tag" && isIndex(desc.index) && (extraProjects(env.draft).some((p) => p.id === desc.id) || own(env.factoryProducts, desc.id))) return { kind: "tag", id: desc.id, index: desc.index, key: `tag:${desc.id}:${desc.index}` };
+    if (desc && desc.card === "galleryTag" && isIndex(desc.index) && own(env.factoryGallery, desc.slug)) return { kind: "galleryTag", slug: desc.slug, index: desc.index, key: `gtag:${desc.slug}:${desc.index}` };
+    if (desc && desc.card === "galleryYears" && own(env.factoryGallery, desc.slug)) return { kind: "galleryYears", slug: desc.slug, key: `gyears:${desc.slug}` };
     if (desc && desc.card === "gallery") {           // a card of the project gallery "Замовні розробки" (data/portfolio.json, kept in draft.portfolio)
       if (!Object.prototype.hasOwnProperty.call(GALLERY_FIELDS, desc.field) || !env.factoryGallery?.[desc.slug]) return null;
       return { kind: "gallery", slug: desc.slug, field: desc.field, key: `gallery:${desc.slug}:${desc.field}` };
@@ -70,6 +81,7 @@
   function holder(binding, env) {            // the {uk,en,de} object a binding points at (may be undefined)
     const { draft } = env;
     if (binding.kind === "text") return draft.texts?.[binding.path] || env.editable[binding.path];
+    if (binding.kind === "productText") return draft.products?.[binding.id]?.[binding.field] || env.factoryProducts?.[binding.id]?.[binding.field];
     if (binding.kind === "gallery") return draft.portfolio?.items?.[binding.slug]?.[binding.field] || env.factoryGallery?.[binding.slug]?.[binding.field];
     if (binding.kind === "extraService") {
       const svc = extraServices(draft).find((s) => s.id === binding.id);
@@ -78,11 +90,26 @@
     return extraProjects(draft).find((p) => p.id === binding.id)?.[binding.field];
   }
 
-  const readText = (binding, env, lang) => holder(binding, env)?.[lang] ?? "";
+  function singleValue(b, env) {            // the string behind a binding without translation
+    const { draft } = env;
+    if (b.kind === "plain") return draft.plain?.[b.path] ?? env.editablePlain[b.path] ?? "";
+    if (b.kind === "tag") return tagList(b, env)[b.index] ?? "";
+    if (b.kind === "galleryTag") return (draft.portfolio?.items?.[b.slug]?.tags || env.factoryGallery[b.slug].tags || [])[b.index] ?? "";
+    return draft.portfolio?.items?.[b.slug]?.years ?? env.factoryGallery[b.slug].years ?? "";
+  }
+  function tagList(b, env) {
+    const extra = extraProjects(env.draft).find((p) => p.id === b.id);
+    return extra ? extra.tags || [] : env.draft.products?.[b.id]?.tags || env.factoryProducts[b.id].tags || [];
+  }
+  const readText = (binding, env, lang) => (SINGLE.includes(binding.kind) ? singleValue(binding, env) : holder(binding, env)?.[lang] ?? "");
 
   function maxLength(binding) {
     if (binding.kind === "text") return MAX.text;
     if (binding.kind === "gallery") return GALLERY_FIELDS[binding.field];
+    if (binding.kind === "plain") return 120;
+    if (binding.kind === "tag" || binding.kind === "galleryTag") return 24;
+    if (binding.kind === "galleryYears") return MAX.galleryYears;
+    if (binding.kind === "productText") return binding.field === "title" ? MAX.projectTitle : binding.field === "summary" ? MAX.projectSummary : MAX.projectStatus;
     if (binding.kind === "extraService") return binding.field === "title" ? MAX.serviceTitle : binding.field === "text" ? MAX.serviceText : MAX.servicePoint;
     return binding.field === "title" ? MAX.projectTitle : binding.field === "summary" ? MAX.projectSummary : MAX.projectStatus;
   }
@@ -92,7 +119,35 @@
     if (!LANGS.includes(lang)) return null;
     const next = one(value).slice(0, maxLength(binding));
     if (one(readText(binding, env, lang)) === next) return null;
-    if (binding.kind === "gallery") {
+    if (SINGLE.includes(binding.kind)) {
+      if (!next && binding.kind !== "galleryYears") return null;          // an emptied tag or value is not saved (remove it in the admin)
+      const { draft } = env;
+      if (binding.kind === "plain") {
+        draft.plain ||= {};
+        if (next === env.editablePlain[binding.path]) delete draft.plain[binding.path]; else draft.plain[binding.path] = next;
+      } else if (binding.kind === "tag") {
+        const list = tagList(binding, env).slice();
+        list[binding.index] = next;
+        const extra = extraProjects(draft).find((p) => p.id === binding.id);
+        if (extra) extra.tags = list;
+        else { draft.products ||= {}; draft.products[binding.id] = { ...(draft.products[binding.id] || {}), tags: list }; }
+      } else if (binding.kind === "galleryTag") {
+        const items = gallery(draft).items;
+        const list = (items[binding.slug]?.tags || env.factoryGallery[binding.slug].tags || []).slice();
+        list[binding.index] = next;
+        items[binding.slug] = { ...(items[binding.slug] || {}), tags: list };
+      } else {
+        const items = gallery(draft).items;
+        items[binding.slug] = { ...(items[binding.slug] || {}), years: next };
+      }
+      return next;
+    }
+    if (binding.kind === "productText") {
+      env.draft.products ||= {};
+      const cur = env.draft.products[binding.id] || {};
+      const base = cur[binding.field] || { ...env.factoryProducts[binding.id][binding.field] };
+      env.draft.products[binding.id] = { ...cur, [binding.field]: { ...base, [lang]: next } };
+    } else if (binding.kind === "gallery") {
       const items = gallery(env.draft).items;
       const base = items[binding.slug]?.[binding.field] || { ...env.factoryGallery[binding.slug][binding.field] };
       items[binding.slug] = { ...(items[binding.slug] || {}), [binding.field]: { ...base, [lang]: next } };
@@ -178,6 +233,16 @@
     return true;
   }
 
+  /** The category of a project card (factory cards keep it in draft.products, the owner's own cards in extra.projects). */
+  const categoryOf = (draft, id, factoryProducts) => extraProjects(draft).find((p) => p.id === id)?.category || draft.products?.[id]?.category || factoryProducts?.[id]?.category || "";
+  function setCategory(draft, id, category, factoryProducts) {
+    const extra = extraProjects(draft).find((p) => p.id === id);
+    if (extra) { extra.category = category; return; }
+    draft.products ||= {};
+    draft.products[id] = { ...(draft.products[id] || {}), category };
+    if (factoryProducts?.[id]?.category === category) delete draft.products[id].category;
+  }
+
   /* ---------- images and models ---------- */
   // target: {type: "hero"} | {type: "projectImage"|"projectModel"|"serviceModel", id} | {type: "gallerySlot", id: "<slug>/<slot>"}. An empty ref goes back to the factory file.
   function setMedia(draft, target, ref) {
@@ -215,5 +280,5 @@
 
   const imageSrc = (ref, api) => (ref.startsWith("u:") ? `${api}?action=file&id=${ref.slice(2)}` : `/${ref}`);
 
-  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, moveGallery, saveIndicator, setMedia, mediaRef, pickerItems, imageSrc };
+  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, moveGallery, categoryOf, setCategory, saveIndicator, setMedia, mediaRef, pickerItems, imageSrc };
 });

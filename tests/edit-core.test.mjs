@@ -221,3 +221,59 @@ test("gallery switch, order among visible projects and slot images", () => {
   assert.deepEqual(C.pickerItems("image", boot, true).map((i) => i.ref), ["u:0123456789abcdef"], "a gallery slot offers uploads only");
   assert.equal(C.pickerItems("image", boot).length, 2);
 });
+
+// ---- factory project cards, tags, plain strings, categories (audit "everything is editable") ----
+const products = JSON.parse(readFileSync(join(root, "data/products.json"), "utf8"));
+const factoryProducts = Object.fromEntries(products.map((p) => [p.id, { title: p.title, summary: p.summary, status: p.status, tags: p.tags, category: p.category }]));
+const editablePlain = {};
+site.stack.groups.forEach((g, gi) => g.items.forEach((it, ii) => { if (typeof it === "string") editablePlain[`stack.groups.${gi}.items.${ii}`] = it; }));
+site.contact.details.forEach((d, i) => { if (typeof d.value === "string") editablePlain[`contact.details.${i}.value`] = d.value; });
+const fullEnv = (draft) => ({ draft, editable, factoryServices: site.services.items.length, factoryGallery, factoryProducts, editablePlain });
+
+test("a factory project card: title/summary/status go to draft.products, tags per chip, category", () => {
+  const d = newDraft();
+  const id = products[0].id;
+  const t = C.bindingFor({ card: "products", id, field: "title" }, fullEnv(d));
+  assert.equal(t.kind, "productText");
+  assert.equal(C.writeText(t, fullEnv(d), "uk", "Новий"), "Новий");
+  assert.equal(d.products[id].title.uk, "Новий");
+  assert.equal(d.products[id].title.en, products[0].title.en, "other languages keep the factory text");
+  assert.equal(C.bindingFor({ card: "products", id: "nope", field: "title" }, fullEnv(d)), null);
+  const tag = C.bindingFor({ card: "tag", id, index: 1 }, fullEnv(d));
+  assert.equal(C.readText(tag, fullEnv(d), "uk"), products[0].tags[1]);
+  assert.equal(C.writeText(tag, fullEnv(d), "uk", "Zephyr"), "Zephyr");
+  assert.deepEqual(d.products[id].tags, products[0].tags.map((x, i) => (i === 1 ? "Zephyr" : x)));
+  assert.equal(C.writeText(tag, fullEnv(d), "uk", ""), null, "an emptied tag is not saved");
+  assert.equal(C.bindingFor({ card: "tag", id: "nope", index: 0 }, fullEnv(d)), null);
+  const other = ["software", "hardware", "ai", "automation"].find((c) => c !== products[0].category);
+  C.setCategory(d, id, other, factoryProducts);
+  assert.equal(C.categoryOf(d, id, factoryProducts), other);
+  C.setCategory(d, id, products[0].category, factoryProducts);
+  assert.equal(d.products[id].category, undefined, "back to the factory category");
+});
+
+test("plain strings: stack items and contact values; only known paths", () => {
+  const d = newDraft();
+  const b = C.bindingFor({ plain: "stack.groups.0.items.0" }, fullEnv(d));
+  assert.equal(C.readText(b, fullEnv(d), "uk"), site.stack.groups[0].items[0]);
+  assert.equal(C.writeText(b, fullEnv(d), "en", "ESP32-S3"), "ESP32-S3");
+  assert.equal(d.plain["stack.groups.0.items.0"], "ESP32-S3");
+  assert.equal(C.writeText(b, fullEnv(d), "en", site.stack.groups[0].items[0]), site.stack.groups[0].items[0]);
+  assert.equal(d.plain["stack.groups.0.items.0"], undefined, "the factory value is not an override");
+  for (const bad of ["brand.name", "contact.details.0.href", "stack.groups.0.items.x", "__proto__"]) assert.equal(C.bindingFor({ plain: bad }, fullEnv(d)), null, bad);
+  const mail = C.bindingFor({ plain: "contact.details.0.value" }, fullEnv(d));
+  assert.equal(C.writeText(mail, fullEnv(d), "uk", "me@example.org"), "me@example.org");
+});
+
+test("gallery years and tags", () => {
+  const d = newDraft();
+  const slug = "can-helper";
+  const y = C.bindingFor({ card: "galleryYears", slug }, galleryEnv(d));
+  const g = { ...factoryGallery, [slug]: { ...factoryGallery[slug], years: "2022", tags: ["C#", "WPF"] } };
+  const env = { ...galleryEnv(d), factoryGallery: g };
+  assert.equal(C.writeText(y, env, "uk", "2023"), "2023");
+  assert.equal(d.portfolio.items[slug].years, "2023");
+  const t = C.bindingFor({ card: "galleryTag", slug, index: 0 }, env);
+  assert.equal(C.writeText(t, env, "uk", "C# 12"), "C# 12");
+  assert.deepEqual(d.portfolio.items[slug].tags, ["C# 12", "WPF"]);
+});

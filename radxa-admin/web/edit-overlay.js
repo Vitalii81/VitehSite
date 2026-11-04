@@ -15,7 +15,7 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const lang = () => document.documentElement.lang;
-  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services, factoryGallery: boot.factoryGallery });
+  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services, factoryGallery: boot.factoryGallery, factoryProducts: boot.factoryProducts, editablePlain: boot.editablePlain });
   const store = {
     get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* storage may be blocked */ } },
@@ -109,6 +109,7 @@
       h("strong", { class: "ve-title" }, "Редагування"),
       h("span", { class: `ve-state ve-${shownState()}`, role: "status" }, stateLabel[shownState()] + (S.message ? `: ${S.message}` : "")),
       S.conflict ? h("button", { class: "ve-btn", type: "button", onclick: () => location.reload() }, "Оновити сторінку") : h("button", { class: "ve-btn", type: "button", onclick: () => { document.activeElement?.blur?.(); save(); } }, "Зберегти"),
+      h("button", { class: "ve-btn", type: "button", onclick: otherTexts }, "Інші тексти…"),
       !boot.gallery ? h("span", { class: "ve-note" }, "3D вимкнено в чернетці: моделі не потраплять у збірку") : null,
       problem ? h("span", { class: "ve-note ve-warn", title: S.problems.map((p) => `${p.where}: ${p.message}`).join("\n") }, `Збірка не пройде: ${problem.message}`) : null,
       h("a", { class: "ve-btn ve-link", href: boot.adminUrl, onclick: async (e) => { e.preventDefault(); if (await flush()) location.href = boot.adminUrl; } }, "До адмінки (зібрати й опублікувати)"),
@@ -183,12 +184,29 @@
       attach($("h3", card), { card: "gallery", slug, field: "title" });
       attach($(".product-body > p", card), { card: "gallery", slug, field: "summary" });
       attach($(".product-link", card), { i18n: "work.request" });
+      const cat = boot.archiveCategories.indexOf(boot.factoryGallery[slug]?.category);
+      if (cat >= 0) attach($(".product-meta .tag:not(.status)", card), { i18n: `work.archive.categories.${cat}.label` });
+      attach($(".product-meta .tag.status", card), { card: "galleryYears", slug });
+      $$(".chips .chip", card).forEach((chip, index) => attach(chip, { card: "galleryTag", slug, index }));
+    });
+    $$("#stackGrid .stack-group").forEach((group, gi) => {
+      attach($("h3", group), { i18n: `stack.groups.${gi}.title` });
+      $$("li", group).forEach((li, ii) => attach(li, { plain: `stack.groups.${gi}.items.${ii}` }));
+    });
+    $$("#contactDetails li").forEach((li, di) => {
+      const path = `contact.details.${di}.value`;
+      attach($("a, .val", li), Object.prototype.hasOwnProperty.call(boot.editable, path) ? { i18n: path } : { plain: path });
+      attach($(".demo-badge", li), { i18n: "contact.demoBadge" });
     });
     $$("#productGrid .product-card[data-id]").forEach((card) => {
       const id = card.dataset.id;
       attach($("h3", card), { card: "products", id, field: "title" });
       attach($(".product-body > p", card), { card: "products", id, field: "summary" });
       attach($(".tag.status", card), { card: "products", id, field: "status" });
+      $$(".chips .chip", card).forEach((chip, index) => attach(chip, { card: "tag", id, index }));
+      attach($(".product-link", card), { i18n: "work.request" });
+      const cat = boot.categories.findIndex((c) => c.id === C.categoryOf(S.draft, id, boot.factoryProducts));
+      if (cat >= 0) attach($(".product-meta .tag:not(.status)", card), { i18n: `work.categories.${cat}.label` });
     });
   }
 
@@ -290,6 +308,8 @@
       const target = { type: "project", id };
       setOff(card, C.isOff(S.draft, target));
       barOf(card, { key: `project:${boot.factory.projects.includes(id) ? id : "custom"}`, fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("Показувати", target, card),
+        h("select", { class: "ve-btn", "aria-label": "Категорія картки", title: "Категорія", onchange: async (e) => { C.setCategory(S.draft, id, e.target.value, boot.factoryProducts); markDirty(); if (await flush()) reloadKeepingPlace(); } },
+          boot.categories.map((c) => h("option", { value: c.id, selected: c.id === C.categoryOf(S.draft, id, boot.factoryProducts) }, c.label?.[lang()] || c.label?.en || c.id))),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectImage", id }, "image") }, "Фото…"),
         h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectModel", id }, "model") }, "3D…"));
     });
@@ -302,6 +322,7 @@
       const slug = card.dataset.slug;
       const target = { type: "gallery", id: slug };
       setOff(card, C.isOff(S.draft, target));
+      card.classList.toggle("ve-pad", !card.querySelector(".archive-shots"));      // a card without pictures starts with its text: leave room for the control strip
       const at = shown.indexOf(slug);
       const move = (dir, label) => h("button", {
         class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${$("h3", card)?.textContent.trim() || slug}`, title: label,
@@ -317,6 +338,23 @@
       const m = /\/assets\/u\/([0-9a-f]{16})\./.exec(img.getAttribute("src"));
       if (m) img.setAttribute("src", `${API}?action=file&id=${m[1]}`);
     });
+  }
+
+  /* ---------- texts that cannot be edited in place ---------- */
+  // Filter buttons (a click filters), <option>s of the form, the "3D" badge, the skip link, ARIA/theme labels and the page title/description are not editable where they sit.
+  const OTHER = /^(?:ui\.|meta\.|nav\.|work\.(?:all|categories\.\d+\.label|archive\.(?:all|categories\.\d+\.label))$|contact\.form\.(?:types|attachErrors)\.)/;
+  function otherTexts() {
+    const dlg = h("dialog", { class: "ve-ui ve-dialog", "aria-label": "Інші тексти" });
+    const rows = Object.keys(boot.editable).filter((path) => OTHER.test(path)).map((path) => {
+      const b = C.bindingFor({ i18n: path }, env());
+      return h("label", { class: "ve-field" }, h("span", { class: "ve-note" }, path),
+        h("input", { type: "text", value: C.readText(b, env(), lang()), onchange: (e) => { if (C.writeText(b, env(), lang(), e.target.value) !== null) markDirty(); } }));
+    });
+    dlg.append(h("h3", {}, "Інші тексти"), h("p", { class: "ve-note" }, `Мова: ${lang().toUpperCase()}. Підписи фільтрів, пункти списку форми, позначка 3D, інтерфейсні підписи, назва й опис сторінки.`),
+      h("div", { class: "ve-fields" }, rows), h("div", { class: "ve-row" }, h("button", { class: "ve-btn", type: "button", onclick: () => dlg.close() }, "Готово")));
+    dlg.addEventListener("close", async () => { dlg.remove(); if (S.dirty && await flush()) reloadKeepingPlace(); });
+    document.body.append(dlg);
+    dlg.showModal();
   }
 
   /* ---------- the picker dialog ---------- */

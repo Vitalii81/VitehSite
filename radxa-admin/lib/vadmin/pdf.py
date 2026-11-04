@@ -3,11 +3,13 @@
 It is deliberately simpler than the Chrome-made factory PDFs (assets/portfolio/*.pdf, tools/make-portfolio.mjs): one column of cards instead of the
 designed two-column spreads. build.py uses it only when the draft changes something the PDF shows; an untouched draft ships the factory files.
 Fonts: DejaVu Sans (regular + bold, lib/vadmin/fonts/), subset into the file, so Ukrainian, German and English text is real, selectable text.
-Images: JPEG as is, PNG (RGB, gray, palette) without re-encoding; WebP/AVIF/PNG-with-alpha cannot be decoded without extra packages and are left out."""
+Images: JPEG as is, plain PNG (RGB, gray, palette) without re-encoding, PNG with alpha/16 bit converted to JPEG on white (imgconv.py); WebP/AVIF cannot be decoded without extra packages and are left out."""
 import os
 import re
 import struct
 import zlib
+
+from . import imgconv
 
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 MM = 72.0 / 25.4
@@ -193,6 +195,25 @@ def read_image(data):
     return None
 
 
+_converted = {}
+
+
+def embeddable(data):
+    """The bytes to embed for a picture: the file itself (JPEG, plain PNG) or, for a PNG with transparency/16 bit, a JPEG made from it on a white background
+    (imgconv, standard library). None for what cannot be decoded without extra packages (WebP, AVIF)."""
+    if data is None:
+        return None
+    if read_image(data):
+        return data
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        key = (len(data), zlib.crc32(data))
+        if key not in _converted:
+            jpeg = imgconv.png_to_jpeg(data)
+            _converted[key] = jpeg if jpeg and read_image(jpeg) else None
+        return _converted[key]
+    return None
+
+
 # ---------- document ----------
 
 def esc_pdf(s):
@@ -256,10 +277,11 @@ class Doc:
 
     def image(self, data, x, y, w, h, fit="contain", ops=None):
         """Draws the picture inside the box (x, y = bottom left). Returns False when the format cannot be embedded."""
-        info = read_image(data)
-        if not info:
+        data = embeddable(data)
+        if data is None:
             return False
-        key = id(data)
+        info = read_image(data)
+        key = zlib.crc32(data)
         if key not in self.image_ids:
             self.image_ids[key] = len(self.images)
             self.images.append(info)

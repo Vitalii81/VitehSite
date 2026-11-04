@@ -448,6 +448,13 @@ const VIEWS = {
           imageField(p.ref, "image", "Фото / ілюстрація"), imageField(p.ref, "model", "3D-модель (.glb)", "model"));
       } else {
         S.draft.images.projects[p.id] ??= ""; S.draft.images.models[p.id] ??= "";
+        S.draft.products ||= {};
+        const ov = (S.draft.products[p.id] ||= {});            // text overrides of the factory card, seeded with the factory values (equal values are dropped by the server)
+        ov.title ||= { ...p.title }; ov.summary ||= { ...p.summary }; ov.status ||= { ...p.status }; ov.tags ||= [...(p.tags || [])]; ov.category ||= p.category;
+        body.append(
+          h("div", { class: "field" }, h("label", {}, "Категорія"), h("select", { onchange: (e) => { ov.category = e.target.value; touch(); } }, S.catalog.factory.categories.map((c) => h("option", { value: c.id, selected: ov.category === c.id }, uk(c.label))))),
+          i18nField(ov, "title", { max: 80, label: "Назва" }), i18nField(ov, "summary", { multiline: true, max: 300, label: "Опис" }), i18nField(ov, "status", { max: 40, label: "Статус" }),
+          h("div", { class: "field" }, h("label", {}, "Теги через кому"), h("input", { type: "text", value: ov.tags.join(", "), oninput: (e) => { ov.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })));
         body.append(imageField(S.draft.images.projects, p.id, "Замінити фото / ілюстрацію"), imageField(S.draft.images.models, p.id, "Замінити 3D-модель (.glb)", "model"));
       }
       card.append(body);
@@ -491,6 +498,11 @@ const VIEWS = {
     sel.addEventListener("change", paint); search.addEventListener("input", paint);
     main.append(h("div", { class: "row" }, h("div", { class: "grow" }, sel), h("div", { class: "grow" }, search)), list);
     paint();
+    // values without translation: e-mail, phone, technology names (draft.plain)
+    S.draft.plain ||= {};
+    main.append(h("h2", { style: "margin-top:22px" }, "Значення без перекладу"), h("p", { class: "lead" }, "Пошта, телефон і назви технологій. Змінена пошта чи телефон оновлює й посилання за ними; справжній номер прибирає позначку «демо»."),
+      ...Object.entries(S.catalog.plain || {}).map(([path, factory]) => h("div", { class: "field" }, h("label", {}, path),
+        h("input", { type: "text", maxlength: 120, value: S.draft.plain[path] ?? factory, "aria-label": path, oninput: (e) => { const v = e.target.value.trim(); if (v && v !== factory) S.draft.plain[path] = v; else delete S.draft.plain[path]; touch(); } }))));
   },
 
   pages(main) {

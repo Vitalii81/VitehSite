@@ -78,7 +78,7 @@ def catalog(paths, ctx):
         },
         "factory": {
             "services": [{"id": "s%d" % i, "title": it.get("title"), "text": it.get("text"), "icon": it.get("icon"), "model": bool(it.get("model"))} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
-            "projects": [{"id": p["id"], "title": p.get("title"), "summary": p.get("summary"), "image": p.get("image"), "model": bool(p.get("model"))} for p in ctx.products],
+            "projects": [{"id": p["id"], "title": p.get("title"), "summary": p.get("summary"), "image": p.get("image"), "model": bool(p.get("model")), "status": p.get("status"), "tags": p.get("tags", []), "category": p.get("category")} for p in ctx.products],
             "categories": [{"id": c["id"], "label": c["label"]} for c in ctx.site.get("work", {}).get("categories", [])],
             "portfolio": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
             "gallery": [{"slug": x.get("slug"), "category": x.get("category"), "years": x.get("years", ""), "title": x.get("title"), "summary": x.get("summary"), "tags": x.get("tags", []),
@@ -87,6 +87,7 @@ def catalog(paths, ctx):
             "portfolioSlots": [{"key": "%s/%s" % (m.get("slug"), m.get("slot")), "alt": m.get("alt"), "status": m.get("status"), "ratio": m.get("ratio"), "hint": m.get("source_hint")} for m in ctx.portfolio_images],
         },
         "texts": groups,
+        "plain": schema.editable_plain(ctx.site),
     }
 
 

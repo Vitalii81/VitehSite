@@ -172,6 +172,7 @@ def merged_site(draft, ctx, assets, all_portfolio_sections=False):
             parent[int(last)] = value
         elif isinstance(parent, dict) and last in parent:
             parent[last] = value
+    apply_plain(site, draft["plain"])
     if "portfolioPage" in site and not all_portfolio_sections:   # sections of the web portfolio switched off in the admin are removed from the data, not hidden
         site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["disabled"]["portfolio"]]
     items = site["services"]["items"]
@@ -207,6 +208,27 @@ def merged_site(draft, ctx, assets, all_portfolio_sections=False):
     return site
 
 
+EMAIL_RE = re.compile(r"^[^\s@<>\"']+@[^\s@<>\"']+\.[^\s@<>\"']+$")
+PHONE_RE = re.compile(r"^\+?[0-9 ()-]{5,30}$")
+
+
+def apply_plain(site, plain):
+    """Untranslated strings from the draft (technology names, contact values). A changed e-mail or phone also fixes the link behind it and drops the "demo" mark."""
+    for path, value in plain.items():
+        parent = schema.get_path(site, path.rsplit(".", 1)[0])
+        last = path.rsplit(".", 1)[1]
+        if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
+            parent[int(last)] = value
+        elif isinstance(parent, dict) and last in parent:
+            parent[last] = value
+            if last == "value" and "href" in parent:
+                if parent["href"].startswith("mailto:") and EMAIL_RE.match(value):
+                    parent["href"] = "mailto:" + value
+                elif (parent["href"].startswith("tel:") or parent.get("demo")) and PHONE_RE.match(value):
+                    parent["href"] = "tel:" + re.sub(r"[^+0-9]", "", value)
+                parent["demo"] = False
+
+
 def merged_products(draft, ctx, assets):
     gallery = draft["widgets"].get("gallery3d", True)
     out = []
@@ -214,6 +236,11 @@ def merged_products(draft, ctx, assets):
         pid = p["id"]
         if pid in draft["disabled"]["projects"]:
             continue
+        p.update(copy.deepcopy(draft["products"].get(pid, {})))               # text overrides of a factory card (title, summary, status, tags, category)
+        for field in ("title", "summary", "status"):
+            if pid in draft["products"] and field in draft["products"][pid]:
+                base = next((q for q in ctx.products if q["id"] == pid), {}).get(field) or {}
+                p[field] = {lang: draft["products"][pid][field].get(lang) or base.get(lang, "") for lang in LANGS}
         img = draft["images"]["projects"].get(pid) or p.get("image", "")
         p["image"] = assets.url(img).lstrip("/") if img.startswith("u:") else img
         model = draft["images"]["models"].get(pid) or p.get("model", "")

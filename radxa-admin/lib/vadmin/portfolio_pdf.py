@@ -45,7 +45,8 @@ class Fig:
         self.data, self.caption, self.max_h, self.ratio, self.fit = data, caption, max_h, ratio, fit
 
     def box(self, w):
-        info = pdf.read_image(self.data) if self.data else None
+        usable = pdf.embeddable(self.data) if self.data else None
+        info = pdf.read_image(usable) if usable else None
         if not info and not self.ratio:
             return 0, 0
         ratio = self.ratio or info[1] / float(info[2])
@@ -183,10 +184,10 @@ class Builder:
             m = by_slot.get(slot)
             if not m or m.get("status") != "final" or not SLOT_RE.match(m.get("file", "")):
                 continue
-            data = self.read(m["file"])
+            data = pdf.embeddable(self.read(m["file"]))
             if data is None and m["file"].endswith(".webp"):
-                data = self.read(m["file"][:-5] + ".jpg")             # the factory ships a JPEG twin of every WebP
-            if data is None or not pdf.read_image(data):
+                data = pdf.embeddable(self.read(m["file"][:-5] + ".jpg"))      # the factory ships a JPEG twin of every WebP; a WebP upload has none and is left out
+            if data is None:
                 continue
             rm = re.match(r"^(\d{1,2}):(\d{1,2})$", m.get("ratio", ""))
             out.append((data, int(rm.group(1)) / float(rm.group(2)) if rm else 4 / 3.0))

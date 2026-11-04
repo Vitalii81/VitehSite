@@ -250,13 +250,54 @@ def editable_texts(site):
             out[".".join(path)] = {lang: node.get(lang, "") for lang in LANGS}
         elif isinstance(node, dict):
             for k, v in node.items():
-                if k in ("languages", "legal", "categories") and not path:
+                if k in ("languages", "categories") and not path:
                     continue
                 walk(v, path + [k])
         elif isinstance(node, list):
             for i, v in enumerate(node):
                 walk(v, path + [str(i)])
     walk(site, [])
+    return out
+
+
+PLAIN_PATH = re.compile(r"^(?:stack\.groups\.\d{1,2}\.items\.\d{1,2}|contact\.details\.\d{1,2}\.value)$")
+
+
+def editable_plain(site):
+    """Visible strings of site.json that are NOT translated (technology names, e-mail, phone): {path: factory string}. Kept in draft.plain."""
+    out = {}
+    for gi, group in enumerate(site.get("stack", {}).get("groups", [])):
+        for ii, item in enumerate(group.get("items", [])):
+            if isinstance(item, str):
+                out["stack.groups.%d.items.%d" % (gi, ii)] = item
+    for di, det in enumerate(site.get("contact", {}).get("details", [])):
+        if isinstance(det.get("value"), str):
+            out["contact.details.%d.value" % di] = det["value"]
+    return out
+
+
+def clean_products(raw, ctx):
+    """Text overrides of the FACTORY project cards (data/products.json): {id: {title, summary, status, tags, category}}, only real differences."""
+    raw = raw if isinstance(raw, dict) else {}
+    cats = ctx.categories()
+    out = {}
+    for p in ctx.products:
+        src = raw.get(p.get("id"))
+        if not isinstance(src, dict):
+            continue
+        kept = {}
+        for field, limit, multi in (("title", 80, False), ("summary", 300, True), ("status", 40, False)):
+            val = i18n(src.get(field), limit, multi)
+            if any(val.values()) and val != {k: (p.get(field) or {}).get(k, "") for k in LANGS}:
+                kept[field] = val
+        if isinstance(src.get("tags"), list):
+            tags = [text(t, 24) for t in src["tags"][:8] if text(t, 24)]
+            if tags != list(p.get("tags") or []):
+                kept["tags"] = tags
+        if src.get("category") in cats and src.get("category") != p.get("category"):
+            kept["category"] = src["category"]
+        if kept:
+            out[p["id"]] = kept
     return out
 
 
@@ -312,7 +353,7 @@ def clean_portfolio(raw, ctx):
 def empty_draft():
     return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}, "portfolioAlt": {}},
-            "pages": [], "forms": {}, "portfolio": {"disabled": [], "order": [], "items": {}}}
+            "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}}}
 
 
 def sanitize(raw, ctx):
@@ -360,6 +401,13 @@ def sanitize(raw, ctx):
     d["images"]["portfolioAlt"] = {k: a for k, a in ((k, i18n(v, 200)) for k, v in alts.items() if k in known_slots) if any(a.get(l) for l in LANGS)}
 
     d["portfolio"] = clean_portfolio(raw.get("portfolio"), ctx)
+    d["products"] = clean_products(raw.get("products"), ctx)
+    plain, src = editable_plain(ctx.site), raw.get("plain") if isinstance(raw.get("plain"), dict) else {}
+    for path, value in list(src.items())[:LIMITS["texts"]]:
+        if isinstance(path, str) and PLAIN_PATH.match(path) and path in plain:
+            clean = text(value, 120)
+            if clean and clean != plain[path]:
+                d["plain"][path] = clean
 
     pages, seen = [], set()
     for p in (raw.get("pages") if isinstance(raw.get("pages"), list) else [])[:LIMITS["pages"]]:

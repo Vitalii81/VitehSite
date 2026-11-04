@@ -78,13 +78,16 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
     for m in gallery_images:                                                            # uploads must pass the public script's file-name check; the overlay points them at the file action
         if m.get("file", "").startswith(FILE_ACTION.lstrip("/")):
             m["file"] = "assets/u/%s.jpg" % m["file"].split("id=")[1]
-    factory_gallery = dict((p["slug"], {"title": p.get("title"), "summary": p.get("summary"), "slots": ["%s/%s" % (p["slug"], s) for s in p.get("slots", [])]}) for p in ctx.portfolio_projects)
+    factory_gallery = dict((p["slug"], {"title": p.get("title"), "summary": p.get("summary"), "years": p.get("years", ""), "tags": p.get("tags", []), "category": p.get("category"), "slots": ["%s/%s" % (p["slug"], s) for s in p.get("slots", [])]}) for p in ctx.portfolio_projects)
     boot = {
         "rev": draft["rev"], "draft": draft, "lang": lang, "api": "/cgi-bin/vadmin-api", "adminUrl": "/",
         "editable": schema.editable_texts(ctx.site), "order": list(schema.MOVABLE_IDS), "labels": section_labels,
         "factory": {"services": len(ctx.site.get("services", {}).get("items", [])), "projects": [p.get("id") for p in ctx.products]},
         "uploads": uploads, "factoryImages": factory_images, "gallery": bool(draft["widgets"].get("gallery3d", True)),
-        "factoryGallery": factory_gallery, "galleryOrder": [p["slug"] for p in ctx.portfolio_projects], "galleryVisible": [p["slug"] for p in ctx.portfolio_projects if not p.get("portfolioOnly")],
+        "factoryGallery": factory_gallery, "editablePlain": schema.editable_plain(ctx.site),
+        "factoryProducts": dict((p["id"], {"title": p.get("title"), "summary": p.get("summary"), "status": p.get("status"), "tags": p.get("tags", []), "category": p.get("category")}) for p in ctx.products),
+        "categories": [{"id": c.get("id"), "label": c.get("label")} for c in ctx.site.get("work", {}).get("categories", [])],
+        "archiveCategories": [c.get("id") for c in ctx.site.get("work", {}).get("archive", {}).get("categories", [])], "galleryOrder": [p["slug"] for p in ctx.portfolio_projects], "galleryVisible": [p["slug"] for p in ctx.portfolio_projects if not p.get("portfolioOnly")],
     }
     html = html.replace('<html lang="en" data-page="home">', '<html lang="%s" data-page="home">' % esc(lang), 1)
     head = ('  <base href="/">\n  <meta name="robots" content="noindex, nofollow">\n  %s\n  %s\n  %s\n  %s\n  %s\n  <script>%s</script>\n'
