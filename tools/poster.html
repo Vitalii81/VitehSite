@@ -2,8 +2,10 @@
 <meta charset="utf-8">
 <title>poster</title>
 <style>
-  html, body { margin: 0; width: 720px; height: 480px; overflow: hidden; background: #0e1816; }
-  model-viewer { width: 720px; height: 480px; background: radial-gradient(ellipse at 50% 40%, #1d312b, #0e1816 75%); --poster-color: transparent; }
+  :root { --stage-a: #fbfdfc; --stage-b: #cfdcd6; }                       /* the same stage tokens as assets/styles.css, light theme */
+  :root[data-theme="dark"] { --stage-a: #1d312b; --stage-b: #0e1816; }
+  html, body { margin: 0; width: 720px; height: 480px; overflow: hidden; background: var(--stage-b); }
+  model-viewer { width: 720px; height: 480px; background: radial-gradient(ellipse at 50% 40%, var(--stage-a), var(--stage-b) 75%); --poster-color: transparent; }
 </style>
 <script type="module">
   // Development page for tools/make-posters.mjs: renders one model exactly as the live gallery does.
@@ -11,6 +13,7 @@
   import { applyViewerSettings, isAccent } from "/assets/viewer-settings.js";
   ModelViewerElement.meshoptDecoderLocation = "/assets/vendor/meshopt_decoder.js";
   const q = new URLSearchParams(location.search);
+  document.documentElement.dataset.theme = q.get("theme") === "dark" ? "dark" : "light";
   const accent = q.get("theme") === "dark" ? "#4cc9ad" : "#1c8a74";          // the --accent tokens of assets/styles.css
   const v = document.createElement("model-viewer");
   applyViewerSettings(v, { full: false, calm: true });
