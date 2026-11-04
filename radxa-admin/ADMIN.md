@@ -193,3 +193,17 @@ The page and the PDF share one content source, `portfolioPage` in `data/site.jso
 Adding a brand-new section or picture still means editing `site.json` / `assets/portfolio/img/` in the repository.
 
 The tab **«Зображення проєктів 2022–2025»** lists every slot (`<project>/<slot>`) with its ratio and the expected source: pick an uploaded image (the slot becomes `final` in the build) and, if needed, type its alt text in uk/en/de (empty languages keep the factory text). An alt text alone never publishes a picture.
+
+
+## Доступ через інтернет: admin.viteh.org з входом за паролем
+
+Режим для випадку, коли адмінка відкрита зовні, а вхід лише за фразою (без Cloudflare Access). Фраза стає єдиним захистом, тож:
+- **Фраза:** не менше 20 символів, краще 5–6 випадкових слів. Змінити: `install-on-radxa.sh --set-password`. Одноразово: `vadmin-cli.py revoke-sessions`.
+- **Тунель:** Cloudflare Tunnel з Radxa: `admin.viteh.org` → `http://127.0.0.1:8082`. Порти Radxa назовні не відкривати. Порт перегляду `:8083` через тунель не віддавати.
+- **HTTPS:** дає Cloudflare. Адмінка бачить `X-Forwarded-Proto`/`CF-Visitor` і ставить cookie з прапором `Secure` (на http у локальній мережі прапора немає).
+- **Адреса відвідувача:** запити від тунелю приходять з `127.0.0.1`, тому тільки в цьому випадку береться `CF-Connecting-IP`. Лічильник невдалих спроб (5 з однієї адреси за 15 хв, 100 загалом) тоді рахує справжні адреси, а не весь тунель.
+- **Дозволені хости:** у середовищі служби `vadmin` задайте `VADMIN_ALLOWED_HOSTS=admin.viteh.org,<tailscale-адреса>`, інші `Host` відхиляються (403).
+- **Захисні заголовки:** відповіді API вже мають `X-Frame-Options: DENY` і `Referrer-Policy: no-referrer`. Для HTML-сторінок (їх віддає `uhttpd`) додайте їх Transform Rule у Cloudflare, плюс `Strict-Transport-Security`.
+- **Обмеження спроб:** додайте правило Rate Limiting у Cloudflare на `/cgi-bin/vadmin*` (наприклад, 10 запитів за 10 хв з однієї адреси). Це доповнює вбудований ліміт.
+- **Якщо заблокували чужі спроби:** `python3 /srv/fwportal/admin/vadmin-cli.py unlock` на Radxa скидає лічильники.
+- Перша перевірка після налаштування: вхід за фразою на `https://admin.viteh.org/`, потім будь-яка зміна й збереження (перевіряється збіг `Origin` і `Host` за проксі).

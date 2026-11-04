@@ -26,7 +26,7 @@ def main():
         body, too_big = b"", True
     else:
         body, too_big = sys.stdin.buffer.read(length) if length else b"", False
-    client = os.environ.get("REMOTE_ADDR", "unknown")
+    client = api.client_address(os.environ.get("REMOTE_ADDR", "unknown"), headers)
     if too_big:
         status, out_headers, payload = 413, [("Content-Type", "application/json")], b'{"ok":false,"error":"too_large"}'
     else:
