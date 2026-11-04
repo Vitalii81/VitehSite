@@ -2,6 +2,7 @@
 import ast
 import json
 import os
+import re
 import shutil
 import struct
 import sys
@@ -869,6 +870,186 @@ class ApiTests(Base):
         self.assertEqual(hd["Content-Type"], "image/png")
         for bad in ("../../etc/passwd", "0" * 16, ""):
             self.assertEqual(api.handle(self.w.paths, "GET", "file", dict(self.h, cookie="vadmin=" + cookie), b"", {"id": [bad]}, "x")[0], 404)
+
+
+class EditPageTests(Base):
+    """The "edit on the page" view: an authenticated, all-enabled copy of the home page; the overlay never reaches a package."""
+    PHRASE = "correct horse battery staple 42"
+
+    def setUp(self):
+        Base.setUp(self)
+        auth.set_passphrase(self.w.paths, self.PHRASE)
+        self.h = {"host": "admin.viteh.org", "origin": "https://admin.viteh.org"}
+        st, hd, _ = api.handle(self.w.paths, "POST", "login", self.h, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "10.0.0.5")
+        self.cookie = dict(hd)["Set-Cookie"].split(";")[0].split("=", 1)[1]
+
+    def page(self, lang="uk", cookie=True):
+        h = dict(self.h, cookie="vadmin=" + self.cookie) if cookie else dict(self.h)
+        return api.handle(self.w.paths, "GET", "edit-page", h, b"", {"lang": [lang]}, "10.0.0.5")
+
+    def embedded(self, html, script_id):
+        m = re.search(r'<script type="application/json" id="%s">(.*?)</script>' % script_id, html, re.S)
+        self.assertTrue(m, script_id)
+        return json.loads(m.group(1))
+
+    def save(self, draft):
+        self.w.save(draft)
+
+    def test_without_a_session_it_is_a_plain_page_with_a_login_link_and_no_data(self):
+        st, hd, body = self.page(cookie=False)
+        html = body.decode()
+        self.assertEqual(st, 401)
+        self.assertIn("text/html", dict(hd)["Content-Type"])
+        self.assertIn('href="/"', html)
+        for needle in ("ve-site", "ve-boot", "edit-overlay", "Viteh", "hero"):
+            self.assertNotIn(needle, html)
+
+    def test_everything_is_switched_on_but_the_real_draft_is_embedded_untouched(self):
+        d = self.w.draft()
+        d["sections"].update({"faq": False, "stack": False})
+        d["disabled"]["services"] = ["s0"]
+        d["disabled"]["projects"] = ["iot-module"]
+        d["widgets"]["gallery3d"] = False
+        self.save(d)
+        st, hd, body = self.page()
+        html = body.decode()
+        self.assertEqual(st, 200)
+        self.assertEqual(dict(hd)["Cache-Control"], "no-store")
+        self.assertIn('<base href="/">', html)
+        for sid in ("faq", "stack", "services", "contact"):
+            self.assertIn('id="%s"' % sid, html)
+        factory = read_json_file(os.path.join(REPO, "data/site.json"))
+        self.assertEqual(self.embedded(html, "ve-site")["services"]["items"], factory["services"]["items"], "no card is dropped")
+        self.assertEqual([p["id"] for p in self.embedded(html, "ve-products")], [p["id"] for p in read_json_file(os.path.join(REPO, "data/products.json"))])
+        boot = self.embedded(html, "ve-boot")
+        self.assertEqual(boot["draft"]["sections"]["faq"], False)
+        self.assertEqual(boot["draft"]["disabled"]["services"], ["s0"])
+        self.assertFalse(boot["gallery"])
+        self.assertIn('src="edit-overlay.js?v=', html)
+        self.assertIn("assets/gallery3d.js", html, "the 3D module stays on the page even when the widget is off in the draft")
+
+    def test_draft_text_with_script_tags_cannot_break_the_page(self):
+        evil = "</script><script>window.pwned=1</script><!-- \u2028"
+        d = self.w.draft()
+        d["texts"]["hero.lead"] = {"uk": evil, "en": evil, "de": evil}
+        d["extra"]["services"] = [{"id": "x-1", "icon": "code", "title": {"uk": evil}, "text": {"uk": "t"}, "points": [{"uk": evil}]}]
+        self.save(d)
+        html = self.page()[2].decode()
+        self.assertNotIn("<script>window.pwned", html)
+        self.assertEqual(html.lower().count("</script>"), html.lower().count("<script"), "every script element is closed by its own tag")
+        kept = schema.text(evil, 2000, True)               # the sanitiser has already removed the line separator; the rest must survive byte for byte
+        self.assertEqual(self.embedded(html, "ve-site")["hero"]["lead"]["uk"], kept)
+        self.assertEqual(self.embedded(html, "ve-boot")["draft"]["texts"]["hero.lead"]["en"], kept)
+        self.assertIn("</script><script>window.pwned=1</script>", kept)
+
+    def test_uploads_are_served_through_the_file_action_and_the_order_is_applied(self):
+        item = uploads.store(self.w.paths, png(), "pic.png")
+        d = self.w.draft()
+        d["images"]["hero"] = item["ref"]
+        d["images"]["projects"]["iot-module"] = item["ref"]
+        d["order"] = ["faq", "services"]
+        self.save(d)
+        html = self.page()[2].decode()
+        file_url = "cgi-bin/vadmin-api?action=file&amp;id=" + item["id"]
+        self.assertIn(file_url, html, "the hero image")
+        prods = {p["id"]: p for p in self.embedded(html, "ve-products")}
+        self.assertEqual(prods["iot-module"]["image"], "cgi-bin/vadmin-api?action=file&id=" + item["id"])
+        self.assertLess(html.index('id="faq"'), html.index('id="services"'))
+        self.assertEqual(self.embedded(html, "ve-boot")["draft"]["order"], schema.clean_order(["faq", "services"]))
+
+    def test_upload_name_comes_from_the_query_because_uhttpd_drops_custom_headers(self):
+        h = dict(self.h, cookie="vadmin=" + self.cookie)
+        st, _, out = api.handle(self.w.paths, "POST", "upload", h, png(), {"name": ["my photo.png"]}, "10.0.0.5")
+        self.assertEqual(st, 200)
+        self.assertEqual(json.loads(out)["item"]["name"], "my photo.png")
+
+    def test_a_package_never_contains_the_overlay_or_its_data(self):
+        d = self.w.draft()
+        d["order"] = ["faq", "services"]
+        d["texts"]["hero.lead"] = {"uk": "x", "en": "x", "de": "x"}
+        self.save(d)
+        self.page()
+        w = World(copy_src=True)
+        self.addCleanup(w.close)
+        w.save(d)
+        r = build.build(w.paths)
+        self.assertTrue(r["ok"], r)
+        site = w.site(r["id"])
+        for root, _, names in os.walk(site):
+            for name in names:
+                self.assertNotIn("edit-", name)
+                if name.rsplit(".", 1)[-1] in ("html", "js", "css", "json", "xml"):
+                    text = read_file(os.path.join(root, name))
+                    for needle in ("edit-overlay", "edit-core", "ve-boot", "ve-site", "ve-edit", "VEdit"):
+                        self.assertNotIn(needle, text, "%s in %s" % (needle, name))
+
+
+class OrderTests(unittest.TestCase):
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def sections(self, html):
+        return re.findall(r'<section class="[^"]*" id="(\w+)"', html)
+
+    def test_sanitize_keeps_a_permutation_or_empty(self):
+        ctx = self.w.ctx()
+        f = lambda v: schema.sanitize({"order": v}, ctx)["order"]
+        self.assertEqual(f(None), [])
+        self.assertEqual(f("faq"), [])
+        self.assertEqual(f(list(schema.MOVABLE_IDS)), [], "the factory order is stored as empty")
+        self.assertEqual(f(["hero", "trust", "nope", 5, None]), [], "hero and trust cannot be moved, junk is dropped")
+        got = f(["faq", "faq", "contact", "bogus"])
+        self.assertEqual(got[:2], ["faq", "contact"])
+        self.assertEqual(sorted(got), sorted(schema.MOVABLE_IDS), "missing sections keep their factory order at the end")
+        self.assertEqual(len(got), len(set(got)))
+        d = schema.sanitize({"order": got}, ctx)
+        self.assertEqual(d, schema.sanitize(d, ctx))
+
+    def test_empty_order_changes_nothing_and_the_natural_order_is_a_noop(self):
+        html = read_file(os.path.join(self.w.src, "index.html"))
+        self.assertEqual(build.reorder_nav(build.reorder_sections(html, list(schema.MOVABLE_IDS)), list(schema.MOVABLE_IDS)), html)
+        d = self.w.draft()
+        d["order"] = []
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertEqual(self.w.read(r["id"], "index.html"), html)
+
+    def test_build_moves_sections_and_the_menu_and_keeps_everything_else(self):
+        order = ["faq", "pricing", "work", "services", "ai", "process", "stack", "contact"]
+        d = self.w.draft()
+        d["order"] = order
+        d["sections"]["ai"] = False
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        html = self.w.read(r["id"], "index.html")
+        self.assertEqual(self.sections(html), [s for s in order if s != "ai"])
+        nav = html[html.index('<nav class="nav"'):html.index("</nav>")]
+        links = re.findall(r'href="#(\w+)"', nav)
+        self.assertEqual(links, ["faq", "pricing", "work", "services", "process", "contact"], "the menu follows the order, the call-to-action stays last")
+        self.assertLess(html.index('class="hero"'), html.index('class="trust"'))
+        self.assertLess(html.index('class="trust"'), html.index('id="faq"'))
+        self.assertLess(html.index('id="contact"'), html.index("</main>"))
+        self.assertEqual(html.count("<section"), html.count("</section>"))
+
+    def test_generated_pages_get_the_same_menu_order(self):
+        d = self.w.draft()
+        d["order"] = ["faq", "contact"]
+        d["pages"] = [{"slug": "about", "title": {"uk": "Про нас", "en": "About", "de": "Über"}, "description": {"uk": "d"}, "enabled": True, "inNav": True, "blocks": [{"type": "divider", "fields": {"style": "line"}}]}]
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        page = self.w.read(r["id"], "s/about/index.html")
+        links = re.findall(r'href="/#(\w+)"', page[page.index('<nav class="nav"'):page.index("</nav>")])
+        self.assertEqual(links[0], "faq")
+
+    def test_rollback_restores_the_order_of_that_build(self):
+        d = self.w.draft()
+        d["order"] = ["faq", "contact"]
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        snap = read_json_file(os.path.join(self.w.paths.builds, r["id"], "draft.json"))
+        self.assertEqual(snap["order"][:2], ["faq", "contact"])
 
 
 class CompatTests(unittest.TestCase):

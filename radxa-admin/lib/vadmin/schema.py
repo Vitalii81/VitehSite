@@ -8,6 +8,7 @@ from . import core
 from .core import ApiError, LANGS, new_id, read_json, valid_slug
 
 SECTION_IDS = ("hero", "trust", "services", "ai", "process", "work", "stack", "pricing", "faq", "contact")
+MOVABLE_IDS = tuple(s for s in SECTION_IDS if s not in ("hero", "trust"))     # the hero and the capability strip keep their place
 EFFECTS = ("floating", "reveal")
 WIDGETS = ("gallery3d", "portfolioLink")
 FORM_TYPES = ("text", "email", "tel", "textarea", "select", "checkbox")
@@ -253,8 +254,21 @@ def editable_texts(site):
     return out
 
 
+def clean_order(value):
+    """The home page order of the movable sections: [] (the factory order) or a full permutation of MOVABLE_IDS.
+    Unknown and repeated ids are dropped, missing ones keep their factory place at the end; a result equal to the factory order becomes []."""
+    seen = []
+    for sid in value if isinstance(value, list) else []:
+        if isinstance(sid, str) and sid in MOVABLE_IDS and sid not in seen:
+            seen.append(sid)
+    if not seen:
+        return []
+    full = seen + [sid for sid in MOVABLE_IDS if sid not in seen]
+    return [] if tuple(full) == MOVABLE_IDS else full
+
+
 def empty_draft():
-    return {"rev": 0, "sections": {}, "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
+    return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}, "portfolioAlt": {}},
             "pages": [], "forms": {}}
 
@@ -266,6 +280,7 @@ def sanitize(raw, ctx):
     rev = raw.get("rev")
     d["rev"] = rev if isinstance(rev, int) and rev >= 0 else 0
     d["sections"] = flag_map(raw.get("sections"), SECTION_IDS)
+    d["order"] = clean_order(raw.get("order"))
     d["widgets"] = flag_map(raw.get("widgets"), WIDGETS)
     d["effects"] = flag_map(raw.get("effects"), EFFECTS)
 

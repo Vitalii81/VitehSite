@@ -21,7 +21,7 @@ ROOT_PREFIX=${INSTALL_ROOT:-}                       # tests install into a scrat
 APP=${ROOT_PREFIX}/srv/fwportal/admin               # code
 SECRET=${ROOT_PREFIX}/srv/fwportal/admin-secret     # password hash, session key (0700)
 STAGING=${ROOT_PREFIX}/srv/fwportal/staging/viteh-site
-DOCROOT=${APP}/docroot                              # what the admin uhttpd serves: web files, site-assets/, cgi-bin/vadmin-api
+DOCROOT=${APP}/docroot                              # what the admin uhttpd serves: web files, site-assets/ and assets/ (the on-page editor loads /assets/...), cgi-bin/vadmin-api
 PREVIEW=${STAGING}/preview                          # what the preview uhttpd serves (swapped by every build)
 INITD=${ROOT_PREFIX}/etc/init.d/vadmin
 UHTTPD=${UHTTPD_BIN:-/usr/sbin/uhttpd}
@@ -152,6 +152,7 @@ build_docroot() {
   v=$(date +%s)                                      # new URL per install so browsers and Cloudflare never serve a stale admin.js/admin.css
   sed -i "s/admin\.js\"/admin.js?v=$v\"/; s/admin\.css\"/admin.css?v=$v\"/" "$DOCROOT.new/index.html"
   cp -R "$STAGING/src/assets" "$DOCROOT.new/site-assets" || die "cannot copy the site assets for the editor"
+  cp -R "$STAGING/src/assets" "$DOCROOT.new/assets" || die "cannot copy the site assets for the on-page editor"      # edit-page loads /assets/styles.css, app.js, ...
   {
     printf '#!/bin/sh\n'
     printf "VADMIN_ROOT='%s'\n" "${STAGING#"$ROOT_PREFIX"}"
