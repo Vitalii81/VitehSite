@@ -14,7 +14,7 @@ MIN_PASSPHRASE = 20
 SESSION_SECONDS = 8 * 3600
 MAX_FAILS = 5
 LOCK_SECONDS = 15 * 60
-GLOBAL_MAX_FAILS = 30
+GLOBAL_MAX_FAILS = 100                               # across all addresses; an owner locked out by someone else's attempts can run `vadmin-cli.py unlock`
 
 
 def _hash(passphrase, salt, iterations):
@@ -79,6 +79,11 @@ def check_session(paths, cookie, now=None):
         return False
     good = hmac.new(base64.b64decode(rec["session_key"]), ("%s.%s" % (expires, nonce)).encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(sig, good) and expires.isdigit() and int(expires) > now
+
+
+def unlock(paths):
+    """Clears the failed-attempt counters (the owner's way out of a lock caused by other people's attempts)."""
+    write_json(paths.attempts, {}, mode=0o600)
 
 
 def revoke_all(paths):

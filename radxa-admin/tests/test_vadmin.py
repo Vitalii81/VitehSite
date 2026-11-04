@@ -726,6 +726,45 @@ class AuthTests(Base):
         self.assertNotIn(self.PHRASE, raw)
         self.assertIn("iterations", raw)
 
+    def test_internet_access_behind_the_tunnel(self):
+        # the real client address is read from CF-Connecting-IP only when the request comes from loopback (the local tunnel)
+        self.assertEqual(api.client_address("127.0.0.1", {"cf-connecting-ip": "203.0.113.7"}), "203.0.113.7")
+        self.assertEqual(api.client_address("127.0.0.1", {"cf-connecting-ip": "not an ip"}), "127.0.0.1")
+        self.assertEqual(api.client_address("100.64.1.2", {"cf-connecting-ip": "203.0.113.7"}), "100.64.1.2", "a direct caller cannot spoof it")
+        self.assertTrue(api.is_https({"x-forwarded-proto": "https"}) and api.is_https({"cf-visitor": '{"scheme":"https"}'}))
+        self.assertFalse(api.is_https({}))
+        auth.set_passphrase(self.w.paths, self.PHRASE)
+        hdr = {"x-vadmin": "1", "host": "admin.viteh.org", "origin": "https://admin.viteh.org", "x-forwarded-proto": "https"}
+        status, out, _ = api.handle(self.w.paths, "POST", "login", hdr, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "203.0.113.7")
+        cookie = dict(out)["Set-Cookie"]
+        self.assertEqual(status, 200)
+        self.assertIn("Secure", cookie); self.assertIn("HttpOnly", cookie); self.assertIn("SameSite=Strict", cookie)
+        self.assertEqual(dict(out)["X-Frame-Options"], "DENY")
+        # plain http (the private LAN) keeps working without the Secure flag
+        status, out, _ = api.handle(self.w.paths, "POST", "login", {"x-vadmin": "1", "host": "radxa:8082"}, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "192.168.1.5")
+        self.assertNotIn("Secure", dict(out)["Set-Cookie"])
+        # one visitor's failures do not lock out the owner who comes from another address
+        for _ in range(auth.MAX_FAILS):
+            api.handle(self.w.paths, "POST", "login", hdr, json.dumps({"passphrase": "wrong wrong wrong wrong"}).encode(), {}, "198.51.100.9")
+        status, _, _ = api.handle(self.w.paths, "POST", "login", hdr, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "198.51.100.9")
+        self.assertEqual(status, 429)
+        status, _, _ = api.handle(self.w.paths, "POST", "login", hdr, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "203.0.113.7")
+        self.assertEqual(status, 200)
+        auth.unlock(self.w.paths)
+        status, _, _ = api.handle(self.w.paths, "POST", "login", hdr, json.dumps({"passphrase": self.PHRASE}).encode(), {}, "198.51.100.9")
+        self.assertEqual(status, 200, "unlock clears the counters")
+
+    def test_allowed_hosts(self):
+        auth.set_passphrase(self.w.paths, self.PHRASE)
+        body = json.dumps({"passphrase": self.PHRASE}).encode()
+        os.environ["VADMIN_ALLOWED_HOSTS"] = "admin.viteh.org,radxa"
+        try:
+            self.assertEqual(api.handle(self.w.paths, "POST", "login", {"x-vadmin": "1", "host": "evil.example"}, body, {}, "1.2.3.4")[0], 403)
+            self.assertEqual(api.handle(self.w.paths, "POST", "login", {"x-vadmin": "1", "host": "admin.viteh.org"}, body, {}, "1.2.3.4")[0], 200)
+            self.assertEqual(api.handle(self.w.paths, "POST", "login", {"x-vadmin": "1", "host": "radxa:8082"}, body, {}, "1.2.3.4")[0], 200)
+        finally:
+            del os.environ["VADMIN_ALLOWED_HOSTS"]
+
     def test_login_session_and_tamper(self):
         auth.set_passphrase(self.w.paths, self.PHRASE)
         cookie = auth.login(self.w.paths, self.PHRASE, "1.2.3.4")

@@ -19,13 +19,42 @@ MAX_UPLOAD_BODY = uploads.MODEL_MAX + 1024
 
 def _json(status, value, headers=None):
     body = json.dumps(value, ensure_ascii=False).encode("utf-8")
-    h = [("Content-Type", "application/json; charset=utf-8"), ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")]
+    h = [("Content-Type", "application/json; charset=utf-8"), ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff"),
+         ("X-Frame-Options", "DENY"), ("Referrer-Policy", "no-referrer")]
     return status, h + (headers or []), body
 
 
-def _session_cookie(value, clear=False):
-    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS)
+def _session_cookie(value, clear=False, secure=False):
+    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS, "; Secure" if secure else "")
     return [("Set-Cookie", c)]
+
+
+def is_https(headers):
+    """True when the browser reached us over https through a proxy (Cloudflare Tunnel sets X-Forwarded-Proto and CF-Visitor)."""
+    return headers.get("x-forwarded-proto", "").lower() == "https" or '"https"' in headers.get("cf-visitor", "").lower()
+
+
+def client_address(remote, headers):
+    """The address used for login rate limiting. Behind the local tunnel every request comes from loopback, so (and only then) the
+    Cloudflare header CF-Connecting-IP is trusted; a request that reaches us directly cannot spoof it."""
+    import ipaddress
+    try:
+        peer = ipaddress.ip_address(remote)
+    except ValueError:
+        return remote or "unknown"
+    if peer.is_loopback:
+        try:
+            return str(ipaddress.ip_address((headers.get("cf-connecting-ip") or "").strip()))
+        except ValueError:
+            pass
+    return remote
+
+
+def _allowed_host(headers):
+    """Optional: VADMIN_ALLOWED_HOSTS="admin.viteh.org,192.168.1.5" limits the Host header (default: no limit, as on the private network)."""
+    allowed = [h.strip().lower() for h in os.environ.get("VADMIN_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    host = headers.get("host", "").split(":")[0].lower()
+    return not allowed or host in allowed
 
 
 def _same_origin(headers):
@@ -106,6 +135,8 @@ def handle(paths, method, action, headers, body=b"", query=None, client="local")
 def _handle(paths, method, action, headers, body, query, client):
     if method not in ("GET", "POST"):
         raise ApiError("method", "Метод не підтримується", 405)
+    if not _allowed_host(headers):
+        raise ApiError("host", "Відхилено: невідомий хост", 403)
     if method == "POST":
         if headers.get("x-vadmin") != "1":
             raise ApiError("csrf", "Відхилено: немає службового заголовка", 403)
@@ -117,7 +148,7 @@ def _handle(paths, method, action, headers, body, query, client):
     if action == "login" and method == "POST":
         data = _body_json(body)
         cookie = auth.login(paths, str(data.get("passphrase", "")), client)
-        return _json(200, {"ok": True}, _session_cookie(cookie))
+        return _json(200, {"ok": True}, _session_cookie(cookie, secure=is_https(headers)))
 
     jar = SimpleCookie()
     try:
@@ -128,7 +159,7 @@ def _handle(paths, method, action, headers, body, query, client):
         raise ApiError("auth", "Потрібен вхід", 401)
 
     if action == "logout" and method == "POST":
-        return _json(200, {"ok": True}, _session_cookie("", clear=True))
+        return _json(200, {"ok": True}, _session_cookie("", clear=True, secure=is_https(headers)))
 
     ctx = schema.Context(paths)
     host = headers.get("host", "")

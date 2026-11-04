@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Command line for the owner and for deploy-from-radxa.sh (over ssh).
-  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | set-password | build"""
+  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | set-password | build | revoke-sessions | unlock"""
 import getpass
 import os
 import sys
@@ -49,6 +49,10 @@ def main(argv):
             os.makedirs(paths.secret, mode=0o700, exist_ok=True)
             auth.set_passphrase(paths, phrase)
             print("Збережено хеш у", paths.auth)
+            return 0
+        if cmd == "unlock":
+            auth.unlock(paths)
+            print("Лічильники невдалих спроб скинуто")
             return 0
         if cmd == "revoke-sessions":
             auth.revoke_all(paths)
