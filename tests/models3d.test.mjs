@@ -94,6 +94,23 @@ for (const name of IMPORTED) {
   });
 }
 
+test("cronos v1: the display carries a generated seven-segment texture, the original export is kept, and the build is reproducible", async () => {
+  const glb = readFileSync(join(root, "assets/models/cronos-controller-v1.glb"));
+  const { json, bin } = parse(new Uint8Array(glb));
+  const screen = json.materials.find((m) => m.name === "screen");
+  assert.ok(screen.pbrMetallicRoughness.baseColorTexture && screen.emissiveTexture, "textured and emissive screen");
+  const img = json.images[json.textures[screen.emissiveTexture.index].source];
+  assert.equal(img.mimeType, "image/png");
+  const bv = json.bufferViews[img.bufferView];
+  assert.equal(Buffer.from(bin.subarray(bv.byteOffset, bv.byteOffset + 8)).toString("hex"), "89504e470d0a1a0a");
+  const original = readFileSync(join(root, "tools/sources/cronos-controller-v1.original.glb"));
+  assert.ok(original.length < glb.length && original.subarray(0, 4).toString() === "glTF", "the untouched export is kept as the source");
+  const { execFileSync } = await import("node:child_process");
+  const before = Buffer.from(glb);
+  execFileSync(process.execPath, [join(root, "tools/make-cronos-v1-display.mjs")]);
+  assert.ok(readFileSync(join(root, "assets/models/cronos-controller-v1.glb")).equals(before), "regenerating gives the same bytes");
+});
+
 test("models are deterministic: the same code always writes byte-identical files", () => {
   for (const name of ["custom-electronics", "service-ai"]) {
     const a = buildGlb(MODEL_BUILDERS[name], "#1c8a74"), b = buildGlb(MODEL_BUILDERS[name], "#1c8a74");
