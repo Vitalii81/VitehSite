@@ -269,7 +269,7 @@
       "de": "Bild- und Schriftwerkzeug für LCDs: Programmfenster"
     },
     "ratio": "1:1",
-    "status": "placeholder",
+    "status": "final",
     "source_hint": "Windows screenshot with test data (owner)"
   },
   {
@@ -282,7 +282,7 @@
       "de": "LANControl mit Qt6: Master-Fenster"
     },
     "ratio": "16:10",
-    "status": "placeholder",
+    "status": "final",
     "source_hint": "Windows screenshot with test data (owner)"
   },
   {
@@ -308,7 +308,7 @@
       "de": "LANControl mit Rust und Slint: Master-Fenster"
     },
     "ratio": "16:10",
-    "status": "placeholder",
+    "status": "final",
     "source_hint": "screenshot or slint-viewer render, test data (owner)"
   },
   {
@@ -347,7 +347,7 @@
       "de": "ModBus-Werkzeuge für DMM: Programmfenster"
     },
     "ratio": "1:1",
-    "status": "placeholder",
+    "status": "final",
     "source_hint": "Windows screenshot with test data (owner)"
   }
 ]
