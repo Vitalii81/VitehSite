@@ -23,7 +23,8 @@
       "ESP32",
       "RS-485",
       "OTA"
-    ]
+    ],
+    "poster": "assets/posters/cronos-controller"
   },
   {
     "id": "iot-module",
@@ -74,7 +75,8 @@
       "KiCad",
       "STM32",
       "3D"
-    ]
+    ],
+    "poster": "assets/posters/custom-electronics"
   },
   {
     "id": "agent-assistant",
@@ -150,6 +152,7 @@
       "LoRa",
       "Zephyr",
       "AI"
-    ]
+    ],
+    "poster": "assets/posters/sensor-node"
   }
 ]

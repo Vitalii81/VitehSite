@@ -131,6 +131,21 @@ def validate(draft, ctx, src):
         if draft["sections"].get("work", True) and any(ctx.blocks[b["type"]].get("singleton") == "productGrid" and b["enabled"] for b in home_blocks):
             _problem(out, "grid_dup", "Головна", "Розділ «Проєкти» вже є на головній: приберіть додатковий блок карток або вимкніть розділ")
 
+    if draft["widgets"].get("gallery3d", True):                  # factory 3D models and posters are shipped as files: they must exist
+        def factory_files(kind, item, enabled):
+            if not enabled:
+                return
+            ref = item.get("model", "")
+            if ref and not (re.match(r"^assets/models/[\w.-]+\.glb$", ref) and os.path.isfile(os.path.join(src, ref))):
+                _problem(out, "model_missing", "%s «%s»" % (kind, (item.get("title") or {}).get("uk") or item.get("id", "")), "3D-модель не знайдена або шлях не дозволений: %s" % ref)
+            base = item.get("poster", "")
+            if base and not all(os.path.isfile(os.path.join(src, "%s-%s.webp" % (base, theme))) for theme in ("light", "dark")):
+                _problem(out, "poster_missing", "%s «%s»" % (kind, (item.get("title") or {}).get("uk") or item.get("id", "")), "Немає постера: %s-light.webp / -dark.webp" % base)
+        for i, item in enumerate(ctx.site.get("services", {}).get("items", [])):
+            factory_files("Послуга", item, "s%d" % i not in draft["disabled"]["services"] and "s%d" % i not in draft["images"]["serviceModels"])
+        for item in ctx.products:
+            factory_files("Проєкт", item, item.get("id") not in draft["disabled"]["projects"] and item.get("id") not in draft["images"]["models"])
+
     sections = {s: draft["sections"].get(s, True) for s in SECTION_IDS}
     for target, users in FACTORY_LINKS.items():
         if not sections[target]:

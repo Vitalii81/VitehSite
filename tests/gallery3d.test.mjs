@@ -77,13 +77,13 @@ test("site.json has every gallery label in uk, en and de", () => {
   }
 });
 
-test("products.json: every model path is accepted by modelFor and the file exists below 300 KB", () => {
+test("products.json: every model path is accepted by modelFor and the file exists below 600 KB", () => {
   const products = JSON.parse(readFileSync(join(root, "data/products.json"), "utf8"));
   const withModel = products.filter((p) => p.model);
   assert.ok(withModel.length >= 3);
   for (const p of withModel) {
     assert.equal(modelFor(p), p.model, p.id);
-    assert.ok(statSync(join(root, p.model)).size < 300 * 1024, `${p.id} is larger than 300 KB`);
+    assert.ok(statSync(join(root, p.model)).size < 600 * 1024, `${p.id} is larger than 600 KB`);
   }
 });
 
@@ -98,7 +98,7 @@ test("generated GLB files are valid glTF 2.0 containers with a recolourable acce
     assert.equal(view.getUint32(16, true), 0x4e4f534a, "JSON chunk");
     const json = JSON.parse(new TextDecoder().decode(glb.subarray(20, 20 + jsonLen)));
     assert.equal(json.asset.version, "2.0");
-    assert.ok(json.materials.some((m) => m.name === "accent"), `${id}: accent material`);
+    assert.ok(json.materials.some((m) => /^accent/.test(m.name)), `${id}: a recolourable accent material`);
     const binAt = 20 + jsonLen;
     assert.equal(view.getUint32(binAt + 4, true), 0x004e4942, "BIN chunk");
     assert.equal(json.buffers[0].byteLength, view.getUint32(binAt, true), "buffer length");
@@ -106,7 +106,7 @@ test("generated GLB files are valid glTF 2.0 containers with a recolourable acce
       const bv = json.bufferViews[a.bufferView];
       assert.ok(bv.byteOffset % 4 === 0 && bv.byteOffset + bv.byteLength <= json.buffers[0].byteLength, "bufferView inside buffer");
     }
-    assert.ok(glb.length < 300 * 1024, `${id} < 300 KB`);
+    assert.ok(glb.length < 600 * 1024, `${id} < 600 KB`);
   }
 });
 

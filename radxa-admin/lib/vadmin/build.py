@@ -15,7 +15,8 @@ from .schema import SECTION_IDS
 
 BUILD_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$")
 PUBLIC_FILES = ("index.html", "impressum.html", "datenschutz.html", "robots.txt")
-GALLERY_ASSETS = ("vendor", "models", "gallery3d.js")
+GALLERY_DIRS = ("vendor", "models", "env", "posters")           # 3D gallery: library, models, lighting, posters
+GALLERY_FILES = ("gallery3d.js", "viewer-settings.js")
 # Lists that the public JS renders from site.json; a disabled section gets empty lists (the heading texts stay).
 SECTION_LISTS = {"hero": ["hero.badges"], "trust": ["trust.items"], "services": ["services.items"], "ai": ["ai.features"], "process": ["process.steps"],
                  "stack": ["stack.groups"], "pricing": ["pricing.models"], "faq": ["faq.items"], "contact": ["contact.details"]}
@@ -117,8 +118,9 @@ def transform_home(html, draft, ctx, assets, forms):
 
 # ---------- data files ----------
 
-def merged_site(draft, ctx):
+def merged_site(draft, ctx, assets):
     site = copy.deepcopy(ctx.site)
+    gallery = draft["widgets"].get("gallery3d", True)
     for path, value in draft["texts"].items():
         parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
         last = path.rsplit(".", 1)[-1]
@@ -127,10 +129,26 @@ def merged_site(draft, ctx):
         elif isinstance(parent, dict) and last in parent:
             parent[last] = value
     items = site["services"]["items"]
-    kept = [it for i, it in enumerate(items) if "s%d" % i not in draft["disabled"]["services"]]
+    kept = []
+    for i, it in enumerate(items):
+        sid = "s%d" % i
+        if sid in draft["disabled"]["services"]:
+            continue
+        override = draft["images"]["serviceModels"].get(sid)
+        if override:                                         # the factory poster belongs to the factory model
+            it["model"] = assets.url(override).lstrip("/")
+            it.pop("poster", None)
+        kept.append(it)
     for s in draft["extra"]["services"]:
         if s["id"] not in draft["disabled"]["services"]:
-            kept.append({"icon": s["icon"], "title": s["title"], "text": s["text"], "points": [p for p in s["points"] if render.has(p)]})
+            item = {"icon": s["icon"], "title": s["title"], "text": s["text"], "points": [p for p in s["points"] if render.has(p)]}
+            if s.get("model"):
+                item["model"] = assets.url(s["model"]).lstrip("/")
+            kept.append(item)
+    if not gallery:
+        for it in kept:
+            it.pop("model", None)
+            it.pop("poster", None)
     site["services"]["items"] = kept
     for sid, paths in SECTION_LISTS.items():
         if not draft["sections"].get(sid, True):
@@ -155,8 +173,11 @@ def merged_products(draft, ctx, assets):
             model = assets.url(model).lstrip("/")
         if gallery and model:
             p["model"] = model
+            if draft["images"]["models"].get(pid):
+                p.pop("poster", None)                       # the factory poster belongs to the factory model
         else:
             p.pop("model", None)
+            p.pop("poster", None)
         out.append(p)
     return out
 
@@ -316,14 +337,14 @@ def build(paths, ctx=None):
         for root, _, files in os.walk(assets_src):
             for f in files:
                 rel = os.path.relpath(os.path.join(root, f), assets_src).replace(os.sep, "/")
-                if not gallery_on and (rel.split("/")[0] in ("vendor", "models") or rel == "gallery3d.js"):
+                if not gallery_on and (rel.split("/")[0] in GALLERY_DIRS or rel in GALLERY_FILES):
                     continue
                 dest = os.path.join(site_dir, "assets", rel)
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copyfile(os.path.join(root, f), dest)
 
         html = transform_home(read_text(os.path.join(paths.src, "index.html")), draft, ctx, assets, forms)
-        site = merged_site(draft, ctx)
+        site = merged_site(draft, ctx, assets)
         products = merged_products(draft, ctx, assets)
         write_json(os.path.join(site_dir, "data", "site.json"), site)
         write_json(os.path.join(site_dir, "data", "products.json"), products)
