@@ -48,15 +48,15 @@ await page("Emulation.setDeviceMetricsOverride", { width: 720, height: 480, devi
 const targets = [];
 const products = JSON.parse(readFileSync(join(root, "data/products.json"), "utf8"));
 const site = JSON.parse(readFileSync(join(root, "data/site.json"), "utf8"));
-for (const item of [...products, ...(site.services?.items || [])]) if (item.model && item.poster) targets.push({ model: item.model, poster: item.poster });
+for (const item of [...products, ...(site.services?.items || [])]) if (item.model && item.poster) targets.push({ model: item.model, poster: item.poster, orbit: /^-?\d{1,3}deg \d{1,3}deg \d{2,3}%$/.test(item.orbit || "") ? item.orbit : "" });
 mkdirSync(join(root, "assets/posters"), { recursive: true });
 
 let failed = 0;
-for (const { model, poster } of targets) {
+for (const { model, poster, orbit } of targets) {
   const name = poster.split("/").pop();
   if (only.length && !only.includes(name)) continue;
   for (const theme of ["light", "dark"]) {
-    await page("Page.navigate", { url: `${base}/tools/poster.html?src=${encodeURIComponent("/" + model)}&theme=${theme}` });
+    await page("Page.navigate", { url: `${base}/tools/poster.html?src=${encodeURIComponent("/" + model)}&theme=${theme}${orbit ? "&orbit=" + encodeURIComponent(orbit) : ""}` });
     let state = null;
     for (let i = 0; i < 120 && !state; i++) {                      // up to ~60 s: software WebGL is slow
       await new Promise((r) => setTimeout(r, 500));

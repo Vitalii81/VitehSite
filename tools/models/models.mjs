@@ -131,71 +131,7 @@ export function customElectronics(scene) {
   buildBoard(scene, P, boardLayout());
 }
 
-/* ---------- 2. Cronos controller: DIN-rail enclosure with terminals, a display, knobs, vents and screws ---------- */
-function cronosTextures(scene) {
-  const s = new Raster(256, 160, [10, 18, 20, 255]);
-  s.rect(0, 0, 256, 22, [18, 86, 76, 255]); s.text("CRONOS", 8, 7, 1.6, [210, 245, 238, 255]); s.text("12:45", 200, 7, 1.6, [210, 245, 238, 255]);
-  s.rect(8, 32, 150, 100, [14, 28, 30, 255]); s.frame(8, 32, 150, 100, 1, [38, 70, 68, 255]);
-  for (let i = 1; i < 5; i++) s.line(8, 32 + i * 20, 158, 32 + i * 20, 1, [24, 46, 46, 255]);
-  const pts = Array.from({ length: 30 }, (_, i) => [10 + i * 5, 84 - Math.sin(i * 0.4) * 22 - Math.sin(i * 0.9) * 8 - i * 0.6]);
-  for (let i = 0; i < pts.length - 1; i++) s.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], 2, [76, 201, 173, 255]);
-  const pts2 = Array.from({ length: 30 }, (_, i) => [10 + i * 5, 106 - Math.cos(i * 0.5) * 12]);
-  for (let i = 0; i < pts2.length - 1; i++) s.line(pts2[i][0], pts2[i][1], pts2[i + 1][0], pts2[i + 1][1], 1.5, [140, 156, 255, 255]);
-  s.rect(168, 32, 80, 46, [14, 28, 30, 255]); s.text("24.6", 176, 40, 3, [240, 166, 90, 255]); s.text("C", 232, 40, 2, [150, 170, 166, 255]); s.text("TEMP", 176, 64, 1.4, [120, 150, 146, 255]);
-  s.rect(168, 86, 80, 46, [14, 28, 30, 255]); s.text("1.02", 176, 94, 3, [76, 201, 173, 255]); s.text("BAR", 176, 118, 1.4, [120, 150, 146, 255]);
-  s.rect(0, 140, 256, 20, [14, 24, 26, 255]);
-  [[12, [55, 201, 110]], [30, [55, 201, 110]], [48, [240, 160, 48]], [66, [90, 100, 100]]].forEach(([x, c]) => s.disc(x, 150, 4, [...c, 255]));
-  s.text("RS-485 OK", 150, 146, 1.4, [150, 180, 176, 255]);
-  scene.texture("screenCronos", s, { opaque: true });
-  const label = new Raster(256, 48, [226, 232, 228, 255]);
-  label.text("VITEH CRONOS", 10, 6, 2.4, [20, 30, 28, 255]); label.text("24V DC  RS-485  IP20", 10, 30, 1.5, [60, 72, 68, 255]);
-  label.rect(214, 6, 30, 30, [20, 30, 28, 255]); for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) if ((i * 3 + j * 5 + i * j) % 3 !== 0) label.rect(217 + i * 5, 9 + j * 5, 4, 4, [226, 232, 228, 255]);
-  scene.texture("labelCronos", label, { opaque: true });
-}
-
-export function cronosController(scene) {
-  const P = makeParts(scene);
-  cronosTextures(scene);
-  const body = scene.part("enclosure");
-  roundedBox(body.geo("graphite"), { size: [7.2, 5.6, 3.3], r: 0.24, n: 3, at: [0, 0, -0.1] });
-  roundedBox(body.geo("accent"), { size: [6.9, 5.3, 0.4], r: 0.16, n: 3, at: [0, 0, 1.6] });
-  roundedBox(body.geo("rubber"), { size: [7.05, 0.05, 0.05], r: 0.02, n: 1, at: [0, 0, 1.38] });                // parting line
-  roundedBox(body.geo("rubber"), { size: [3.55, 1.95, 0.08], r: 0.1, n: 2, at: [-1.25, 1.1, 1.82] });             // display bezel
-  roundedBox(body.geo("glass"), { size: [3.5, 1.9, 0.02], r: 0.08, n: 1, at: [-1.25, 1.1, 1.865] });
-  roundedBox(body.geo("screenCronos", true), { size: [3.28, 1.7, 0.01], r: 0.0, n: 0, at: [-1.25, 1.1, 1.872], uvZ: true });
-  roundedBox(body.geo("labelCronos", true), { size: [5.0, 0.75, 0.03], r: 0.03, n: 1, at: [0, -1.6, 1.815], uvZ: true });
-  scene.inst(body);
-  [["ledGreen", 1.3], ["ledGreen", 1.85], ["ledAmber", 2.4]].forEach(([m, x]) => {
-    const led = scene.part("front-led-" + m + x);
-    cylinder(led.geo("rubber"), { r: 0.17, h: 0.05, bevel: 0.01, seg: 20, axis: "z", at: [x, 1.9, 1.83] });
-    sphere(led.geo(m), { r: 0.11, seg: 18, rings: 8, half: true, axis: "z", scaleY: 0.5, at: [x, 1.9, 1.85] });
-    scene.inst(led);
-  });
-  const knob = scene.part("knob");
-  cylinder(knob.geo("plasticLight"), { r: 0.34, h: 0.26, bevel: 0.06, seg: 32, axis: "z", at: [0, 0, 0.13] });
-  cylinder(knob.geo("steel"), { r: 0.26, h: 0.02, bevel: 0.0, seg: 24, axis: "z", at: [0, 0, 0.27] });
-  roundedBox(knob.geo("rubber"), { size: [0.04, 0.2, 0.02], r: 0.01, n: 1, at: [0, 0.14, 0.285] });
-  for (let i = 0; i < 4; i++) scene.inst(knob, { at: [-2.55 + i * 1.0, -0.45, 1.8], rot: [0, 0, i * 0.5 - 0.7] });
-  const post = scene.part("ring-seat");
-  torus(post.geo("steel"), { R: 0.36, t: 0.025, seg: 32, tube: 8, axis: "z", at: [0, 0, 0] });
-  for (let i = 0; i < 4; i++) scene.inst(post, { at: [-2.55 + i * 1.0, -0.45, 1.8] });
-  const term = P.terminal(2);
-  for (const x of [-2.3, 0, 2.3]) {
-    scene.inst(term, { at: [x, 2.8, -0.2] });
-    scene.inst(term, { at: [x, -2.8, -0.2], rot: [Math.PI, 0, 0] });
-  }
-  for (const x of [-2.5, 2.5]) for (const y of [-2.3, 2.3]) scene.inst(P.screw, { at: [x, y, 1.8], rot: [Math.PI / 2, 0, 0], s: 1 });
-  const vent = scene.part("vent");
-  roundedBox(vent.geo("rubber"), { size: [0.03, 0.9, 0.14], r: 0.012, n: 1, at: [0, 0, 0] });
-  for (let i = 0; i < 9; i++) for (const sx of [-1, 1]) scene.inst(vent, { at: [sx * 3.605, 0.0, -1.2 + i * 0.34] });
-  const din = scene.part("din-clip");
-  roundedBox(din.geo("steel"), { size: [3.6, 0.5, 0.22], r: 0.04, n: 2, at: [0, -2.15, -1.88] });
-  roundedBox(din.geo("steel"), { size: [3.6, 0.42, 0.22], r: 0.04, n: 2, at: [0, 2.15, -1.88] });
-  roundedBox(din.geo("graphite"), { size: [1.2, 0.3, 0.26], r: 0.04, n: 1, at: [0, -2.5, -1.9] });
-  scene.inst(din);
-}
-
-/* ---------- 3. sensor node: IP-rated outdoor housing with a cable gland, antenna and LED ring ---------- */
+/* ---------- 2. sensor node: IP-rated outdoor housing with a cable gland, antenna and LED ring ---------- */
 export function sensorNode(scene) {
   const P = makeParts(scene);
   const bracket = scene.part("bracket");
@@ -348,7 +284,6 @@ export function serviceAi(scene) {
 }
 
 export const MODEL_BUILDERS = {
-  "cronos-controller": cronosController,
   "custom-electronics": customElectronics,
   "sensor-node": sensorNode,
   "service-software": serviceSoftware,

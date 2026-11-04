@@ -22,10 +22,16 @@ function parse(glb) {
 
 const pngSize = (bytes) => { const b = Buffer.from(bytes); assert.equal(b.subarray(0, 8).toString("hex"), "89504e470d0a1a0a"); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
 
-test("every model target has a builder, and the builders cover products and services", () => {
+// Models exported from the owner's Blender projects: committed as-is, not produced by tools/make-models.mjs.
+const IMPORTED = ["cronos-controller-v1", "cronos-controller-v2"];
+
+test("every model target has a builder or is a listed imported model, and the builders cover products and services", () => {
   const targets = modelTargets();
-  assert.ok(targets.length >= 6);
-  for (const { id, model } of targets) assert.ok(MODEL_BUILDERS[id] || MODEL_BUILDERS[model.replace(/^assets\/models\/|\.glb$/g, "")], `${id} has no builder`);
+  assert.ok(targets.length >= 7);
+  for (const { id, model } of targets) {
+    const name = model.replace(/^assets\/models\/|\.glb$/g, "");
+    assert.ok(MODEL_BUILDERS[id] || MODEL_BUILDERS[name] || IMPORTED.includes(name), `${id} has no builder`);
+  }
   for (const name of ["service-software", "service-electronics", "service-ai"]) assert.ok(MODEL_BUILDERS[name], name);
 });
 
@@ -65,6 +71,26 @@ for (const [name, draw] of Object.entries(MODEL_BUILDERS)) {
     for (const node of json.nodes.slice(1)) assert.ok(node.mesh === undefined || node.mesh < json.meshes.length);
     assert.ok(json.nodes.length > json.meshes.length, "instancing: more nodes than meshes");
     for (const t of json.textures || []) { const img = json.images[t.source]; const bv = json.bufferViews[img.bufferView]; assert.equal(img.mimeType, "image/png"); const [w, h] = pngSize(bin.subarray(bv.byteOffset, bv.byteOffset + bv.byteLength)); assert.ok(w <= 1024 && h <= 1024 && w >= 64); }
+  });
+}
+
+for (const name of IMPORTED) {
+  test(`imported model ${name}: valid GLB, unit-scaled nodes, normals, UVs, small, no external references`, () => {
+    const glb = readFileSync(join(root, `assets/models/${name}.glb`));
+    assert.ok(glb.length < 300 * 1024, "weight budget");
+    const { json, bin } = parse(new Uint8Array(glb));
+    assert.equal(json.asset.version, "2.0");
+    assert.equal(json.buffers[0].byteLength, bin.length);
+    assert.ok(json.meshes.length >= 5 && json.materials.length >= 4);
+    for (const m of json.meshes) for (const prim of m.primitives) {
+      assert.ok(prim.attributes.NORMAL !== undefined && prim.attributes.TEXCOORD_0 !== undefined, "normals and UVs");
+      assert.ok(prim.material >= 0 && prim.material < json.materials.length);
+      const pos = json.accessors[prim.attributes.POSITION];
+      assert.ok(pos.min.every(Number.isFinite) && pos.max.every(Number.isFinite), "finite bounds");
+    }
+    for (const n of json.nodes) if (n.scale) assert.ok(n.scale.every((v) => Math.abs(Math.abs(v) - 0.001) < 1e-6), "millimetres to metres");
+    for (const x of [...(json.buffers || []), ...(json.images || [])]) assert.ok(!x.uri || x.uri.startsWith("data:"), "no external file references");
+    for (const x of json.extensionsUsed || []) assert.ok(["EXT_texture_webp"].includes(x), `extension ${x} not in the allow-list`);
   });
 }
 

@@ -17,9 +17,13 @@ export const BASE_ATTRS = {
   "interpolation-decay": "90",
 };
 
-export function applyViewerSettings(el, { full = false, calm = false } = {}) {
+/** Optional per-model start orbit ("30deg 65deg 130%"): only this strict shape is accepted, anything else falls back to the default. */
+export const orbitFor = (item) => (/^-?\d{1,3}deg \d{1,3}deg \d{2,3}%$/.test(item?.orbit || "") ? item.orbit : null);
+
+export function applyViewerSettings(el, { full = false, calm = false, orbit = null } = {}) {
   el.setAttribute("environment-image", STUDIO_ENV);
   for (const [k, v] of Object.entries(BASE_ATTRS)) el.setAttribute(k, v);
+  if (orbit) el.setAttribute("camera-orbit", orbit);
   el.toggleAttribute("camera-controls", full);
   el.toggleAttribute("disable-zoom", !full);
   el.toggleAttribute("auto-rotate", !calm);

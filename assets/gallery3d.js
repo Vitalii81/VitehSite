@@ -5,7 +5,7 @@
 
 const MIN_RATIO = 0.55;     // a card must be this visible to host the live scene
 const KEEP_MARGIN = 0.2;    // hysteresis: keep the current card unless another is clearly more visible
-import { applyViewerSettings, isAccent, posterUrl } from "./viewer-settings.js";
+import { applyViewerSettings, isAccent, orbitFor, posterUrl } from "./viewer-settings.js";
 
 const MODEL_RE = /^assets\/models\/[\w.-]+\.glb$/;
 
@@ -90,7 +90,7 @@ function boot() {
   const show = (host, product, full) => {
     viewer ??= makeViewer();
     viewer.classList.remove("ready");
-    applyViewerSettings(viewer, { full, calm: calm() });
+    applyViewerSettings(viewer, { full, calm: calm(), orbit: orbitFor(product) });
     viewer.setAttribute("alt", text(product.title));
     const plan = planShow({ src: viewer.getAttribute("src"), loaded: viewer.loaded }, product.model);
     if (plan.setSrc) viewer.setAttribute("src", product.model);
