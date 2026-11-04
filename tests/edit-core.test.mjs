@@ -170,3 +170,54 @@ test("save indicator over a typing session: type, leave the field, save", () => 
   s.state = "saved"; steps.push(C.saveIndicator(s));                       // save() succeeded
   assert.deepEqual(steps, ["dirty", "dirty", "saving", "saved"]);
 });
+
+// ---- the project gallery ("Замовні розробки", data/portfolio.json, kept in draft.portfolio) ----
+const gallerySource = JSON.parse(readFileSync(join(root, "data/portfolio.json"), "utf8")).projects;
+const factoryGallery = Object.fromEntries(gallerySource.map((p) => [p.slug, { title: p.title, summary: p.summary }]));
+const galleryEnv = (draft) => ({ draft, editable, factoryServices: site.services.items.length, factoryGallery });
+const ALL = gallerySource.map((p) => p.slug);
+const VISIBLE = gallerySource.filter((p) => !p.portfolioOnly).map((p) => p.slug);
+
+test("gallery texts: binding, read, write into draft.portfolio.items, caps", () => {
+  const d = newDraft();
+  const b = C.bindingFor({ card: "gallery", slug: "toyota-hv-monitor", field: "title" }, galleryEnv(d));
+  assert.equal(b.kind, "gallery");
+  assert.equal(C.readText(b, galleryEnv(d), "en"), gallerySource.find((p) => p.slug === "toyota-hv-monitor").title.en);
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "My title\n"), "My title");
+  assert.equal(d.portfolio.items["toyota-hv-monitor"].title.en, "My title");
+  assert.equal(d.portfolio.items["toyota-hv-monitor"].title.uk, gallerySource.find((p) => p.slug === "toyota-hv-monitor").title.uk, "other languages keep the factory text");
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "My title"), null, "no change, nothing written");
+  assert.equal(C.writeText(b, galleryEnv(d), "en", "x".repeat(500)).length, 80);
+  const s = C.bindingFor({ card: "gallery", slug: "toyota-hv-monitor", field: "summary" }, galleryEnv(d));
+  assert.equal(C.writeText(s, galleryEnv(d), "de", "y".repeat(900)).length, 600);
+  for (const bad of [{ card: "gallery", slug: "nope", field: "title" }, { card: "gallery", slug: "../x", field: "title" }, { card: "gallery", slug: "toyota-hv-monitor", field: "years" }, { card: "gallery", slug: "toyota-hv-monitor", field: "__proto__" }]) {
+    assert.equal(C.bindingFor(bad, galleryEnv(d)), null, JSON.stringify(bad));
+  }
+});
+
+test("gallery switch, order among visible projects and slot images", () => {
+  const d = newDraft();
+  assert.equal(C.isOff(d, { type: "gallery", id: "can-helper" }), false);
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, false);
+  assert.deepEqual(d.portfolio.disabled, ["can-helper"]);
+  assert.equal(C.isOff(d, { type: "gallery", id: "can-helper" }), true);
+  C.setEnabled(d, { type: "gallery", id: "can-helper" }, true);
+  assert.deepEqual(d.portfolio.disabled, []);
+
+  assert.equal(C.moveGallery(d, VISIBLE[0], -1, ALL, VISIBLE), false, "the first visible project cannot go up");
+  assert.equal(C.moveGallery(d, VISIBLE[0], 1, ALL, VISIBLE), true);
+  assert.ok(d.portfolio.order.indexOf(VISIBLE[1]) < d.portfolio.order.indexOf(VISIBLE[0]));
+  assert.equal(C.moveGallery(d, VISIBLE[0], -1, ALL, VISIBLE), true);
+  assert.deepEqual(d.portfolio.order, [], "back to the factory order is stored as nothing");
+  assert.ok(ALL.includes("prometheus-controller") && !VISIBLE.includes("prometheus-controller"));
+  assert.equal(C.moveGallery(d, "prometheus-controller", 1, ALL, VISIBLE), false, "a portfolio-only project has no place on the home page");
+
+  C.setMedia(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "u:0123456789abcdef");
+  assert.equal(C.mediaRef(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }), "u:0123456789abcdef");
+  C.setMedia(d, { type: "gallerySlot", id: "toyota-hv-monitor/device-photo" }, "");
+  assert.deepEqual(d.images.portfolio, {});
+  const boot = { factoryImages: ["assets/a.svg"], uploads: [{ kind: "image", ref: "u:0123456789abcdef", name: "a" }] };
+  assert.deepEqual(C.pickerItems("image", boot, true).map((i) => i.ref), ["u:0123456789abcdef"], "a gallery slot offers uploads only");
+  assert.equal(C.pickerItems("image", boot).length, 2);
+});

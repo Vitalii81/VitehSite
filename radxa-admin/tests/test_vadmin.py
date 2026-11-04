@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 
-from vadmin import api, auth, build, check, core, render, richtext, schema, uploads   # noqa: E402
+from vadmin import api, auth, build, check, core, pdf, portfolio_pdf, render, richtext, schema, uploads   # noqa: E402
 from vadmin.core import ApiError   # noqa: E402
 
 
@@ -984,6 +984,250 @@ class EditPageTests(Base):
                         self.assertNotIn(needle, text, "%s in %s" % (needle, name))
 
 
+TOYOTA = "Toyota Prius hybrid-battery monitor"       # the English title of the factory project "toyota-hv-monitor"
+PDF_EN = "assets/portfolio/Vitalii_Krutikov_Engineering_Portfolio_2026.pdf"
+
+
+def pdf_text(data):
+    """All text of a PDF, or None when pypdf (a development-machine package, not needed on the Radxa) is not installed."""
+    try:
+        import io
+        import pypdf
+    except ImportError:
+        return None
+    return "\n".join(page.extract_text() for page in pypdf.PdfReader(io.BytesIO(data)).pages)
+
+
+class PortfolioDraftTests(Base):
+    """The project gallery in the draft: texts, switches, order, picture slots; nothing a browser sends can name a new item or a file."""
+
+    def test_sanitize_keeps_only_known_projects_and_real_changes(self):
+        ctx = self.w.ctx()
+        slugs = [p["slug"] for p in ctx.portfolio_projects]
+        factory = ctx.portfolio_projects[1]
+        d = self.w.draft()
+        d["portfolio"] = {
+            "disabled": ["toyota-hv-monitor", "../../etc/passwd", "no-such", 5, "toyota-hv-monitor"],
+            "order": ["lvgl-smartwatch", "../x", "lvgl-smartwatch", "toyota-hv-monitor"],
+            "items": {
+                "toyota-hv-monitor": {"title": {"uk": "T" * 500, "en": "New", "de": "<b>x</b>"}, "summary": {"uk": "s\x00s", "en": "", "de": ""}, "years": "2" * 99, "tags": ["a"] * 20 + [" "], "evil": 1},
+                factory["slug"]: {"title": factory["title"], "summary": factory["summary"], "years": factory["years"], "tags": list(factory["tags"])},      # equal to the factory: dropped
+                "no-such": {"title": {"en": "x"}}, "../x": {"title": {"en": "x"}},
+            },
+        }
+        p = schema.sanitize(d, ctx)["portfolio"]
+        self.assertEqual(p["disabled"], ["toyota-hv-monitor"])
+        self.assertEqual(p["order"][:2], ["lvgl-smartwatch", "toyota-hv-monitor"])
+        self.assertEqual(sorted(p["order"]), sorted(slugs), "a full permutation: missing projects keep their place at the end")
+        self.assertEqual(list(p["items"]), ["toyota-hv-monitor"])
+        it = p["items"]["toyota-hv-monitor"]
+        self.assertEqual(len(it["title"]["uk"]), 80)
+        self.assertEqual(it["title"]["de"], "<b>x</b>", "stored as text; every output escapes it")
+        self.assertEqual(it["summary"]["uk"], "ss")
+        self.assertEqual(len(it["years"]), 20)
+        self.assertEqual(len(it["tags"]), 8)
+        self.assertNotIn("evil", it)
+        self.assertEqual(schema.sanitize(schema.sanitize(d, ctx), ctx)["portfolio"], p, "idempotent")
+
+    def test_untouched_gallery_and_factory_order_are_stored_as_nothing(self):
+        ctx = self.w.ctx()
+        slugs = [p["slug"] for p in ctx.portfolio_projects]
+        self.assertEqual(schema.sanitize({}, ctx)["portfolio"], {"disabled": [], "order": [], "items": {}})
+        self.assertEqual(schema.sanitize({"portfolio": {"order": slugs}}, ctx)["portfolio"]["order"], [])
+        self.assertEqual(schema.sanitize({"portfolio": "junk"}, ctx)["portfolio"], {"disabled": [], "order": [], "items": {}})
+        self.assertEqual(schema.sanitize({"portfolio": {"items": {"toyota-hv-monitor": {"title": {"uk": "", "en": "", "de": ""}}}}}, ctx)["portfolio"]["items"], {}, "an emptied title is not an override")
+
+    def test_a_slot_takes_only_uploaded_files_the_public_script_can_show(self):
+        png_item = uploads.store(self.w.paths, png(), "a.png")
+        avif = uploads.store(self.w.paths, b"\x00\x00\x00\x1cftypavif" + b"\x00" * 40, "a.avif")
+        ctx = self.w.ctx()
+        d = {"images": {"portfolio": {"toyota-hv-monitor/device-photo": png_item["ref"], "can-helper/window": avif["ref"], "lvgl-smartwatch/home": "assets/hero-illustration.svg", "x/y": png_item["ref"]}}}
+        self.assertEqual(schema.sanitize(d, ctx)["images"]["portfolio"], {"toyota-hv-monitor/device-photo": png_item["ref"]})
+
+
+class PortfolioBuildTests(unittest.TestCase):
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def build(self, draft=None):
+        if draft is not None:
+            self.w.save(draft)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        return r["id"]
+
+    def test_an_empty_draft_ships_the_factory_gallery_and_the_factory_pdfs_byte_for_byte(self):
+        bid = self.build()
+        for rel in ("data/portfolio.json", "data/portfolio-images.json") + tuple("assets/portfolio/" + n for n in build.PDF_NAMES.values()):
+            with open(os.path.join(self.w.src, rel), "rb") as a, open(os.path.join(self.w.site(bid), rel), "rb") as b:
+                self.assertEqual(a.read(), b.read(), rel)
+
+    def test_changes_that_the_pdf_does_not_show_keep_the_factory_pdfs(self):
+        d = self.w.draft()
+        d["texts"]["hero.lead"] = {"uk": "x", "en": "x", "de": "x"}
+        d["order"] = ["faq", "services"]
+        bid = self.build(d)
+        with open(os.path.join(self.w.src, PDF_EN), "rb") as a, open(os.path.join(self.w.site(bid), PDF_EN), "rb") as b:
+            self.assertEqual(a.read(), b.read())
+
+    def test_a_disabled_project_is_removed_from_the_data_the_files_and_the_pdf(self):
+        before = pdf_text(read_bytes(os.path.join(self.w.src, PDF_EN)))
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        bid = self.build(d)
+        site = self.w.site(bid)
+        data = json.loads(self.w.read(bid, "data/portfolio.json"))
+        self.assertNotIn("toyota-hv-monitor", [p["slug"] for p in data["projects"]])
+        self.assertEqual(len(data["projects"]), len(self.w.ctx().portfolio_projects) - 1)
+        self.assertNotIn("toyota-hv-monitor", [m["slug"] for m in json.loads(self.w.read(bid, "data/portfolio-images.json"))])
+        self.assertFalse(os.path.exists(os.path.join(site, "assets/portfolio/toyota-hv-monitor")), "its pictures are not shipped")
+        self.assertTrue(os.path.isdir(os.path.join(site, "assets/portfolio/lvgl-smartwatch")))
+        for name in build.PDF_NAMES.values():
+            raw = read_bytes(os.path.join(site, "assets/portfolio", name))
+            self.assertTrue(raw.startswith(b"%PDF-"))
+            self.assertNotEqual(raw, read_bytes(os.path.join(self.w.src, "assets/portfolio", name)), "generated, not the factory file")
+        text = pdf_text(read_bytes(os.path.join(site, PDF_EN)))
+        if text is not None:
+            self.assertIn(TOYOTA, before, "the factory PDF does show it")
+            self.assertNotIn(TOYOTA, text)
+            self.assertIn("LVGL smartwatch prototype", text)
+            self.assertIn("Prometheus: control board", text, "projects that only the portfolio shows stay in the PDF")
+
+    def test_the_pdf_follows_the_web_texts_pictures_and_order_and_switches_with_the_web_portfolio(self):
+        item = uploads.store(self.w.paths, png(), "shot.png")
+        d = self.w.draft()
+        d["portfolio"]["items"] = {"lvgl-smartwatch": {"title": {"uk": "Годинник-Тест", "en": "Watch-Test", "de": "Uhr-Test"}}}
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        d["portfolio"]["order"] = ["lvgl-smartwatch"]
+        d["images"]["portfolio"] = {"prometheus-controller/board-photo": item["ref"]}
+        site_on = self.w.site(self.build(d))
+        data = json.loads(read_file(os.path.join(site_on, "data/portfolio.json")))
+        self.assertEqual(data["projects"][0]["slug"], "lvgl-smartwatch")
+        self.assertEqual(data["projects"][0]["title"]["en"], "Watch-Test")
+        text = pdf_text(read_bytes(os.path.join(site_on, PDF_EN)))
+        uk = pdf_text(read_bytes(os.path.join(site_on, "assets/portfolio", build.PDF_NAMES["uk"])))
+        if text is not None:
+            self.assertIn("Watch-Test", text)
+            self.assertNotIn(TOYOTA, text)
+            self.assertIn("Годинник-Тест", uk)
+        d["widgets"]["portfolioLink"] = False                           # no web portfolio to follow: the admin's data as it is, switches of the web ignored
+        bid = self.build(d)
+        site_off = self.w.site(bid)
+        self.assertNotIn("toyota-hv-monitor", [p["slug"] for p in json.loads(read_file(os.path.join(site_off, "data/portfolio.json")))["projects"]], "the home gallery still honours the switch")
+        text = pdf_text(read_bytes(os.path.join(site_off, PDF_EN)))
+        if text is not None:
+            self.assertIn(TOYOTA, text)
+            self.assertIn("Watch-Test", text)
+
+    def test_no_pdf_work_needs_the_network_or_external_tools(self):
+        for name in ("pdf.py", "portfolio_pdf.py"):
+            src = read_file(os.path.join(REPO, "radxa-admin/lib/vadmin", name))
+            for banned in ("subprocess", "urllib", "socket", "http.client", "os.system"):
+                self.assertNotIn(banned, src, name)
+
+    def test_the_package_never_contains_overlay_or_editor_data_for_the_gallery(self):
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        d["portfolio"]["items"] = {"can-helper": {"title": {"uk": "u", "en": "e", "de": "d"}}}
+        site = self.w.site(self.build(d))
+        for root, _, names in os.walk(site):
+            for name in names:
+                if name.rsplit(".", 1)[-1] in ("html", "js", "css", "json", "xml"):
+                    text = read_file(os.path.join(root, name))
+                    for needle in ("ve-portfolio", "ve-boot", "VEdit", "edit-overlay", "factoryGallery", '"disabled": true', '"disabled":true'):
+                        self.assertNotIn(needle, text, "%s in %s" % (needle, name))
+
+
+class PortfolioPdfTests(unittest.TestCase):
+    """The standard-library PDF writer: real Cyrillic text, valid structure, pictures embedded as they are."""
+
+    def make(self, lang="uk", projects=None):
+        site = read_json_file(os.path.join(REPO, "data/site.json"))
+        pj = projects if projects is not None else read_json_file(os.path.join(REPO, "data/portfolio.json"))["projects"]
+        mf = read_json_file(os.path.join(REPO, "data/portfolio-images.json"))
+        read = lambda rel: read_bytes(os.path.join(REPO, rel)) if os.path.isfile(os.path.join(REPO, rel)) else None
+        return portfolio_pdf.build_portfolio_pdf(site["portfolioPage"], site, pj, mf, lang, read)
+
+    def test_a_valid_multipage_pdf_with_selectable_text_in_all_languages(self):
+        for lang, word in (("uk", "Інженерія"), ("en", "Engineering, end to end"), ("de", "Engineering von A bis Z")):
+            data, texts = self.make(lang)
+            self.assertTrue(data.startswith(b"%PDF-") and data.rstrip().endswith(b"%%EOF"))
+            self.assertTrue(any(word in t for t in texts), lang)
+            self.assertLess(len(data), 4 * 1024 * 1024)
+            text = pdf_text(data)
+            if text is not None:
+                self.assertIn(word, text)
+                import io
+                import pypdf
+                self.assertGreater(len(pypdf.PdfReader(io.BytesIO(data)).pages), 10)
+
+    def test_the_output_is_reproducible(self):
+        self.assertEqual(self.make("en")[0], self.make("en")[0])
+
+    def test_images_png_is_embedded_unencoded_and_unsupported_formats_are_skipped(self):
+        doc = pdf.Doc("t")
+        self.assertTrue(doc.image(png(), 10, 10, 50, 50))
+        self.assertTrue(doc.image(read_bytes(os.path.join(REPO, "assets/portfolio/img/hero-unit.jpg")), 10, 10, 50, 50))
+        self.assertFalse(doc.image(b"RIFF\x00\x00\x00\x00WEBPVP8 ", 0, 0, 5, 5), "WebP cannot be decoded without extra packages")
+        self.assertIsNone(pdf.read_image(b"\x89PNG\r\n\x1a\n"))
+        self.assertTrue(doc.render().startswith(b"%PDF-"))
+
+    def test_a_missing_project_list_or_picture_does_not_break_the_document(self):
+        data, texts = self.make("en", projects=[])
+        self.assertTrue(data.startswith(b"%PDF-"))
+        self.assertFalse(any("Prometheus" in t for t in texts))
+
+
+class EditPagePortfolioTests(EditPageTests):
+    """The portfolio gallery in the on-page editor: shown (not stripped), every project present with its switch state, data embedded for the fetch stub."""
+
+    def test_the_gallery_script_and_the_data_are_on_the_page(self):
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        d["portfolio"]["items"] = {"can-helper": {"title": {"uk": "Мій CanHelper", "en": "My CanHelper", "de": "Mein CanHelper"}}}
+        item = uploads.store(self.w.paths, png(), "shot.png")
+        d["images"]["portfolio"] = {"lvgl-smartwatch/home": item["ref"]}
+        self.save(d)
+        html = self.page()[2].decode()
+        self.assertIn('src="assets/portfolio.js"', html, "the gallery is no longer stripped from the edit view")
+        self.assertIn('id="archiveGrid"', html)
+        data = self.embedded(html, "ve-portfolio")
+        by = dict((p["slug"], p) for p in data["projects"])
+        self.assertEqual(len(by), len(read_json_file(os.path.join(REPO, "data/portfolio.json"))["projects"]), "no project is dropped, disabled ones too")
+        self.assertTrue(by["toyota-hv-monitor"]["disabled"], "flagged, so the overlay shows it dimmed")
+        self.assertNotIn("disabled", by["lvgl-smartwatch"])
+        self.assertEqual(by["can-helper"]["title"]["en"], "My CanHelper")
+        manifest = dict(("%s/%s" % (m["slug"], m["slot"]), m) for m in self.embedded(html, "ve-portfolio-images"))
+        self.assertEqual(manifest["lvgl-smartwatch/home"]["file"], "assets/u/%s.jpg" % item["id"], "an upload passes the public script's file check; the overlay points it at the file action")
+        self.assertIn('"/data/portfolio.json":"ve-portfolio"', html, "fetch() of the data is answered from the page")
+        boot = self.embedded(html, "ve-boot")
+        self.assertEqual(boot["draft"]["portfolio"]["disabled"], ["toyota-hv-monitor"], "the real draft is embedded untouched")
+        self.assertIn("toyota-hv-monitor", boot["galleryVisible"])
+        self.assertNotIn("prometheus-controller", boot["galleryVisible"], "portfolio-only projects are not on the home page")
+        self.assertEqual(boot["factoryGallery"]["can-helper"]["title"]["en"], "CanHelper")
+        self.assertIn("can-helper/window", boot["factoryGallery"]["can-helper"]["slots"])
+
+    def test_the_gallery_view_never_leaks_into_a_package(self):
+        d = self.w.draft()
+        d["portfolio"]["disabled"] = ["toyota-hv-monitor"]
+        self.save(d)
+        self.page()
+        w = World(copy_src=True)
+        self.addCleanup(w.close)
+        w.save(d)
+        r = build.build(w.paths)
+        self.assertTrue(r["ok"], r)
+        self.assertNotIn("ve-portfolio", w.read(r["id"], "index.html"))
+        self.assertIn("assets/portfolio.js", w.read(r["id"], "index.html"))
+
+
+def read_bytes(path):
+    with open(path, "rb") as fh:
+        return fh.read()
+
+
+
 class PreviewTests(unittest.TestCase):
     """The hover previews of the admin: every id the admin lists has words and a picture (or a live demo), and the files are small."""
     WEB = os.path.join(REPO, "radxa-admin", "web")
@@ -1004,6 +1248,7 @@ class PreviewTests(unittest.TestCase):
         keys = ["section:%s" % s["id"] for s in c["sections"]]
         keys += ["service:%s" % s["id"] for s in c["factory"]["services"]] + ["service:custom"]
         keys += ["project:%s" % p["id"] for p in c["factory"]["projects"]] + ["project:custom"]
+        keys += ["gallery:item"]                                                    # one preview for every card of the portfolio gallery editor
         keys += ["block:%s" % t for t in c["blocks"]]
         keys += ["effect:%s" % e["id"] for e in c["effects"]] + ["widget:%s" % w["id"] for w in c["widgets"]]
         return keys

@@ -9,7 +9,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   const LANGS = ["uk", "en", "de"];
   const MOVABLE = ["services", "ai", "process", "work", "stack", "pricing", "faq", "contact"];
-  const MAX = { text: 2000, serviceTitle: 80, serviceText: 300, servicePoint: 80, projectTitle: 80, projectSummary: 300, projectStatus: 40 };
+  const MAX = { text: 2000, serviceTitle: 80, serviceText: 300, servicePoint: 80, projectTitle: 80, projectSummary: 300, projectStatus: 40, galleryTitle: 80, gallerySummary: 600, galleryYears: 20 };
 
   const isIndex = (n) => Number.isInteger(n) && n >= 0 && n < 1000;
   const one = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();      // Enter commits an edit, so texts are one line
@@ -40,12 +40,19 @@
   const extraServices = (draft) => draft.extra?.services || [];
   const extraProjects = (draft) => draft.extra?.projects || [];
 
-  /** env = {draft, editable, factoryServices}. Returns a binding {kind, key, ...} or null when the text cannot be edited here
+  const GALLERY_FIELDS = { title: MAX.galleryTitle, summary: MAX.gallerySummary };
+  const gallery = (draft) => (draft.portfolio ||= { disabled: [], order: [], items: {} });
+
+  /** env = {draft, editable, factoryServices, factoryGallery}. Returns a binding {kind, key, ...} or null when the text cannot be edited here
    *  (not in the draft's schema, a plain string, or a factory project card whose text is not part of the draft). */
   function bindingFor(desc, env) {
     if (desc && desc.card === "products") {
       if (!["title", "summary", "status"].includes(desc.field) || !extraProjects(env.draft).some((p) => p.id === desc.id)) return null;
       return { kind: "extraProject", id: desc.id, field: desc.field, key: `project:${desc.id}:${desc.field}` };
+    }
+    if (desc && desc.card === "gallery") {           // a card of the project gallery "Замовні розробки" (data/portfolio.json, kept in draft.portfolio)
+      if (!Object.prototype.hasOwnProperty.call(GALLERY_FIELDS, desc.field) || !env.factoryGallery?.[desc.slug]) return null;
+      return { kind: "gallery", slug: desc.slug, field: desc.field, key: `gallery:${desc.slug}:${desc.field}` };
     }
     const path = sitePath(desc);
     if (!path) return null;
@@ -63,6 +70,7 @@
   function holder(binding, env) {            // the {uk,en,de} object a binding points at (may be undefined)
     const { draft } = env;
     if (binding.kind === "text") return draft.texts?.[binding.path] || env.editable[binding.path];
+    if (binding.kind === "gallery") return draft.portfolio?.items?.[binding.slug]?.[binding.field] || env.factoryGallery?.[binding.slug]?.[binding.field];
     if (binding.kind === "extraService") {
       const svc = extraServices(draft).find((s) => s.id === binding.id);
       return binding.field === "points" ? svc?.points?.[binding.point] : svc?.[binding.field];
@@ -74,6 +82,7 @@
 
   function maxLength(binding) {
     if (binding.kind === "text") return MAX.text;
+    if (binding.kind === "gallery") return GALLERY_FIELDS[binding.field];
     if (binding.kind === "extraService") return binding.field === "title" ? MAX.serviceTitle : binding.field === "text" ? MAX.serviceText : MAX.servicePoint;
     return binding.field === "title" ? MAX.projectTitle : binding.field === "summary" ? MAX.projectSummary : MAX.projectStatus;
   }
@@ -83,7 +92,11 @@
     if (!LANGS.includes(lang)) return null;
     const next = one(value).slice(0, maxLength(binding));
     if (one(readText(binding, env, lang)) === next) return null;
-    if (binding.kind === "text") {
+    if (binding.kind === "gallery") {
+      const items = gallery(env.draft).items;
+      const base = items[binding.slug]?.[binding.field] || { ...env.factoryGallery[binding.slug][binding.field] };
+      items[binding.slug] = { ...(items[binding.slug] || {}), [binding.field]: { ...base, [lang]: next } };
+    } else if (binding.kind === "text") {
       env.draft.texts ||= {};
       const base = env.draft.texts[binding.path] || { ...env.editable[binding.path] };
       env.draft.texts[binding.path] = { ...base, [lang]: next };
@@ -96,9 +109,10 @@
   }
 
   /* ---------- switches ---------- */
-  // target: {type: "section"|"service"|"project", id}
+  // target: {type: "section"|"service"|"project"|"gallery", id}
   function isOff(draft, target) {
     if (target.type === "section") return draft.sections?.[target.id] === false;
+    if (target.type === "gallery") return (draft.portfolio?.disabled || []).includes(target.id);
     const list = draft.disabled?.[target.type === "service" ? "services" : "projects"] || [];
     return list.includes(target.id);
   }
@@ -107,6 +121,11 @@
     if (target.type === "section") {
       draft.sections ||= {};
       draft.sections[target.id] = !!on;
+      return;
+    }
+    if (target.type === "gallery") {
+      const g = gallery(draft);
+      g.disabled = on ? g.disabled.filter((x) => x !== target.id) : [...g.disabled.filter((x) => x !== target.id), target.id];
       return;
     }
     draft.disabled ||= {};
@@ -144,8 +163,23 @@
     return true;
   }
 
+  /** Moves a gallery project one step among the VISIBLE ones (`all` = every factory slug in factory order, `visible` = those the home page shows;
+   *  projects only the portfolio page shows keep their places). An order equal to the factory one is stored as []. */
+  function moveGallery(draft, slug, dir, all, visible) {
+    const g = gallery(draft);
+    const order = (g.order?.length === all.length ? g.order : all).slice();
+    const shown = order.filter((x) => visible.includes(x));
+    const at = shown.indexOf(slug);
+    const other = shown[at + (dir < 0 ? -1 : 1)];
+    if (at < 0 || other === undefined) return false;
+    const a = order.indexOf(slug), b = order.indexOf(other);
+    [order[a], order[b]] = [order[b], order[a]];
+    g.order = order.every((x, i) => x === all[i]) ? [] : order;
+    return true;
+  }
+
   /* ---------- images and models ---------- */
-  // target: {type: "hero"} | {type: "projectImage"|"projectModel"|"serviceModel", id}. An empty ref goes back to the factory file.
+  // target: {type: "hero"} | {type: "projectImage"|"projectModel"|"serviceModel", id} | {type: "gallerySlot", id: "<slug>/<slot>"}. An empty ref goes back to the factory file.
   function setMedia(draft, target, ref) {
     draft.images ||= {};
     const put = (key, id) => {
@@ -155,6 +189,7 @@
     if (target.type === "hero") draft.images.hero = ref || "";
     else if (target.type === "projectImage") put("projects", target.id);
     else if (target.type === "projectModel") put("models", target.id);
+    else if (target.type === "gallerySlot") put("portfolio", target.id);
     else if (target.type === "serviceModel") {
       const own = extraServices(draft).find((s) => s.id === target.id);
       if (own) own.model = ref || "";
@@ -167,17 +202,18 @@
     if (target.type === "hero") return im.hero || "";
     if (target.type === "projectImage") return im.projects?.[target.id] || "";
     if (target.type === "projectModel") return im.models?.[target.id] || "";
+    if (target.type === "gallerySlot") return im.portfolio?.[target.id] || "";
     return im.serviceModels?.[target.id] || extraServices(draft).find((s) => s.id === target.id)?.model || "";
   };
 
   /** What the picker offers: factory pictures (images only) and the owner's uploads of the right kind, newest first as the server lists them. */
-  function pickerItems(kind, boot) {
+  function pickerItems(kind, boot, uploadsOnly) {         // gallery slots take the owner's uploads only (the server refuses factory files there)
     const uploads = (boot.uploads || []).filter((u) => u.kind === kind).map((u) => ({ ref: u.ref, label: u.name || u.ref, upload: true }));
-    const factory = kind === "image" ? (boot.factoryImages || []).map((ref) => ({ ref, label: ref.replace(/^assets\//, ""), upload: false })) : [];
+    const factory = kind === "image" && !uploadsOnly ? (boot.factoryImages || []).map((ref) => ({ ref, label: ref.replace(/^assets\//, ""), upload: false })) : [];
     return [...factory, ...uploads];
   }
 
   const imageSrc = (ref, api) => (ref.startsWith("u:") ? `${api}?action=file&id=${ref.slice(2)}` : `/${ref}`);
 
-  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, saveIndicator, setMedia, mediaRef, pickerItems, imageSrc };
+  return { LANGS, MOVABLE, MAX, one, sitePath, bindingFor, readText, writeText, maxLength, isOff, setEnabled, serviceId, effectiveOrder, moveSection, moveGallery, saveIndicator, setMedia, mediaRef, pickerItems, imageSrc };
 });

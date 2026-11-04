@@ -12,8 +12,8 @@ from .core import LANGS
 from .richtext import esc
 
 FILE_ACTION = "/cgi-bin/vadmin-api?action=file&id="
-# fetch() of the two data files is answered from the page itself, so the view needs no public data folder next to the admin.
-FETCH_STUB = ('(function(){var f=window.fetch,m={"/data/site.json":"ve-site","/data/products.json":"ve-products"};'
+# fetch() of the data files is answered from the page itself, so the view needs no public data folder next to the admin.
+FETCH_STUB = ('(function(){var f=window.fetch,m={"/data/site.json":"ve-site","/data/products.json":"ve-products","/data/portfolio.json":"ve-portfolio","/data/portfolio-images.json":"ve-portfolio-images"};'
               'window.fetch=function(u){try{var p=new URL(typeof u==="string"?u:u.url,location.href).pathname,id=m[p];'
               'if(id)return Promise.resolve(new Response(document.getElementById(id).textContent,{status:200,headers:{"Content-Type":"application/json"}}));}'
               'catch(e){}return f.apply(this,arguments);};})();')
@@ -36,6 +36,7 @@ def view_draft(draft):
     view["sections"] = {sid: True for sid in schema.SECTION_IDS}
     view["disabled"]["services"] = []
     view["disabled"]["projects"] = []
+    view["portfolio"]["disabled"] = []
     view["widgets"]["gallery3d"] = True
     return view
 
@@ -72,16 +73,22 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
     html = build.transform_home(build.read_text(os.path.join(paths.src, "index.html")), view, ctx, assets, view["forms"])
     site = build.merged_site(view, ctx, assets)
     products = build.merged_products(view, ctx, assets)
+    gallery = build.merged_portfolio(draft, ctx, keep_disabled=True)                   # the REAL draft: a project switched off stays, flagged, and is shown dimmed
+    gallery_images = build.merged_portfolio_images(draft, ctx, assets, keep_disabled=True)
+    for m in gallery_images:                                                            # uploads must pass the public script's file-name check; the overlay points them at the file action
+        if m.get("file", "").startswith(FILE_ACTION.lstrip("/")):
+            m["file"] = "assets/u/%s.jpg" % m["file"].split("id=")[1]
+    factory_gallery = dict((p["slug"], {"title": p.get("title"), "summary": p.get("summary"), "slots": ["%s/%s" % (p["slug"], s) for s in p.get("slots", [])]}) for p in ctx.portfolio_projects)
     boot = {
         "rev": draft["rev"], "draft": draft, "lang": lang, "api": "/cgi-bin/vadmin-api", "adminUrl": "/",
         "editable": schema.editable_texts(ctx.site), "order": list(schema.MOVABLE_IDS), "labels": section_labels,
         "factory": {"services": len(ctx.site.get("services", {}).get("items", [])), "projects": [p.get("id") for p in ctx.products]},
         "uploads": uploads, "factoryImages": factory_images, "gallery": bool(draft["widgets"].get("gallery3d", True)),
+        "factoryGallery": factory_gallery, "galleryOrder": [p["slug"] for p in ctx.portfolio_projects], "galleryVisible": [p["slug"] for p in ctx.portfolio_projects if not p.get("portfolioOnly")],
     }
-    html = re.sub(r'[ \t]*<script type="module" src="assets/portfolio.js"></script>\n?', "", html)      # the archive is not editable here
     html = html.replace('<html lang="en" data-page="home">', '<html lang="%s" data-page="home">' % esc(lang), 1)
-    head = ('  <base href="/">\n  <meta name="robots" content="noindex, nofollow">\n  %s\n  %s\n  %s\n  <script>%s</script>\n'
-            % (json_script("ve-site", site), json_script("ve-products", products), json_script("ve-boot", boot), FETCH_STUB))
+    head = ('  <base href="/">\n  <meta name="robots" content="noindex, nofollow">\n  %s\n  %s\n  %s\n  %s\n  %s\n  <script>%s</script>\n'
+            % (json_script("ve-site", site), json_script("ve-products", products), json_script("ve-portfolio", {"projects": gallery}), json_script("ve-portfolio-images", gallery_images), json_script("ve-boot", boot), FETCH_STUB))
     html = html.replace('<meta charset="utf-8">\n', '<meta charset="utf-8">\n' + head, 1)
     v = overlay_version()
     html = html.replace("</head>", '  <link rel="stylesheet" href="edit-overlay.css?v=%s">\n  <link rel="stylesheet" href="preview-tip.css?v=%s">\n</head>' % (v, v), 1)

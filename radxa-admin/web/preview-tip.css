@@ -9,10 +9,13 @@
 .vpv-eye:hover { background: var(--soft, #dcebe4); border-color: var(--accent, #aebfb6); }
 .vpv-eye:focus-visible { outline: 2px solid #1d6fd1; outline-offset: 2px; }
 @media (prefers-color-scheme: dark) {
-  .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }
-  .vpv-text { color: #a9bbb4; }
-  .vpv-img { background: #0c1311; }
+  :root:not([data-theme="light"]) .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }
+  :root:not([data-theme="light"]) .vpv-text { color: #a9bbb4; }
+  :root:not([data-theme="light"]) .vpv-img { background: #0c1311; }
 }
+:root[data-theme="dark"] .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }   /* the site's own theme switch on the on-page editor */
+:root[data-theme="dark"] .vpv-text { color: #a9bbb4; }
+:root[data-theme="dark"] .vpv-img { background: #0c1311; }
 
 /* live demonstrations of effects */
 .vpv-demo { height: 110px; margin-bottom: 8px; border-radius: 8px; background: #e8efeb; display: grid; place-items: center; overflow: hidden; }

@@ -15,7 +15,7 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const lang = () => document.documentElement.lang;
-  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services });
+  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services, factoryGallery: boot.factoryGallery });
   const store = {
     get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* storage may be blocked */ } },
@@ -176,6 +176,14 @@
       attach($(".answer", d), { card: "faq", index, field: "a" });
     });
     $$("#contactDetails li").forEach((li, index) => attach($("small", li), { card: "contact", index, field: "label" }));
+    attach($("#archiveTitle"), { i18n: "work.archive.title" });          // the project gallery "Замовні розробки" (data/portfolio.json)
+    attach($("#archiveLead"), { i18n: "work.archive.lead" });
+    $$("#archiveGrid .archive-card[data-slug]").forEach((card) => {
+      const slug = card.dataset.slug;
+      attach($("h3", card), { card: "gallery", slug, field: "title" });
+      attach($(".product-body > p", card), { card: "gallery", slug, field: "summary" });
+      attach($(".product-link", card), { i18n: "work.request" });
+    });
     $$("#productGrid .product-card[data-id]").forEach((card) => {
       const id = card.dataset.id;
       attach($("h3", card), { card: "products", id, field: "title" });
@@ -226,7 +234,7 @@
   }
 
   function pickMedia(target, kind) {
-    return pickerDialog(kind, C.mediaRef(S.draft, target)).then(async (ref) => {
+    return pickerDialog(kind, C.mediaRef(S.draft, target), target.type === "gallerySlot").then(async (ref) => {
       if (ref === null) return;
       C.setMedia(S.draft, target, ref);
       markDirty();
@@ -287,8 +295,32 @@
     });
   }
 
+  /** The gallery cards: switch, up/down among the visible projects, one button per picture slot of the project. */
+  function bindGallery() {
+    const shown = boot.galleryVisible.filter((slug) => $(`#archiveGrid .archive-card[data-slug="${CSS.escape(slug)}"]`));
+    $$("#archiveGrid .archive-card[data-slug]").forEach((card) => {
+      const slug = card.dataset.slug;
+      const target = { type: "gallery", id: slug };
+      setOff(card, C.isOff(S.draft, target));
+      const at = shown.indexOf(slug);
+      const move = (dir, label) => h("button", {
+        class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${$("h3", card)?.textContent.trim() || slug}`, title: label,
+        disabled: at < 0 || (dir < 0 ? at === 0 : at === shown.length - 1) || null,
+        onclick: async () => { if (C.moveGallery(S.draft, slug, dir, boot.galleryOrder, boot.galleryVisible)) { markDirty(); if (await flush()) reloadKeepingPlace(); } },
+      }, dir < 0 ? "▲" : "▼");
+      const slots = boot.factoryGallery[slug]?.slots || [];
+      barOf(card, { key: "gallery:item", fallback: { title: $("h3", card)?.textContent.trim() } }, switchBox("Показувати", target, card),
+        ...slots.map((key, i) => h("button", { class: "ve-btn", type: "button", title: `Фото ${i + 1}: ${key}`, "aria-label": `Фото ${i + 1}`, onclick: () => pickMedia({ type: "gallerySlot", id: key }, "image") }, `🖼${i + 1}`)),
+        at >= 0 ? move(-1, "Вгору") : null, at >= 0 ? move(1, "Вниз") : null);
+    });
+    $$("#archiveGrid img[src*='/assets/u/']").forEach((img) => {            // an uploaded picture is served by the admin's file action, not by a public path
+      const m = /\/assets\/u\/([0-9a-f]{16})\./.exec(img.getAttribute("src"));
+      if (m) img.setAttribute("src", `${API}?action=file&id=${m[1]}`);
+    });
+  }
+
   /* ---------- the picker dialog ---------- */
-  function pickerDialog(kind, current) {
+  function pickerDialog(kind, current, uploadsOnly) {
     return new Promise((resolve) => {
       let result = null;
       const dlg = h("dialog", { class: "ve-ui ve-dialog", "aria-label": kind === "image" ? "Вибір зображення" : "Вибір 3D-моделі" });
@@ -297,7 +329,7 @@
       const pick = (ref) => { result = ref; dlg.close(); };
       const paint = () => grid.replaceChildren(
         h("button", { class: "ve-tile", type: "button", onclick: () => pick("") }, h("span", { class: "ve-thumb" }, "—"), h("span", {}, "Заводський варіант")),
-        ...C.pickerItems(kind, boot).map((item) => h("button", { class: `ve-tile${item.ref === current ? " ve-sel" : ""}`, type: "button", onclick: () => pick(item.ref) },
+        ...C.pickerItems(kind, boot, uploadsOnly).map((item) => h("button", { class: `ve-tile${item.ref === current ? " ve-sel" : ""}`, type: "button", onclick: () => pick(item.ref) },
           kind === "image" ? h("img", { class: "ve-thumb", src: C.imageSrc(item.ref, API), alt: "" }) : h("span", { class: "ve-thumb" }, "3D"), h("span", {}, item.label))));
       const input = h("input", { type: "file", accept: kind === "image" ? "image/jpeg,image/png,image/webp,image/avif" : ".glb,model/gltf-binary", "aria-label": "Завантажити новий файл" });
       input.addEventListener("change", async () => {
@@ -328,13 +360,14 @@
     bindTexts();
     bindSections();
     bindCards();
+    bindGallery();
   }
   const schedule = () => { if (!queued) { queued = true; queueMicrotask(refresh); } };
 
   document.body.append(bar);
   paintBar();
   document.addEventListener("viteh:render", schedule);
-  for (const sel of ["#productGrid", "#serviceGrid"]) {            // the category filter re-creates the project cards without a render event
+  for (const sel of ["#productGrid", "#serviceGrid", "#archiveGrid"]) {            // the category filter re-creates the project cards without a render event
     const grid = $(sel);
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true });
   }

@@ -95,7 +95,7 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["portfolio", "Портфоліо (сторінка)"], ["archive-images", "Зображення проєктів 2022–2025"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["gallery", "Галерея портфоліо"], ["portfolio", "Портфоліо (сторінка)"], ["archive-images", "Зображення проєктів 2022–2025"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
@@ -374,6 +374,39 @@ const VIEWS = {
         h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` })))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));
+  },
+
+  gallery(main) {
+    main.append(...head("Галерея портфоліо", "Картки «Замовні розробки» на головній, сторінка /portfolio/ і PDF-портфоліо беруть дані звідси. Вимкнена картка зникає з усіх трьох місць після збирання пакета. Фото обирайте з завантажених файлів (JPEG, PNG або WebP). Поки сторінка /portfolio/ увімкнена (віджет «Портфоліо»), PDF збирається з увімкнених карток; коли вимкнена, у PDF потрапляють усі картки з вашими текстами."));
+    const g = (S.draft.portfolio ||= { disabled: [], order: [], items: {} });
+    g.disabled ||= []; g.order ||= []; g.items ||= {};
+    S.draft.images.portfolio ||= {};
+    const all = S.catalog.factory.gallery;
+    const bySlug = Object.fromEntries(all.map((x) => [x.slug, x]));
+    const order = (g.order.length === all.length ? g.order : all.map((x) => x.slug)).filter((slug) => bySlug[slug]);
+    const move = (slug, dir) => {
+      const at = order.indexOf(slug), to = at + dir;
+      if (to < 0 || to >= order.length) return;
+      [order[at], order[to]] = [order[to], order[at]];
+      g.order = order.slice(); touch(); rerender();
+    };
+    order.forEach((slug, at) => {
+      const f = bySlug[slug];
+      const on = !g.disabled.includes(slug);
+      const ov = (g.items[slug] ||= {});
+      ov.title ||= { ...f.title }; ov.summary ||= { ...f.summary };
+      ov.years ??= f.years || ""; ov.tags ||= [...(f.tags || [])];
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("gallery:item", { title: uk(ov.title), text: uk(ov.summary) },
+        toggle(`${uk(ov.title)}${f.portfolioOnly ? " (лише портфоліо й PDF)" : ""}`, on, (v) => { g.disabled = g.disabled.filter((x) => x !== slug); if (!v) g.disabled.push(slug); card.classList.toggle("off", !v); }),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вгору: ${uk(ov.title)}`, title: "Вгору", disabled: at === 0 || null, onclick: () => move(slug, -1) }, "▲"),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вниз: ${uk(ov.title)}`, title: "Вниз", disabled: at === order.length - 1 || null, onclick: () => move(slug, 1) }, "▼")));
+      card.append(h("div", { class: "block-body", style: "margin-top:12px" },
+        i18nField(ov, "title", { max: 80, label: "Назва" }), i18nField(ov, "summary", { multiline: true, max: 600, label: "Опис" }),
+        h("div", { class: "field" }, h("label", {}, "Роки"), h("input", { type: "text", maxlength: 20, value: ov.years, oninput: (e) => { ov.years = e.target.value; touch(); } })),
+        h("div", { class: "field" }, h("label", {}, "Теги через кому (до 8)"), h("input", { type: "text", value: ov.tags.join(", "), oninput: (e) => { ov.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })),
+        ...f.slots.map((sl, i) => imageField(S.draft.images.portfolio, sl.key, `Фото ${i + 1} (${sl.key}${S.draft.images.portfolio[sl.key] ? "" : sl.status === "final" ? ", заводське фото" : ", ще немає фото"})`, "image"))));
+      main.append(card);
+    });
   },
 
   portfolio(main) {

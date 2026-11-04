@@ -46,16 +46,28 @@
   .ve-toolbar { left: 8px; right: 8px; transform: none; width: auto; gap: 6px; padding: 6px 8px; }
   .ve-edit { padding-bottom: 120px; }
 }
+/* dark: the system preference, unless the site's own theme switch says light; or the site's switch says dark */
 @media (prefers-color-scheme: dark) {
-  .ve-ui { color: #e6efe9; }
-  .ve-bar, .ve-toolbar, .ve-dialog { background: #14201b; border-color: #3d5b4f; }
-  .ve-btn { background: #1f322a; border-color: #3d5b4f; }
-  .ve-btn:hover:not(:disabled) { background: #2a4439; }
-  .ve-state { background: #1f4435; }
-  .ve-state.ve-dirty, .ve-state.ve-saving { background: #4a3a10; }
-  .ve-state.ve-error, .ve-state.ve-conflict { background: #5a2323; }
-  .ve-note { color: #a9bdb3; }
-  .ve-warn { color: #ffb757; }
-  .ve-tile { background: #1a2a23; border-color: #3d5b4f; }
-  .ve-thumb { background: #22352d; }
+  :root:not([data-theme="light"]) .ve-ui { color: #e6efe9; }
+  :root:not([data-theme="light"]) .ve-bar, :root:not([data-theme="light"]) .ve-toolbar, :root:not([data-theme="light"]) .ve-dialog { background: #14201b; border-color: #3d5b4f; }
+  :root:not([data-theme="light"]) .ve-btn { background: #1f322a; border-color: #3d5b4f; }
+  :root:not([data-theme="light"]) .ve-btn:hover:not(:disabled) { background: #2a4439; }
+  :root:not([data-theme="light"]) .ve-state { background: #1f4435; }
+  :root:not([data-theme="light"]) .ve-state.ve-dirty, :root:not([data-theme="light"]) .ve-state.ve-saving { background: #4a3a10; }
+  :root:not([data-theme="light"]) .ve-state.ve-error, :root:not([data-theme="light"]) .ve-state.ve-conflict { background: #5a2323; }
+  :root:not([data-theme="light"]) .ve-note { color: #a9bdb3; }
+  :root:not([data-theme="light"]) .ve-warn { color: #ffb757; }
+  :root:not([data-theme="light"]) .ve-tile { background: #1a2a23; border-color: #3d5b4f; }
+  :root:not([data-theme="light"]) .ve-thumb { background: #22352d; }
 }
+:root[data-theme="dark"] .ve-ui { color: #e6efe9; }
+:root[data-theme="dark"] .ve-bar, :root[data-theme="dark"] .ve-toolbar, :root[data-theme="dark"] .ve-dialog { background: #14201b; border-color: #3d5b4f; }
+:root[data-theme="dark"] .ve-btn { background: #1f322a; border-color: #3d5b4f; }
+:root[data-theme="dark"] .ve-btn:hover:not(:disabled) { background: #2a4439; }
+:root[data-theme="dark"] .ve-state { background: #1f4435; }
+:root[data-theme="dark"] .ve-state.ve-dirty, :root[data-theme="dark"] .ve-state.ve-saving { background: #4a3a10; }
+:root[data-theme="dark"] .ve-state.ve-error, :root[data-theme="dark"] .ve-state.ve-conflict { background: #5a2323; }
+:root[data-theme="dark"] .ve-note { color: #a9bdb3; }
+:root[data-theme="dark"] .ve-warn { color: #ffb757; }
+:root[data-theme="dark"] .ve-tile { background: #1a2a23; border-color: #3d5b4f; }
+:root[data-theme="dark"] .ve-thumb { background: #22352d; }

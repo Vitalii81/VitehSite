@@ -27,9 +27,10 @@ const sampleHtml = (variant) => { if (!samples.has(variant)) samples.set(variant
 const SHOTS = {};
 for (const id of ["hero", "trust", "services", "ai", "process", "work", "stack", "pricing", "faq", "contact"]) SHOTS[`section:${id}`] = { page: "home", sel: id === "hero" ? "section.hero" : id === "trust" ? "section.trust" : `section#${id}`, height: 0.7 };
 for (let i = 0; i < 12; i++) SHOTS[`service:s${i}`] = { page: "home", sel: `#serviceGrid .card[data-s="${i}"]`, pad: 8 };
-for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
+for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node", "toyota-hv-monitor"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
 for (const t of ["hero", "services", "projects", "gallery3d", "agents", "steps", "stack", "pricing", "faq", "form", "text_image", "gallery", "cta"]) SHOTS[`block:${t}`] = { page: ["projects", "gallery3d"].includes(t) ? `sample:${t}` : "sample", sel: `#pv-${t}`, height: 0.7 };
 SHOTS["block:divider"] = { page: "sample", sel: "hr.divider", pad: 70 };
+SHOTS["gallery:item"] = { page: "home", sel: '#archiveGrid .archive-card[data-slug="toyota-hv-monitor"]', pad: 8 };        // a card of the project gallery (data/portfolio.json)
 SHOTS["widget:gallery3d"] = { page: "home", sel: "#productGrid", height: 0.55 };
 SHOTS["widget:portfolioLink"] = { page: "home", sel: "#work .portfolio-link", pad: 40 };
 
@@ -69,7 +70,7 @@ async function open(kind) {
   const [which, variant] = kind.split(":");
   await page("Page.navigate", { url: `${base}/${which === "home" ? "index.html" : "__sample.html" + (variant ? "?b=" + variant : "")}` });
   for (let i = 0; i < 80; i++) {                                  // the cards are drawn by app.js after data/*.json is fetched
-    const ready = await evaluate(`document.readyState === "complete" && !!document.querySelector("#serviceGrid .card") && !!document.querySelector("#productGrid .product-card")`);
+    const ready = await evaluate(`document.readyState === "complete" && !!document.querySelector("#serviceGrid .card") && !!document.querySelector("#productGrid .product-card") && !!document.querySelector("#archiveGrid .archive-card")`);
     if (ready) break;
     await new Promise((r) => setTimeout(r, 250));
   }

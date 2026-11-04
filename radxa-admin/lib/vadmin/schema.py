@@ -37,6 +37,7 @@ class Context:
         self.site = read_json(os.path.join(data, "site.json"), {}) or {}
         self.products = read_json(os.path.join(data, "products.json"), []) or []
         self.portfolio_images = read_json(os.path.join(data, "portfolio-images.json"), []) or []
+        self.portfolio_projects = (read_json(os.path.join(data, "portfolio.json"), {}) or {}).get("projects", []) or []
         self.uploads = (read_json(paths.uploads_index, {}) or {}).get("items", {})
 
     def categories(self):
@@ -70,6 +71,11 @@ def image_ref(value, ctx):
     if ASSET_REF.match(value):
         return value
     return ""
+
+
+def gallery_file_ok(ref, ctx):
+    """The public gallery script (assets/portfolio.js) accepts only .webp/.jpg/.png files in a slot; an AVIF upload would show nothing, so it is not accepted there."""
+    return os.path.splitext(ctx.uploads.get(ref[2:], {}).get("file", ""))[1].lower() in (".webp", ".jpg", ".jpeg", ".png")
 
 
 def link(value, limit=60):
@@ -267,10 +273,46 @@ def clean_order(value):
     return [] if tuple(full) == MOVABLE_IDS else full
 
 
+def clean_portfolio(raw, ctx):
+    """The project gallery ("Замовні розробки"): which factory projects are off, their order, and text overrides.
+    Slugs come ONLY from the factory data/portfolio.json (nothing a browser sends can name a new item or a file path); an override is kept
+    only where it differs from the factory text, so an untouched draft stays empty and builds the factory gallery byte for byte."""
+    raw = raw if isinstance(raw, dict) else {}
+    factory = {p.get("slug"): p for p in ctx.portfolio_projects if isinstance(p, dict) and isinstance(p.get("slug"), str)}
+    slugs = list(factory)
+    out = {"disabled": [], "order": [], "items": {}}
+    off = raw.get("disabled") if isinstance(raw.get("disabled"), list) else []
+    out["disabled"] = sorted({x for x in off if isinstance(x, str) and x in factory})
+    seen = []
+    for slug in raw.get("order") if isinstance(raw.get("order"), list) else []:
+        if isinstance(slug, str) and slug in factory and slug not in seen:
+            seen.append(slug)
+    full = seen + [x for x in slugs if x not in seen]
+    out["order"] = [] if not seen or full == slugs else full
+    items = raw.get("items") if isinstance(raw.get("items"), dict) else {}
+    for slug, src in items.items():
+        if slug not in factory or not isinstance(src, dict):
+            continue
+        base, kept = factory[slug], {}
+        for field, limit in (("title", 80), ("summary", 600)):
+            val = i18n(src.get(field), limit)
+            if any(val.values()) and val != {k: (base.get(field) or {}).get(k, "") for k in LANGS}:
+                kept[field] = val
+        years = text(src.get("years"), 20)
+        if "years" in src and years != (base.get("years") or ""):
+            kept["years"] = years
+        tags = [t for t in (text(x, 40) for x in (src.get("tags") if isinstance(src.get("tags"), list) else [])[:8]) if t]
+        if "tags" in src and tags != list(base.get("tags") or []):
+            kept["tags"] = tags
+        if kept:
+            out["items"][slug] = kept
+    return out
+
+
 def empty_draft():
     return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": [], "portfolio": []}, "widgets": {}, "effects": {}, "texts": {},
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}, "portfolio": {}, "portfolioAlt": {}},
-            "pages": [], "forms": {}}
+            "pages": [], "forms": {}, "portfolio": {"disabled": [], "order": [], "items": {}}}
 
 
 def sanitize(raw, ctx):
@@ -313,9 +355,11 @@ def sanitize(raw, ctx):
     # project-archive image slots, keyed "<slug>/<slot>" exactly as in data/portfolio-images.json; only uploaded images (u:...) may fill a slot
     known_slots = {"%s/%s" % (m.get("slug"), m.get("slot")) for m in ctx.portfolio_images if isinstance(m, dict)}
     src = imgs.get("portfolio") if isinstance(imgs.get("portfolio"), dict) else {}
-    d["images"]["portfolio"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in src.items()) if k in known_slots and v.startswith("u:")}
+    d["images"]["portfolio"] = {k: v for k, v in ((k, image_ref(v, ctx)) for k, v in src.items()) if k in known_slots and v.startswith("u:") and gallery_file_ok(v, ctx)}
     alts = imgs.get("portfolioAlt") if isinstance(imgs.get("portfolioAlt"), dict) else {}
     d["images"]["portfolioAlt"] = {k: a for k, a in ((k, i18n(v, 200)) for k, v in alts.items() if k in known_slots) if any(a.get(l) for l in LANGS)}
+
+    d["portfolio"] = clean_portfolio(raw.get("portfolio"), ctx)
 
     pages, seen = [], set()
     for p in (raw.get("pages") if isinstance(raw.get("pages"), list) else [])[:LIMITS["pages"]]:
