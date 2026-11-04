@@ -112,9 +112,9 @@
         "de": "CanHelper"
       },
       "summary": {
-        "uk": "Інструмент для роботи з CAN/OBD в авто (Tesla та інші) на C# WPF для Windows і окремий пристрій ON/OFF.",
-        "en": "A CAN/OBD tool for cars (Tesla and others) written in C# WPF for Windows, plus a separate ON/OFF device.",
-        "de": "Ein CAN/OBD-Werkzeug für Fahrzeuge (Tesla und andere) in C# WPF für Windows sowie ein separates EIN/AUS-Gerät."
+        "uk": "Інструмент для роботи з CAN/OBD в авто (Tesla та інші) на C# WPF для Windows і окремий міні-хелпер ON/OFF.",
+        "en": "A CAN/OBD tool for cars (Tesla and others) written in C# WPF for Windows, plus a separate ON/OFF mini helper.",
+        "de": "Ein CAN/OBD-Werkzeug für Fahrzeuge (Tesla und andere) in C# WPF für Windows sowie ein separater EIN/AUS-Mini-Helfer."
       },
       "tags": [
         "C#",
