@@ -837,14 +837,14 @@
     },
     "archive": {
       "title": {
-        "uk": "Проєкти 2022–2025",
-        "en": "Projects 2022–2025",
-        "de": "Projekte 2022–2025"
+        "uk": "Замовні розробки 2022–2025",
+        "en": "Custom developments 2022–2025",
+        "de": "Auftragsentwicklungen 2022–2025"
       },
       "lead": {
-        "uk": "Плати, прошивки та програми з архіву проєктів. Деталі, ролі й результати — за запитом.",
-        "en": "Boards, firmware and programs from the project archive. Details, roles and results on request.",
-        "de": "Platinen, Firmware und Programme aus dem Projektarchiv. Details, Rollen und Ergebnisse auf Anfrage."
+        "uk": "Це замовні розробки, а не серійні вироби. Вони показують пройдений шлях і можливості: на їхньому прикладі можна зробити подібні та інші контролери, плати й програми під ваш проєкт.",
+        "en": "These were built to order, not as stock products. They show the path covered and what is possible: similar and entirely different controllers, boards and programs can be made for your project.",
+        "de": "Das waren Auftragsentwicklungen, keine Serienprodukte. Sie zeigen den zurückgelegten Weg und die Möglichkeiten: Ähnliche und ganz andere Controller, Platinen und Programme lassen sich für Ihr Projekt umsetzen."
       },
       "all": {
         "uk": "Усі",
@@ -2600,19 +2600,19 @@
         "id": "archive",
         "type": "archive",
         "kicker": {
-          "uk": "07A / ПРОЄКТИ 2022–2025",
-          "en": "07A / PROJECTS 2022–2025",
-          "de": "07A / PROJEKTE 2022–2025"
+          "uk": "07A / CUSTOM DEVELOPMENTS 2022–2025",
+          "en": "07A / ЗАМОВНІ РОЗРОБКИ 2022–2025",
+          "de": "07A / AUFTRAGSENTWICKLUNGEN 2022–2025"
         },
         "title": {
-          "uk": "Проєкти 2022–2025",
-          "en": "Projects 2022–2025",
-          "de": "Projekte 2022–2025"
+          "uk": "Замовні розробки 2022–2025",
+          "en": "Custom developments 2022–2025",
+          "de": "Auftragsentwicklungen 2022–2025"
         },
         "note": {
-          "uk": "Ролі, замовники та результати — за запитом.",
-          "en": "Roles, customers and results are available on request.",
-          "de": "Rollen, Auftraggeber und Ergebnisse auf Anfrage."
+          "uk": "Ролі, замовники та результати — за запитом. Кожен проєкт зроблено під замовлення; подібні й інші замовлення можливі.",
+          "en": "Roles, customers and results are available on request. Every project was built to order; similar and other orders are possible.",
+          "de": "Rollen, Auftraggeber und Ergebnisse auf Anfrage. Jedes Projekt entstand im Kundenauftrag; ähnliche und andere Aufträge sind möglich."
         },
         "more": {
           "uk": "Ще плати, прошивки й програми з архіву проєктів.",
