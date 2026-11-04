@@ -79,6 +79,7 @@ t("installer: installs the code, a docroot with the CGI wrapper and a procd serv
   assert.equal(init.split("-x /cgi-bin").length - 1, 1, "only the admin instance runs CGI");
   assert.ok(existsSync(ADMIN(w, "cgi/vadmin.py")) && existsSync(STAGE(w, "src/index.html")));
   assert.ok(existsSync(ADMIN(w, "docroot/index.html")) && existsSync(ADMIN(w, "docroot/site-assets")), "static files and editor assets in the docroot");
+  for (const f of ["assets/app.js", "assets/styles.css", "edit-core.js", "edit-overlay.js", "edit-overlay.css"]) assert.ok(existsSync(ADMIN(w, `docroot/${f}`)), `${f} is served for the on-page editor`);
   assert.equal(statMode(ADMIN(w, "docroot/cgi-bin/vadmin-api")), "755");
   assert.equal(statMode(join(w.root, "srv/fwportal/admin-secret")), "700");
   assert.ok(readFileSync(join(w.fake, "service.log"), "utf8").includes("restart"));

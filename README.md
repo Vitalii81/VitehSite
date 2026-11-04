@@ -55,6 +55,7 @@ The owner edits the site privately on the Radxa (LAN/Tailscale only, nothing in 
 from the main PC with the existing `deploy-worker.sh`. Cloudflare credentials never touch the Radxa.
 
 - Switch sections, services, project cards, widgets and effects on or off (removed from the HTML, not hidden by CSS); replace photos and `.glb` models; edit all texts in uk/en/de.
+- **Edit on the page** (button in the admin's top bar): the home page with controls, served by the admin host only for a logged-in owner. Click a text to edit it in the current language, tick sections and cards on or off, pick or upload an image or a `.glb` model, move sections up or down (`draft.order`; empty = factory order). It writes into the same draft through the same `save` action; publishing stays a separate step. The overlay files (`radxa-admin/web/edit-*.js/css`) are never part of a package.
 - Build pages from a block library and templates (`/s/<slug>/`), create forms from templates; a pre-build check lists every problem and builds nothing until it is fixed.
 - Backend: nginx + a short-lived `python3` CGI (standard library only, about 17 MB per request, no daemons). History of the last 20 builds with draft rollback.
 - If no draft exists (or it is damaged) the build reproduces the factory site exactly.

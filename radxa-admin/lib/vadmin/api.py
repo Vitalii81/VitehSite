@@ -4,7 +4,7 @@ import os
 import re
 from http.cookies import SimpleCookie
 
-from . import auth, build, core, deploy, schema, uploads
+from . import auth, build, core, deploy, editpage, schema, uploads
 from .core import ApiError, LANGS, locked, read_json, write_json
 
 COOKIE = "vadmin"
@@ -131,6 +131,8 @@ def _handle(paths, method, action, headers, body, query, client):
     except Exception:
         pass
     if not auth.check_session(paths, jar[COOKIE].value if COOKIE in jar else ""):
+        if action == "edit-page" and method == "GET":                # opened in a browser tab: a page with a link to the login, not JSON
+            return editpage.login_page()
         raise ApiError("auth", "Потрібен вхід", 401)
 
     if action == "logout" and method == "POST":
@@ -143,6 +145,9 @@ def _handle(paths, method, action, headers, body, query, client):
         if action == "bootstrap":
             return _json(200, {"ok": True, "draft": read_draft(paths, ctx), "catalog": catalog(paths, ctx), "status": status(paths, host, ctx),
                                "uploads": uploads.listing(paths), "builds": build.list_builds(paths)})
+        if action == "edit-page":
+            lang = str((query.get("lang") or [""])[0])
+            return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS)
         if action == "status":
             return _json(200, {"ok": True, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
         if action == "file":
@@ -172,7 +177,8 @@ def _handle(paths, method, action, headers, body, query, client):
             return _json(200, {"ok": True, "newId": new_id, "draft": draft})
         if action == "upload":
             from urllib.parse import unquote
-            name = unquote(headers.get("x-filename", "file"))
+            # uhttpd drops custom headers, so the page sends the name in the query (?name=); X-Filename stays for other clients
+            name = str((query.get("name") or [""])[0]) or unquote(headers.get("x-filename", "file"))
             item = uploads.store(paths, body, name)
             return _json(200, {"ok": True, "item": item, "uploads": uploads.listing(paths)})
         if action == "delete-upload":

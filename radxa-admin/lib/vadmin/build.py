@@ -87,8 +87,49 @@ def insert_nav_pages(html, pages):
     return html[:a] + nav + html[b:]
 
 
+def reorder_sections(html, order):
+    """Moves the movable <section>s of the factory markup into `order` (a full permutation of MOVABLE_IDS). Only the sections change
+    places: the whitespace between them and everything around them stays byte for byte. Runs before any section is removed."""
+    spans = []
+    for sid in schema.MOVABLE_IDS:
+        a, _ = section_span(html, sid)
+        core_end = html.index("</section>", a) + len("</section>")
+        spans.append((sid, html.rfind("\n", 0, a) + 1, core_end))      # from the start of the line, so the indentation travels along
+    spans.sort(key=lambda x: x[1])
+    for (_, _, end), (_, start, _) in zip(spans, spans[1:]):
+        if html[end:start].strip():
+            raise ApiError("src_changed", "У index.html між розділами є сторонній вміст: порядок розділів змінити не можна", 500)
+    chunk = {sid: html[a:b] for sid, a, b in spans}
+    seps = [html[end:start] for (_, _, end), (_, start, _) in zip(spans, spans[1:])]
+    out = chunk[order[0]]
+    for sep, sid in zip(seps, order[1:]):
+        out += sep + chunk[sid]
+    return html[:spans[0][1]] + out + html[spans[-1][2]:]
+
+
+def reorder_nav(html, order):
+    """The menu follows the section order (the call-to-action link stays last, pages are added after this step)."""
+    a, b = nav_span(html)
+    nav = html[a:b]
+    found = []
+    for sid in schema.MOVABLE_IDS:
+        m = re.search(r'[ \t]*<a (?![^>]*nav-cta)[^>]*href="#%s"[^>]*>.*?</a>\n?' % re.escape(sid), nav, flags=re.S)
+        if m:
+            found.append((m.start(), m.end(), sid, m.group(0)))
+    found.sort()
+    texts = {sid: txt for _, _, sid, txt in found}
+    ranked = [texts[sid] for sid in order if sid in texts]
+    out, pos = "", 0
+    for (start, end, _, _), txt in zip(found, ranked):
+        out += nav[pos:start] + txt
+        pos = end
+    return html[:a] + out + nav[pos:] + html[b:]
+
+
 def transform_home(html, draft, ctx, assets, forms):
     sections = {s: draft["sections"].get(s, True) for s in SECTION_IDS}
+    if draft.get("order"):
+        html = reorder_nav(reorder_sections(html, draft["order"]), draft["order"])
     for sid in SECTION_IDS:
         if not sections[sid]:
             html = remove_section(html, sid)
@@ -231,6 +272,8 @@ def page_parts(src):
 
 def prepare_shell(parts, draft):
     header = parts["header"]
+    if draft.get("order"):
+        header = reorder_nav(header, draft["order"])
     for sid in SECTION_IDS:
         if not draft["sections"].get(sid, True) and sid not in ("hero", "trust"):
             header = drop_nav_links(header, sid)

@@ -122,6 +122,8 @@ function shell() {
     h("header", { class: "top" }, h("h1", {}, "ViTeh · адмінка"), h("div", { class: "chips", id: "chips" }),
       h("div", { class: "actions" },
         h("a", { class: "btn", id: "btn-preview", target: "_blank", rel: "noopener", href: "#", onclick: (e) => { if (!S.status.built) { e.preventDefault(); toast("Спершу зберіть пакет", "warn"); } } }, "Перегляд"),
+        h("a", { class: "btn", id: "btn-edit", target: "_blank", rel: "noopener", href: `${API}?action=edit-page`, title: "Та сама головна сторінка з елементами керування: тексти, розділи, картки, зображення, порядок",
+          onclick: async (e) => { if (S.save === "saved") return; e.preventDefault(); await save(); window.open(e.currentTarget.href, "_blank", "noopener"); } }, "Редагувати на сторінці"),
         h("button", { class: "btn primary", id: "btn-build", type: "button", onclick: buildNow }, "Зібрати пакет"),
         h("button", { class: "btn", type: "button", onclick: () => go("builds") }, "Відкотити…"),
         h("button", { class: "btn", type: "button", onclick: async () => { await save(); try { await api("logout", { method: "POST", body: {} }); } catch { /* ignore */ } showLogin(); } }, "Вийти"))),
@@ -220,7 +222,7 @@ function pickFile(kind, current) {
 }
 
 async function uploadFile(file) {
-  const r = await api("upload", { method: "POST", raw: file, headers: { "X-Filename": encodeURIComponent(file.name), "Content-Type": "application/octet-stream" } });
+  const r = await api("upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}`, headers: { "Content-Type": "application/octet-stream" } });
   S.uploads = r.uploads;
   return r;
 }

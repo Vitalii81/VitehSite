@@ -63,6 +63,8 @@ class Handler(Base):
         path = urlsplit(self.path).path
         if path == "/cgi-bin/vadmin-api":
             return self._api("GET")
+        if path.startswith("/assets/"):                                         # the on-page editor loads the site's own /assets/...
+            return self._static(os.path.join(PATHS.src, "assets"), path[len("/assets"):])
         if path.startswith("/site-assets/"):
             return self._static(os.path.join(PATHS.src, "assets"), path[len("/site-assets"):])
         self._static(os.path.join(HERE, "web"), path)

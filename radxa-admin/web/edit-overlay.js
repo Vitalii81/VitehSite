@@ -1,0 +1,336 @@
+"use strict";
+// "Edit on the page": runs ONLY on the page built by the admin API action `edit-page` (never in a published package).
+// The site's own assets/app.js renders the page from the embedded data; this file adds controls on top of it:
+// text editing in place, section/card switches, image and 3D-model pickers, section order. All changes go into the draft
+// through the same `save` action as the admin (revision check, 409 on a conflict). Publishing stays in the admin.
+// No innerHTML anywhere: every value is inserted as text.
+(() => {
+  const C = window.VEdit;
+  const bootNode = document.getElementById("ve-boot");
+  if (!C || !bootNode) return;
+  const boot = JSON.parse(bootNode.textContent);
+  const API = boot.api;
+  const S = { draft: boot.draft, rev: boot.rev, dirty: false, saving: null, timer: null, state: "saved", message: "", conflict: false, problems: [] };
+  const BIND = new WeakMap();
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const lang = () => document.documentElement.lang;
+  const env = () => ({ draft: S.draft, editable: boot.editable, factoryServices: boot.factory.services });
+  const store = {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* storage may be blocked */ } },
+    del(k) { try { sessionStorage.removeItem(k); } catch { /* ignore */ } },
+  };
+
+  const h = (tag, attrs = {}, ...kids) => {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") node.className = v;
+      else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+      else if (k === "checked") node.checked = !!v;
+      else node.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) node.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    return node;
+  };
+
+  /* ---------- API ---------- */
+  async function call(action, { method = "GET", body, raw, query = "" } = {}) {
+    const init = { method, credentials: "same-origin", headers: { "X-Vadmin": "1" } };
+    if (raw !== undefined) { init.body = raw; init.headers["Content-Type"] = "application/octet-stream"; }
+    else if (body !== undefined) { init.body = JSON.stringify(body); init.headers["Content-Type"] = "application/json"; }
+    const response = await fetch(`${API}?action=${action}${query}`, init);
+    const data = await response.json().catch(() => ({ ok: false, error: "bad_response", message: "Сервер повернув неочікувану відповідь" }));
+    if (!response.ok) throw Object.assign(new Error(data.message || data.error || `HTTP ${response.status}`), { data, status: response.status });
+    return data;
+  }
+
+  /* ---------- saving ---------- */
+  function setState(state, message = "") {
+    S.state = state;
+    S.message = message;
+    paintBar();
+  }
+
+  function markDirty() {
+    if (S.conflict) return;
+    S.dirty = true;
+    setState("dirty");
+    clearTimeout(S.timer);
+    S.timer = setTimeout(save, 1200);
+  }
+
+  async function save() {
+    clearTimeout(S.timer);
+    if (S.saving) return S.saving;
+    if (!S.dirty || S.conflict) return;
+    S.dirty = false;
+    setState("saving");
+    S.saving = call("save", { method: "POST", body: { rev: S.rev, draft: S.draft } }).then((r) => {
+      S.rev = r.rev;
+      S.draft.rev = r.rev;
+      setState(S.dirty ? "dirty" : "saved");
+      refreshProblems();
+    }).catch((e) => {
+      S.dirty = true;
+      if (e.data?.error === "conflict") { S.conflict = true; setState("conflict", e.message); }
+      else if (e.status === 401) setState("error", "Сесія завершилась: відкрийте адмінку, увійдіть і поверніться сюди");
+      else setState("error", e.message);
+    }).finally(() => {
+      S.saving = null;
+      if (S.dirty && !S.conflict && S.state !== "error") S.timer = setTimeout(save, 300);
+    });
+    return S.saving;
+  }
+
+  async function refreshProblems() {        // the build would refuse e.g. a switched-off section that the page still links to
+    try { S.problems = (await call("check")).problems || []; } catch { S.problems = []; }
+    paintBar();
+  }
+
+  const flush = async () => { document.activeElement?.blur?.(); if (S.dirty) await save(); await S.saving; return !S.dirty && !S.conflict; };
+
+  function reloadKeepingPlace() {
+    store.set("ve.scroll", String(Math.round(window.scrollY)));
+    location.reload();
+  }
+
+  window.addEventListener("beforeunload", (e) => { if (S.dirty || S.saving) { e.preventDefault(); e.returnValue = ""; } });
+
+  /* ---------- the bottom bar ---------- */
+  const bar = h("div", { class: "ve-ui ve-toolbar", role: "region", "aria-label": "Режим редагування" });
+  const stateLabel = { saved: "Збережено", dirty: "Є зміни…", saving: "Зберігаю…", error: "Помилка", conflict: "Конфлікт" };
+
+  function paintBar() {
+    const problem = S.problems[0];
+    bar.replaceChildren(...[
+      h("strong", { class: "ve-title" }, "Редагування"),
+      h("span", { class: `ve-state ve-${S.state}`, role: "status" }, stateLabel[S.state] + (S.message ? `: ${S.message}` : "")),
+      S.conflict ? h("button", { class: "ve-btn", type: "button", onclick: () => location.reload() }, "Оновити сторінку") : h("button", { class: "ve-btn", type: "button", onclick: () => { document.activeElement?.blur?.(); save(); } }, "Зберегти"),
+      !boot.gallery ? h("span", { class: "ve-note" }, "3D вимкнено в чернетці: моделі не потраплять у збірку") : null,
+      problem ? h("span", { class: "ve-note ve-warn", title: S.problems.map((p) => `${p.where}: ${p.message}`).join("\n") }, `Збірка не пройде: ${problem.message}`) : null,
+      h("a", { class: "ve-btn ve-link", href: boot.adminUrl, onclick: async (e) => { e.preventDefault(); if (await flush()) location.href = boot.adminUrl; } }, "До адмінки (зібрати й опублікувати)"),
+    ].filter(Boolean));
+  }
+
+  /* ---------- text editing ---------- */
+  const MODE = (() => { const probe = document.createElement("div"); probe.contentEditable = "plaintext-only"; return probe.contentEditable === "plaintext-only" ? "plaintext-only" : "true"; })();
+
+  function textHost(el) {                   // an element with an icon next to its text: only the text is editable
+    if (!el.children.length) return el;
+    const existing = $(":scope > .ve-t", el);
+    if (existing) return existing;
+    for (const node of [...el.childNodes].reverse()) {
+      if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+        const span = h("span", { class: "ve-t" });
+        node.replaceWith(span);
+        span.append(node);
+        return span;
+      }
+    }
+    return null;
+  }
+
+  function attach(el, desc) {
+    if (!el) return;
+    const binding = C.bindingFor(desc, env());
+    if (!binding) return;
+    const node = textHost(el);
+    if (!node) return;
+    BIND.set(node, binding);
+    node.classList.add("ve-editable");
+    node.setAttribute("contenteditable", MODE);
+    node.setAttribute("spellcheck", "false");
+    node.setAttribute("data-ve-key", binding.key);
+    if (document.activeElement !== node) {
+      const want = C.readText(binding, env(), lang());
+      if (node.textContent !== want) node.textContent = want;
+    }
+  }
+
+  function bindTexts() {
+    $$("[data-i18n]").forEach((el) => { if (!el.closest(".skip-link, .ve-ui")) attach(el, { i18n: el.dataset.i18n }); });
+    $$("#heroBadges li").forEach((li, i) => attach(li, { card: "heroBadges", index: i }));
+    $$("#trustList li").forEach((li, i) => attach(li, { card: "trust", index: i }));
+    $$("#serviceGrid .card[data-s]").forEach((card) => {
+      const index = Number(card.dataset.s);
+      attach($("h3", card), { card: "services", index, field: "title" });
+      attach($(":scope > p", card), { card: "services", index, field: "text" });
+      $$(".check-list li", card).forEach((li, point) => attach(li, { card: "services", index, point }));
+    });
+    $$("#aiFeatures li").forEach((li, index) => { attach($("h3", li), { card: "ai", index, field: "title" }); attach($("p", li), { card: "ai", index, field: "text" }); });
+    $$("#processSteps li").forEach((li, index) => { attach($("h3", li), { card: "process", index, field: "title" }); attach($("p", li), { card: "process", index, field: "text" }); });
+    $$("#pricingGrid .price-card").forEach((card, index) => {
+      attach($("h3", card), { card: "pricing", index, field: "title" });
+      attach($(":scope > p", card), { card: "pricing", index, field: "text" });
+      attach($(".ribbon", card), { card: "price", field: "ribbon" });
+      attach($(".price-tag", card), { card: "price", field: "price" });
+      attach($("a.btn", card), { card: "price", field: "cta" });
+      $$(".check-list li", card).forEach((li, point) => attach(li, { card: "pricing", index, point }));
+    });
+    $$("#faqList details").forEach((d, index) => {
+      d.open = true;                        // answers are editable only while visible
+      attach($("summary", d), { card: "faq", index, field: "q" });
+      attach($(".answer", d), { card: "faq", index, field: "a" });
+    });
+    $$("#contactDetails li").forEach((li, index) => attach($("small", li), { card: "contact", index, field: "label" }));
+    $$("#productGrid .product-card[data-id]").forEach((card) => {
+      const id = card.dataset.id;
+      attach($("h3", card), { card: "products", id, field: "title" });
+      attach($(".product-body > p", card), { card: "products", id, field: "summary" });
+      attach($(".tag.status", card), { card: "products", id, field: "status" });
+    });
+  }
+
+  function commit(node) {
+    const binding = BIND.get(node);
+    if (!binding) return;
+    const stored = C.writeText(binding, env(), lang(), node.textContent);
+    const shown = C.readText(binding, env(), lang());
+    $$(`[data-ve-key="${CSS.escape(binding.key)}"]`).forEach((n) => { if (n.textContent !== shown) n.textContent = shown; });      // the same text may appear twice (e.g. the menu button)
+    if (stored !== null) markDirty();
+  }
+
+  document.addEventListener("focusin", (e) => { const n = e.target.closest?.(".ve-editable"); if (n) n.dataset.veOrig = n.textContent; });
+  document.addEventListener("focusout", (e) => { const n = e.target.closest?.(".ve-editable"); if (n) { commit(n); delete n.dataset.veOrig; } });
+  document.addEventListener("keydown", (e) => {
+    const n = e.target.closest?.(".ve-editable");
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); n?.blur(); save(); return; }
+    if (!n) return;
+    if (e.key === "Enter") { e.preventDefault(); n.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); n.textContent = n.dataset.veOrig ?? n.textContent; n.blur(); }
+    else if (e.key === " ") e.stopPropagation();       // a space inside <summary> must type a space, not toggle the answer
+  }, true);
+
+  // The page must not navigate away: links stay put, in-page anchors scroll (the <base> tag would otherwise send them to "/#...").
+  document.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target.closest?.(".ve-ui")) return;
+    if (target.closest?.("summary, label")) e.preventDefault();
+    const link = target.closest?.("a");
+    if (!link) return;
+    e.preventDefault();
+    const href = link.getAttribute("href") || "";
+    if (href.startsWith("#")) (href.length > 1 ? document.getElementById(href.slice(1)) : document.body)?.scrollIntoView({ behavior: "smooth" });
+  }, true);
+  document.addEventListener("submit", (e) => e.preventDefault(), true);        // the contact form is only shown, never sent from here
+
+  /* ---------- switches, order, media ---------- */
+  function setOff(node, off) { node.classList.toggle("ve-off", off); }
+
+  function sectionNode(id) {
+    return id === "hero" ? $("section.hero") : id === "trust" ? $("section.trust") : document.getElementById(id);
+  }
+
+  function pickMedia(target, kind) {
+    return pickerDialog(kind, C.mediaRef(S.draft, target)).then(async (ref) => {
+      if (ref === null) return;
+      C.setMedia(S.draft, target, ref);
+      markDirty();
+      if (await flush()) reloadKeepingPlace();
+    });
+  }
+
+  function switchBox(label, target, node) {
+    return h("label", { class: "ve-switch", title: "Показувати на сайті" },
+      h("input", { type: "checkbox", checked: !C.isOff(S.draft, target), "aria-label": label, onchange: (e) => { C.setEnabled(S.draft, target, e.target.checked); setOff(node, !e.target.checked); markDirty(); } }),
+      h("span", {}, label));
+  }
+
+  const barOf = (node, ...kids) => { $$(":scope > .ve-bar", node).forEach((b) => b.remove()); node.classList.add("ve-host"); node.append(h("div", { class: "ve-ui ve-bar" }, kids.filter(Boolean))); };
+
+  function bindSections() {
+    const order = C.effectiveOrder(S.draft);
+    for (const id of ["hero", "trust", ...C.MOVABLE]) {
+      const node = sectionNode(id);
+      if (!node) continue;
+      const target = { type: "section", id };
+      setOff(node, C.isOff(S.draft, target));
+      const at = order.indexOf(id);
+      const move = (dir, label) => h("button", {
+        class: "ve-btn ve-icon", type: "button", "aria-label": `${label}: ${boot.labels[id] || id}`, title: label, disabled: at < 0 || (dir < 0 ? at === 0 : at === order.length - 1) || null,
+        onclick: async () => { if (C.moveSection(S.draft, id, dir)) { markDirty(); if (await flush()) reloadKeepingPlace(); } },
+      }, dir < 0 ? "▲" : "▼");
+      barOf(node,
+        h("span", { class: "ve-name" }, boot.labels[id] || id),
+        switchBox("Показувати", target, node),
+        id === "hero" ? h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "hero" }, "image") }, "Зображення…") : null,
+        at >= 0 ? move(-1, "Вгору") : null, at >= 0 ? move(1, "Вниз") : null);
+    }
+  }
+
+  function bindCards() {
+    $$("#serviceGrid .card[data-s]").forEach((card) => {
+      const id = C.serviceId(S.draft, Number(card.dataset.s), boot.factory.services);
+      if (!id) return;
+      const target = { type: "service", id };
+      setOff(card, C.isOff(S.draft, target));
+      barOf(card, switchBox("Показувати", target, card), h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "serviceModel", id }, "model") }, "3D…"));
+    });
+    $$("#productGrid .product-card[data-id]").forEach((card) => {
+      const id = card.dataset.id;
+      const target = { type: "project", id };
+      setOff(card, C.isOff(S.draft, target));
+      barOf(card, switchBox("Показувати", target, card),
+        h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectImage", id }, "image") }, "Фото…"),
+        h("button", { class: "ve-btn", type: "button", onclick: () => pickMedia({ type: "projectModel", id }, "model") }, "3D…"));
+    });
+  }
+
+  /* ---------- the picker dialog ---------- */
+  function pickerDialog(kind, current) {
+    return new Promise((resolve) => {
+      let result = null;
+      const dlg = h("dialog", { class: "ve-ui ve-dialog", "aria-label": kind === "image" ? "Вибір зображення" : "Вибір 3D-моделі" });
+      const grid = h("div", { class: "ve-grid" });
+      const msg = h("p", { class: "ve-note ve-warn", hidden: true, role: "alert" });
+      const pick = (ref) => { result = ref; dlg.close(); };
+      const paint = () => grid.replaceChildren(
+        h("button", { class: "ve-tile", type: "button", onclick: () => pick("") }, h("span", { class: "ve-thumb" }, "—"), h("span", {}, "Заводський варіант")),
+        ...C.pickerItems(kind, boot).map((item) => h("button", { class: `ve-tile${item.ref === current ? " ve-sel" : ""}`, type: "button", onclick: () => pick(item.ref) },
+          kind === "image" ? h("img", { class: "ve-thumb", src: C.imageSrc(item.ref, API), alt: "" }) : h("span", { class: "ve-thumb" }, "3D"), h("span", {}, item.label))));
+      const input = h("input", { type: "file", accept: kind === "image" ? "image/jpeg,image/png,image/webp,image/avif" : ".glb,model/gltf-binary", "aria-label": "Завантажити новий файл" });
+      input.addEventListener("change", async () => {
+        const file = input.files[0];
+        if (!file) return;
+        msg.hidden = true;
+        try {
+          const r = await call("upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}` });
+          boot.uploads = r.uploads;
+          pick(r.item.ref);
+        } catch (e) { msg.textContent = e.message; msg.hidden = false; }
+      });
+      dlg.append(h("h3", {}, kind === "image" ? "Оберіть зображення" : "Оберіть 3D-модель (.glb)"),
+        h("p", { class: "ve-note" }, kind === "image" ? "JPEG, PNG, WebP або AVIF до 5 МБ. SVG не приймається." : "Один файл glTF Binary (.glb) до 8 МБ, дані вбудовані у файл."),
+        h("label", { class: "ve-upload" }, h("span", {}, "Завантажити новий файл"), input), msg, grid,
+        h("div", { class: "ve-row" }, h("button", { class: "ve-btn", type: "button", onclick: () => dlg.close() }, "Скасувати")));
+      dlg.addEventListener("close", () => { dlg.remove(); resolve(result); });
+      paint();
+      document.body.append(dlg);
+      dlg.showModal();
+    });
+  }
+
+  /* ---------- wiring ---------- */
+  let queued = false;
+  function refresh() {
+    queued = false;
+    bindTexts();
+    bindSections();
+    bindCards();
+  }
+  const schedule = () => { if (!queued) { queued = true; queueMicrotask(refresh); } };
+
+  document.body.append(bar);
+  paintBar();
+  document.addEventListener("viteh:render", schedule);
+  for (const sel of ["#productGrid", "#serviceGrid"]) {            // the category filter re-creates the project cards without a render event
+    const grid = $(sel);
+    if (grid) new MutationObserver(schedule).observe(grid, { childList: true });
+  }
+  if (window.vitehRender) refresh();
+  refreshProblems();
+  const y = Number(store.get("ve.scroll"));
+  if (y > 0) { store.del("ve.scroll"); requestAnimationFrame(() => window.scrollTo(0, y)); }
+})();
