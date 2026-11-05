@@ -13,6 +13,8 @@
 
   const isIndex = (n) => Number.isInteger(n) && n >= 0 && n < 1000;
   const one = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").trim();      // Enter commits an edit, so texts are one line
+  const multi = (s) => String(s ?? "").replace(/\r\n?/g, "\n").replace(/[ \t]*\n[ \t]*/g, "\n").trim();      // legal paragraphs keep their line breaks
+  const MULTILINE_PATH = /^legal\.(?:imprint|privacy)\.sections\.\d{1,2}\.p$/;
 
   /** Where a node's text lives in site.json, or null. `desc` is built by the overlay from the DOM:
    *  {i18n: "hero.lead"}  or  {card: "services", index: 2, field: "title"|"text", point: 1}. */
@@ -75,7 +77,7 @@
       if (point !== null && !svc.points?.[point]) return null;
       return { kind: "extraService", id: svc.id, field: point === null ? m[2] : "points", point, key: `service:${svc.id}:${m[2]}` };
     }
-    return Object.prototype.hasOwnProperty.call(env.editable, path) ? { kind: "text", path, key: `text:${path}` } : null;
+    return Object.prototype.hasOwnProperty.call(env.editable, path) ? { kind: "text", path, key: `text:${path}`, multiline: MULTILINE_PATH.test(path) } : null;
   }
 
   function holder(binding, env) {            // the {uk,en,de} object a binding points at (may be undefined)
@@ -117,8 +119,9 @@
   /** Writes `value` for one language into the draft. Returns the stored (trimmed, capped) text, or null when nothing changed. */
   function writeText(binding, env, lang, value) {
     if (!LANGS.includes(lang)) return null;
-    const next = one(value).slice(0, maxLength(binding));
-    if (one(readText(binding, env, lang)) === next) return null;
+    const norm = binding.multiline ? multi : one;
+    const next = norm(value).slice(0, maxLength(binding));
+    if (norm(readText(binding, env, lang)) === next) return null;
     if (SINGLE.includes(binding.kind)) {
       if (!next && binding.kind !== "galleryYears") return null;          // an emptied tag or value is not saved (remove it in the admin)
       const { draft } = env;

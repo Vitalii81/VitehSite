@@ -164,9 +164,10 @@ class Builder:
 
     def services(self, s):
         cards = []
+        bare = lambda v: re.sub(r"\*\*|\{\{|\}\}", "", self.t(v))           # the home page's **bold** / {{tag}} markers are not shown here (same as the web page)
         for it in self.site.get("services", {}).get("items", []):
-            cards.append(Card([Para(self.t(it.get("title")), 8.5, ACC, True, 0.8 * MM), Para(self.t(it.get("text")), 8.4, INK, False, 1 * MM),
-                               Para(" · ".join(self.t(p) for p in it.get("points", [])), 7.6, MUTED, False, 0)], pad=3 * MM))
+            cards.append(Card([Para(bare(it.get("title")), 8.5, ACC, True, 0.8 * MM), Para(bare(it.get("text")), 8.4, INK, False, 1 * MM),
+                               Para(" · ".join(bare(p) for p in it.get("points", [])), 7.6, MUTED, False, 0)], pad=3 * MM))
         return self.pairs(cards) + [Para(self.t(s.get("note")), 8.5, MUTED)]
 
     def pairs(self, cards):

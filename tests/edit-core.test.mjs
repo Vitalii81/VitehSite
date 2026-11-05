@@ -291,3 +291,19 @@ test("gallery years and tags", () => {
   assert.equal(C.writeText(t, env, "uk", "C# 12"), "C# 12");
   assert.deepEqual(d.portfolio.items[slug].tags, ["C# 12", "WPF"]);
 });
+
+test("a legal paragraph keeps its line breaks, every other text stays one line", () => {
+  const draft = newDraft();
+  const env = envOf(draft);
+  env.editable["legal.imprint.sections.0.p"] = { uk: "a\nb", en: "a\nb", de: "a\nb" };
+  env.editable["legal.imprint.sections.0.h"] = { uk: "h", en: "h", de: "h" };
+  const p = C.bindingFor({ i18n: "legal.imprint.sections.0.p" }, env);
+  const hd = C.bindingFor({ i18n: "legal.imprint.sections.0.h" }, env);
+  assert.equal(p.multiline, true);
+  assert.equal(hd.multiline, false);
+  assert.equal(C.writeText(p, env, "en", "Line 1 \r\n  Line 2\n\nLine 4\n"), "Line 1\nLine 2\n\nLine 4");
+  assert.equal(draft.texts["legal.imprint.sections.0.p"].en, "Line 1\nLine 2\n\nLine 4");
+  assert.equal(C.writeText(p, env, "en", "Line 1\nLine 2\n\nLine 4"), null, "an unchanged paragraph is not a change");
+  assert.equal(C.writeText(hd, env, "en", "A\nB"), "A B");
+  assert.equal(C.bindingFor({ i18n: "legal.imprint.sections.0.p.x" }, env), null);
+});
