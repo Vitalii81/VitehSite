@@ -83,12 +83,14 @@
   const avatarNode = (uid) => {
     if (avatarId() === "custom") {
       const box = el("span", { class: "asst-av asst-custom", "aria-hidden": "true" });
-      box.append(el("img", { class: "asst-pose", src: customFrames().idle, alt: "", decoding: "async" }));
+      const zoom = el("span", { class: "asst-zoom" });
+      box.append(zoom);
+      zoom.append(el("img", { class: "asst-pose", src: customFrames().idle, alt: "", decoding: "async" }));
       for (const [name, url] of Object.entries(customFrames())) if (/^viseme_/.test(name)) new Image().src = url;       // no flicker the first time the mouth moves
       const mouth = customFrames().mouth_open;
       if (mouth) {                                          // a pack with an open-mouth picture: it is laid over the face and driven by the voice
         box.dataset.mouth = voiceGender();
-        box.append(el("img", { class: "asst-mouth", src: mouth, alt: "", decoding: "async" }));
+        zoom.append(el("img", { class: "asst-mouth", src: mouth, alt: "", decoding: "async" }));
       }
       return box;
     }
