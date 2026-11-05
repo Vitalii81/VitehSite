@@ -394,7 +394,8 @@ const avatarPicker = (A) => {
         const ref = frames[own] || frames[base] || frames.idle;                      // the widget does the same: own picture, else the basic pose, else idle
         const mine = frames[own] || (base && frames[base]);
         return h("figure", { style: "margin:0;text-align:center" + (mine ? "" : ";opacity:.5"), title: mine ? state : state + " = " + (frames[base] ? base : "idle") },
-          h("img", { src: frameUrl(ref), alt: state, style: "width:48px;height:48px;object-fit:cover;object-position:50% 12%;border-radius:10px;background:#dff3ee" }),
+          h("div", { style: "width:48px;height:48px;overflow:hidden;border-radius:10px;background:linear-gradient(150deg,#eaf9f4,#b9e1d8)" },       // the same crop as on the site: zoomed to the shoulders, head centred
+            h("img", { src: frameUrl(ref), alt: state, style: "width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.5);transform-origin:54% 15%" })),
           h("figcaption", { class: "muted", style: "font-size:11px" }, state));
       }));
       const visemes = Object.keys(frames).filter((k) => k.startsWith("viseme_")).map((k) => k.slice(7));

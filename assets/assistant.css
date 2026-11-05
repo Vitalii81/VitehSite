@@ -136,7 +136,7 @@
 .asst-fab .asst-custom { width: 80px; height: 80px; margin: -18px 0 -8px -2px; box-shadow: 0 0 0 3px var(--accent-ink), var(--shadow-lg); }
 .asst-head .asst-custom { width: 72px; height: 72px; margin: -8px 0; border-radius: 18px; box-shadow: 0 0 0 2px var(--accent); }
 /* the frame never moves and the person is not shaken: the poses themselves carry the gestures. The portrait is shown close, down to the shoulders (the zoom box also carries the mouth layer) */
-.asst-custom .asst-zoom { position: absolute; inset: 0; transform: scale(1.5); transform-origin: 50% 15%; }
+.asst-custom .asst-zoom { position: absolute; inset: 0; transform: scale(1.5); transform-origin: 54% 15%; }      /* the head sits ~4% right of the middle of these portraits */
 .asst-custom img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* the open-mouth picture of a custom pack (position measured on the 256 px portraits of the Pro pack; the women's pack sits a hair differently) */
 .asst-custom .asst-mouth { position: absolute; left: 39.1%; top: 43.7%; width: 25.8%; height: 15.6%; object-fit: fill; opacity: var(--m-open); transform: scaleY(calc(.65 + var(--m-open) * .5)); transform-origin: 50% 40%; transition: opacity .075s linear; pointer-events: none; }
