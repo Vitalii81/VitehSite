@@ -818,7 +818,12 @@ class ApiTests(Base):
         self.assertEqual(self.call("POST", "deploy", {"id": bid}, cookie=cookie)[0], 409, "one publish at a time")
         self.assertEqual(deploy.next_request(self.w.paths), bid)
         self.assertEqual(deploy.next_request(self.w.paths), "", "a running request is not handed out twice")
+        self.assertTrue(deploy.progress(self.w.paths, bid, "Downloading ...\nVerifying checksums ..."))
+        d = self.call("GET", "status", cookie=cookie)[2]["status"]["deploy"]
+        self.assertEqual((d["state"], d["log"].splitlines()[-1], bool(d["startedAt"])), ("running", "Verifying checksums ...", True), "progress shows the log while running")
+        self.assertFalse(deploy.progress(self.w.paths, "20260101-000000-deadbeef", "x"), "another request is ignored")
         deploy.report(self.w.paths, bid, True, "Published.")
+        self.assertFalse(deploy.progress(self.w.paths, bid, "late"), "a finished request is not touched")
         d = self.call("GET", "status", cookie=cookie)[2]["status"]["deploy"]
         self.assertEqual((d["state"], d["log"], d["agentOnline"]), ("ok", "Published.", True))
         with self.assertRaises(core.ApiError):
@@ -1803,6 +1808,17 @@ class CustomAvatarTests(ApiTests):
         self.assertEqual(clean["assistant"]["avatar"], "custom")
         draft["assistant"]["customAvatar"] = {"idle": "u:0123456789abcdef"}                 # an upload that does not exist
         self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["avatar"], "consultant-f")
+
+    def test_a_publication_clears_the_live_overrides(self):
+        from vadmin import settings
+        seen = []
+        self.assertFalse(settings.reset(self.w.paths, lambda *a: seen.append(a) or '{"ok": true}'), "no key file: nothing is sent")
+        self.assertEqual(seen, [])
+        with open(settings.token_path(self.w.paths), "w") as f:
+            f.write("k-1")
+        self.assertTrue(settings.reset(self.w.paths, lambda url, token, body: seen.append((token, body)) or '{"ok": true}'))
+        self.assertEqual(seen, [("k-1", "{}")])
+        self.assertFalse(settings.reset(self.w.paths, lambda *a: 1 / 0), "a failure never breaks the publication")
 
     def test_apply_now_is_refused_for_a_custom_avatar(self):
         from vadmin import settings

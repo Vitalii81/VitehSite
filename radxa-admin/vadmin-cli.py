@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Command line for the owner and for deploy-from-radxa.sh (over ssh).
-  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | deploy-next | deploy-report <id> ok|fail (log on stdin) | set-password | build"""
+  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | deploy-next | deploy-progress <id> (log on stdin) | deploy-report <id> ok|fail (log on stdin) | set-password | build"""
 import getpass
 import os
 import sys
@@ -36,10 +36,16 @@ def main(argv):
                 state["published"] = args[0]
                 core.write_json(paths.state, state)
             print("published =", args[0])
+            from vadmin import settings                         # the new build carries the newest built-in values: drop the live overrides
+            print("live overrides cleared" if settings.reset(paths) else "live overrides not cleared (no key or no answer): use the apply button if needed")
             return 0
         if cmd == "deploy-next":
             with core.locked(paths):
                 print(deploy.next_request(paths))
+            return 0
+        if cmd == "deploy-progress":
+            with core.locked(paths):
+                deploy.progress(paths, args[0], sys.stdin.read())
             return 0
         if cmd == "deploy-report":
             with core.locked(paths):

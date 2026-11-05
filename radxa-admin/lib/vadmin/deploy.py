@@ -34,7 +34,7 @@ def next_request(paths, now=None):
     cur["agentSeenAt"] = now
     bid = ""
     if cur.get("state") == "queued":
-        cur.update(state="running", at=now)
+        cur.update(state="running", at=now, startedAt=now, log="")
         bid = cur["id"]
     write_json(paths.deploy, cur)
     return bid
@@ -49,6 +49,17 @@ def report(paths, bid, ok, log, now=None):
     write_json(paths.deploy, cur)
 
 
+def progress(paths, bid, log, now=None):
+    """The agent sends the tail of the log while the deploy runs, so the page can show where it is. Ignored once the request is finished or is another one."""
+    now = now or time.time()
+    cur = _read(paths)
+    if cur.get("id") != bid or cur.get("state") != "running":
+        return False
+    cur.update(at=now, agentSeenAt=now, log=(log or "")[-LOG_MAX:])
+    write_json(paths.deploy, cur)
+    return True
+
+
 def view(paths, now=None):
     now = now or time.time()
     cur = _read(paths)
@@ -58,5 +69,5 @@ def view(paths, now=None):
     if state == "running" and now - cur.get("at", 0) > RUNNING_MAX:
         state = "failed"
         cur["log"] = (cur.get("log") or "") + "\nАгент довго не відповідає"
-    return {"state": state, "id": cur.get("id"), "log": cur.get("log", ""), "requestedAt": cur.get("requestedAt"), "finishedAt": cur.get("finishedAt"),
+    return {"state": state, "id": cur.get("id"), "log": cur.get("log", ""), "requestedAt": cur.get("requestedAt"), "startedAt": cur.get("startedAt"), "finishedAt": cur.get("finishedAt"),
             "agentOnline": now - cur.get("agentSeenAt", 0) < AGENT_FRESH}
