@@ -223,16 +223,18 @@ export function serviceElectronics(scene) {
   cylinder(stand.geo("copper"), { r: 0.2, h: 0.72, seg: 6, flat: true, at: [0, 0.7, 0] });
   for (const [x, z] of L.holes) scene.inst(stand, { at: [x, 0.17, z] });
   for (const [x, z] of L.holes) scene.inst(P.screw, { at: [x, 1.45 + 0.16, z], s: 0.9 });
+  // Exploded view: the lid hovers parallel to the tray, centred over it, brushed aluminium, the themable accent only in the logo.
+  const lidY = 3.7;
   const lid = scene.part("lid");
-  roundedBox(lid.geo("accent"), { size: [iw, 0.3, id], r: 0.18, n: 3, at: [0, 0, 0] });
+  roundedBox(lid.geo("alu"), { size: [iw, 0.3, id], r: 0.18, n: 3, at: [0, 0, 0] });
+  scene.inst(lid, { at: [0, lidY, 0] });
   const slot = scene.part("lid-slot");
   roundedBox(slot.geo("rubber"), { size: [1.6, 0.04, 0.12], r: 0.05, n: 1, at: [0, 0, 0] });
-  for (let i = 0; i < 7; i++) scene.inst(slot, { at: [1.6, 4.62, -1.8 + i * 0.3], rot: [-0.18, 0.1, 0] });
+  for (let i = 0; i < 7; i++) scene.inst(slot, { at: [2.4, lidY + 0.16, -1.2 + i * 0.3] });
   const logo = scene.part("lid-logo");
-  cylinder(logo.geo("chrome"), { r: 0.55, h: 0.03, bevel: 0.01, seg: 40, at: [0, 0, 0] });
+  cylinder(logo.geo("accent"), { r: 0.55, h: 0.03, bevel: 0.01, seg: 40, at: [0, 0, 0] });
   torus(logo.geo("graphite"), { R: 0.4, t: 0.03, seg: 40, tube: 8, at: [0, 0.02, 0] });
-  scene.inst(lid, { at: [0, 4.55, 0], rot: [-0.18, 0.1, 0] });
-  scene.inst(logo, { at: [-1.9, 4.75, 0.5], rot: [-0.18, 0.1, 0] });
+  scene.inst(logo, { at: [-2.4, lidY + 0.16, 0] });
 }
 
 /* ---------- 6. service: AI agents (a core with orbits, satellites and links) ---------- */
@@ -273,10 +275,21 @@ export function serviceAi(scene) {
 }
 
 /* ---------- 6. project: IoT module (a development board: carrier PCB, radio module with a PCB antenna, headers, USB-C, buttons, LEDs) ---------- */
+function iotScreen(scene) {                                                                                   // 1.3" TFT shown on the IoT module: node name, temperature, link state and a trend
+  const s = new Raster(160, 128, [10, 18, 24, 255]);
+  s.rect(0, 0, 160, 16, [18, 34, 40, 255]); s.text("IOT-NODE 07", 6, 5, 1, [190, 215, 210, 255]); s.disc(148, 8, 3, [76, 201, 173, 255]);
+  s.text("23.4", 10, 28, 4, [76, 201, 173, 255]); s.text("C", 112, 30, 2, [150, 170, 166, 255]);
+  s.text("HUM 48%", 10, 68, 1.4, [240, 166, 90, 255]);
+  const heights = [14, 20, 17, 26, 22, 30, 25, 34, 28, 31, 36, 29];
+  heights.forEach((h, i) => s.rect(10 + i * 12, 116 - h, 8, h, i === heights.length - 1 ? [76, 201, 173, 255] : [34, 70, 70, 255]));
+  scene.texture("screenIot", s, { opaque: true });
+}
+
 export function iotModule(scene) {
+  iotScreen(scene);
   const P = makeParts(scene);
   const pcb = scene.part("carrier-pcb");                                                                      // carrier board, x from -2.4 to 2.4
-  roundedBox(pcb.geo("accent"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
+  roundedBox(pcb.geo("pcbDeep"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
   for (const [x, z] of [[-2.15, -1.12], [-2.15, 1.12], [2.15, -1.12], [2.15, 1.12]]) { disc(pcb.geo("gold"), { rOut: 0.1, y: 0.146, seg: 18, at: [x, 0, z] }); }
   scene.inst(pcb);
   const hdr = scene.part("header"), pin = scene.part("header-pin");                                           // two rows of pin headers along the long edges
@@ -303,12 +316,18 @@ export function iotModule(scene) {
   const btn = scene.part("button");
   roundedBox(btn.geo("graphite"), { size: [0.34, 0.1, 0.34], r: 0.03, n: 1, at: [0, 0.05, 0] });
   cylinder(btn.geo("chrome"), { r: 0.09, h: 0.07, bevel: 0.015, seg: 20, at: [0, 0.135, 0] });
-  for (const z of [-0.55, 0.55]) scene.inst(btn, { at: [-1.5, 0.14, z] });
-  scene.inst(P.soicBody, { at: [-0.62, 0.14, 0.0], s: 0.7 });
-  scene.inst(P.led("ledGreen"), { at: [-0.85, 0.14, -0.55] });
-  scene.inst(P.led("ledAmber"), { at: [-0.85, 0.14, 0.55] });
-  for (const [x, z, r] of [[-1.05, -0.35, 0], [-1.05, 0.35, 0], [-0.3, -0.5, 1.57], [-0.3, 0.5, 1.57]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, r, 0] });
-  for (const [x, z] of [[-0.3, 0.0], [0.0, -0.5]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
+  for (const z of [-0.6, 0.6]) scene.inst(btn, { at: [-2.1, 0.14, z] });
+  // built-in display: a TFT module on its own small PCB between the pin-header rows, left of the radio shield
+  const dsp = scene.part("display-module");
+  roundedBox(dsp.geo("graphite"), { size: [1.4, 0.07, 1.45], r: 0.04, n: 1, at: [0, 0.035, 0] });
+  roundedBox(dsp.geo("rubber"), { size: [1.3, 0.05, 1.35], r: 0.03, n: 1, at: [0, 0.095, 0] });
+  quadUV(dsp.geo("screenIot", true), [[-0.5, 0.123, 0.4], [0.5, 0.123, 0.4], [0.5, 0.123, -0.4], [-0.5, 0.123, -0.4]], [0, 1, 0], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  roundedBox(dsp.geo("accent"), { size: [1.0, 0.012, 0.05], r: 0.012, n: 1, at: [0, 0.12, 0.54] });                // themed accent bar under the screen
+  for (const x of [-0.6, 0.6]) cylinder(dsp.geo("gold"), { r: 0.045, h: 0.03, seg: 14, at: [x, 0.085, 0.6] });
+  scene.inst(dsp, { at: [-1.15, 0.14, 0.0] });
+  scene.inst(P.led("ledGreen"), { at: [-0.32, 0.14, -0.78] });
+  scene.inst(P.led("ledAmber"), { at: [-0.32, 0.14, 0.78] });
+  for (const z of [-0.45, 0.45]) scene.inst(P.resistor, { at: [-0.32, 0.14, z], rot: [0, 1.57, 0] });
 }
 
 /* ---------- 7. project: device monitoring panel (a display with trends, tiles and a status bar) ---------- */

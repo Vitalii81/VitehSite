@@ -161,7 +161,7 @@
       const index = Number(card.dataset.s);
       attach($("h3", card), { card: "services", index, field: "title" });
       attach($(":scope > p", card), { card: "services", index, field: "text" });
-      $$(".check-list li", card).forEach((li, point) => attach(li, { card: "services", index, point }));
+      $$(".check-list li", card).forEach((li, point) => attach(li.querySelector(":scope > span") || li, { card: "services", index, point }));
     });
     $$("#aiFeatures li").forEach((li, index) => { attach($("h3", li), { card: "ai", index, field: "title" }); attach($("p", li), { card: "ai", index, field: "text" }); });
     $$("#processSteps li").forEach((li, index) => { attach($("h3", li), { card: "process", index, field: "title" }); attach($("p", li), { card: "process", index, field: "text" }); });
