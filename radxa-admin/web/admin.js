@@ -366,7 +366,32 @@ const avatarPicker = (A) => {
     }));
   };
   loadAvatarAssets().then(fill);
-  return h("div", { class: "card" }, h("p", { class: "muted" }, "Вигляд помічника на сайті: кнопка в кутку і шапка чату. Усі варіанти рухаються однаково (привітання, кивок, думає, говорить). Наведіть курсор, щоб побачити привітання. Зміна потрапить на сайт після збірки й публікації."), box);
+  const mine = h("div", { class: "avatar-custom" });
+  const frameUrl = (ref) => `${API}?action=file&id=${encodeURIComponent(String(ref).slice(2))}`;
+  const paintMine = () => {
+    const frames = A.customAvatar || {};
+    const input = h("input", { type: "file", accept: ".zip,image/png,image/jpeg,image/webp,image/avif", hidden: true });
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const r = await api("avatar-upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}`, headers: { "Content-Type": "application/octet-stream" } });
+        S.uploads = r.uploads; A.customAvatar = r.frames; A.avatar = "custom"; touch(); fill(); paintMine();
+        toast("Свій аватар завантажено: " + Object.keys(r.frames).join(", "));
+      } catch (e) { fail(e); }
+    });
+    mine.replaceChildren(
+      h("h3", { style: "margin:14px 0 6px" }, "Свій аватар"),
+      h("p", { class: "muted" }, "Одна картинка (PNG, JPEG, WebP, AVIF; SVG не приймається) або ZIP з картинками на кожен стан: idle, wave, nod, think, talk, present (за назвою файлу). Достатньо idle: решта стане нею ж. Картинка в кружку; рух дає сторінка (дихання, кивок, привітання, «говорить»)."),
+      h("div", { class: "row" },
+        h("button", { class: "btn", type: "button", onclick: () => input.click() }, frames.idle ? "Замінити файл або ZIP" : "Завантажити файл або ZIP"),
+        frames.idle ? h("button", { class: `btn${A.avatar === "custom" ? " primary" : ""}`, type: "button", onclick: () => { A.avatar = "custom"; touch(); fill(); paintMine(); } }, A.avatar === "custom" ? "Обрано" : "Обрати свій") : null,
+        input),
+      h("div", { class: "row", style: "margin-top:8px" }, ...Object.entries(frames).map(([mood, ref]) => h("figure", { style: "margin:0;text-align:center" },
+        h("img", { src: frameUrl(ref), alt: mood, style: "width:64px;height:64px;object-fit:cover;border-radius:50%" }), h("figcaption", { class: "muted" }, mood)))));
+  };
+  paintMine();
+  return h("div", { class: "card" }, h("p", { class: "muted" }, "Вигляд помічника на сайті: кнопка в кутку і шапка чату. Усі варіанти рухаються однаково (привітання, кивок, думає, говорить). Наведіть курсор, щоб побачити привітання. Зміна потрапить на сайт після збірки й публікації (вибір готового вигляду можна застосувати кнопкою нижче без публікації)."), box, mine);
 };
 
 const VIEWS = {

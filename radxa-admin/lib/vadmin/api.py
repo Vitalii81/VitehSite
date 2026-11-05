@@ -175,6 +175,11 @@ def _handle(paths, method, action, headers, body, query, client):
             clean = schema.sanitize(data.get("draft"), ctx)
             clean["rev"] = current["rev"]
             return _json(200, {"ok": True, "rev": save_draft(paths, clean), "draft": clean})
+        if action == "avatar-upload":                          # one picture or a ZIP with a picture per mood (see avatar.py)
+            from . import avatar
+            from urllib.parse import unquote
+            name = str((query.get("name") or [""])[0]) or unquote(headers.get("x-filename", "idle"))
+            return _json(200, {"ok": True, "frames": avatar.store(paths, body, name), "uploads": uploads.listing(paths)})
         if action == "apply-settings":                         # parameters that need no new publication (see settings.py)
             from . import settings
             return _json(200, settings.apply(paths, read_draft(paths, ctx)))
