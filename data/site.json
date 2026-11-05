@@ -594,7 +594,10 @@
             "en": "**3D product models** and a private admin",
             "de": "**3D-Produktmodelle** und privates Admin"
           }
-        ]
+        ],
+        "model": "assets/models/service-web.glb",
+        "poster": "assets/posters/service-web",
+        "orbit": "28deg 70deg 90%"
       },
       {
         "icon": "code",
@@ -624,7 +627,9 @@
             "en": "**Automatic updates** and private networks",
             "de": "**Automatische Updates** und private Netzwerke"
           }
-        ]
+        ],
+        "model": "assets/models/service-android.glb",
+        "poster": "assets/posters/service-android"
       },
       {
         "icon": "agent",
