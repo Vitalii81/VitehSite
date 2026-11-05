@@ -818,7 +818,12 @@ class ApiTests(Base):
         self.assertEqual(self.call("POST", "deploy", {"id": bid}, cookie=cookie)[0], 409, "one publish at a time")
         self.assertEqual(deploy.next_request(self.w.paths), bid)
         self.assertEqual(deploy.next_request(self.w.paths), "", "a running request is not handed out twice")
+        self.assertTrue(deploy.progress(self.w.paths, bid, "Downloading ...\nVerifying checksums ..."))
+        d = self.call("GET", "status", cookie=cookie)[2]["status"]["deploy"]
+        self.assertEqual((d["state"], d["log"].splitlines()[-1], bool(d["startedAt"])), ("running", "Verifying checksums ...", True), "progress shows the log while running")
+        self.assertFalse(deploy.progress(self.w.paths, "20260101-000000-deadbeef", "x"), "another request is ignored")
         deploy.report(self.w.paths, bid, True, "Published.")
+        self.assertFalse(deploy.progress(self.w.paths, bid, "late"), "a finished request is not touched")
         d = self.call("GET", "status", cookie=cookie)[2]["status"]["deploy"]
         self.assertEqual((d["state"], d["log"], d["agentOnline"]), ("ok", "Published.", True))
         with self.assertRaises(core.ApiError):

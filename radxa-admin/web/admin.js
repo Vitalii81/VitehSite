@@ -711,7 +711,7 @@ const VIEWS = {
       h("td", { class: "row" },
         h("button", { class: "btn small", type: "button", onclick: async () => { try { const r = await api("preview", { method: "POST", body: { id: b.id } }); S.status = r.status; window.open(r.status.previewUrl, "_blank", "noopener"); await refreshStatus(); rerender(); } catch (e) { fail(e); } } }, "Перегляд"),
         h("button", { class: "btn small", type: "button", onclick: () => rollback(b.id) }, "Відкотити чернетку"),
-        h("button", { class: "btn small", type: "button", onclick: () => publish(b.id) }, "Опублікувати"))));
+        h("button", { class: "btn small", type: "button", disabled: b.published && !st.changedSinceBuild ? true : null, onclick: () => publish(b.id) }, b.published ? "Опубліковано" : "Опублікувати"))));
     table.append(tb);
     main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
   },
@@ -800,18 +800,46 @@ function logView(text) {
   }));
 }
 
+/** Where the deploy is, read from the log lines the agent sends while it works (the stages follow deploy-from-radxa.sh and wrangler). */
+const DEPLOY_STAGES = [
+  ["Завантаження пакета з Radxa", /downloading/i],
+  ["Перевірка контрольних сум", /verifying|files match/i],
+  ["Підготовка файлів", /deploying with|staged/i],
+  ["Завантаження файлів у Cloudflare", /building list of assets|starting asset upload|uploaded \d|read \d+ files/i],
+  ["Публікація Worker", /total upload|worker startup|deployed |current version|uploaded viteh/i],
+  ["Фіксація версії", /marking .* as published|stored\./i],
+];
+const deployStage = (log) => DEPLOY_STAGES.reduce((at, [, re], i) => (re.test(String(log)) ? i : at), -1);
+const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+
+function deployProgress(d) {
+  const stage = d.state === "queued" ? -1 : Math.max(0, deployStage(d.log));
+  const pct = d.state === "queued" ? 4 : Math.round(((stage + 1) / (DEPLOY_STAGES.length + 1)) * 100);
+  const since = d.state === "queued" ? d.requestedAt : (d.startedAt || d.requestedAt);
+  const timer = h("span", { class: "muted mono" }, "");
+  const tick = () => { timer.textContent = since ? clock(Date.now() / 1000 - since) : ""; };
+  tick();
+  const ticker = setInterval(() => { if (!timer.isConnected) clearInterval(ticker); else tick(); }, 1000);
+  const text = d.state === "queued" ? (d.agentOnline ? "У черзі: агент зараз візьме публікацію" : "У черзі: чекаємо агента на основному ПК") : `Крок ${stage + 1} з ${DEPLOY_STAGES.length}: ${DEPLOY_STAGES[stage][0]}`;
+  return h("div", { class: "deploy-progress", role: "status", "aria-live": "polite" },
+    h("div", { class: "row" }, h("span", { class: "spinner", "aria-hidden": "true" }), h("strong", {}, text), timer),
+    h("div", { class: "bar", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct) }, h("div", { class: "bar-fill", style: `width:${pct}%` })));
+}
+
 function publishBox(id) {
   const d = S.status?.deploy || { state: "idle" };
   const mine = d.id === id;
   const busy = mine && (d.state === "queued" || d.state === "running");
   const label = { queued: "У черзі…", running: "Публікується…", ok: "Опубліковано", failed: "Помилка публікації" }[mine ? d.state : ""] || "";
-  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: () => publish(id) }, busy ? "Публікується…" : "Опублікувати цю версію");
   const stale = id === S.status?.built && S.status?.changedSinceBuild;
+  const done = S.status?.published === id && !stale;                                   // this very package is already live and the draft has not moved on
+  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || done || null, onclick: () => publish(id) },
+    busy ? "Публікується…" : done ? "Вже опубліковано" : "Опублікувати цю версію");
   const staleNote = stale && !busy ? h("p", { class: "chip warn" }, "У чернетці є зміни після цієї збірки: кнопка спершу збере свіжий пакет, а потім опублікує його.") : null;
   const note = !d.agentOnline && !busy ? h("p", { class: "muted" }, "Агент публікації на основному ПК зараз не на зв'язку: запит дочекається, поки його запустять (deploy-agent.sh).") : null;
   return h("div", { class: "card" }, h("strong", {}, `Опублікувати ${id}`),
     h("p", { class: "muted" }, "Кнопка ставить публікацію в чергу; ключі Cloudflare лишаються на основному ПК, де її виконує агент."),
-    h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), staleNote, note,
+    h("div", { class: "row" }, btn, label && !busy ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), busy ? deployProgress(d) : null, staleNote, note,
     mine && d.log ? logView(d.log) : null);
 }
 
@@ -839,9 +867,9 @@ function watchDeploy() {
     if (st !== "queued" && st !== "running") {
       clearInterval(deployTimer);
       toast(st === "ok" ? "Опубліковано" : "Публікація не вдалася, дивіться журнал", st === "ok" ? undefined : "err", 8000);
-      rerender();
     }
-  }, 4000);
+    if (S.view?.name === "builds") { const y = window.scrollY; rerender(); window.scrollTo(0, y); }          // progress and log move while it runs
+  }, 2500);
 }
 
 async function buildNow() {
