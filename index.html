@@ -21,7 +21,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <script>
     /* Apply the saved theme before first paint to avoid a flash. */
-    document.documentElement.classList.add("js"); try { var t = localStorage.getItem("viteh.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+    document.documentElement.classList.add("js"); try { var t = localStorage.getItem("viteh.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; var p = localStorage.getItem("viteh.palette"); if (/^[a-z]{3,12}$/.test(p || "")) document.documentElement.dataset.palette = p; } catch (e) {}
   </script>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -49,6 +49,11 @@
           <svg class="ico ico-sun" aria-hidden="true"><use href="assets/icons.svg#i-sun"/></svg>
           <svg class="ico ico-moon" aria-hidden="true"><use href="assets/icons.svg#i-moon"/></svg>
         </button>
+        <div class="palette" id="paletteBox">
+          <button class="icon-btn" id="paletteToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="paletteMenu" aria-label="Colours">
+            <svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-palette"/></svg>
+          </button>
+        </div>
         <button class="icon-btn menu-btn" id="menuToggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu">
           <svg class="ico ico-open" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg>
           <svg class="ico ico-close" aria-hidden="true"><use href="assets/icons.svg#i-close"/></svg>
