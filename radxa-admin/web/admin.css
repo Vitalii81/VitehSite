@@ -1,6 +1,6 @@
 /* ViTeh admin. Local only: no fonts, no CDN, no frameworks. Light and dark follow the system. */
-:root { color-scheme: light dark; --bg:#f3f6f4; --panel:#fff; --ink:#122019; --muted:#566660; --line:#d6e1db; --accent:#1c8a74; --accent-ink:#fff; --soft:rgba(28,138,116,.12); --warn:#b4570a; --warn-bg:#fff2e0; --err:#b3261e; --err-bg:#fde8e6; --ok:#146b5a; }
-@media (prefers-color-scheme: dark) { :root { --bg:#0c1311; --panel:#15201d; --ink:#e7efeb; --muted:#9bada6; --line:#25352f; --accent:#4cc9ad; --accent-ink:#06201a; --soft:rgba(76,201,173,.14); --warn:#f0a65a; --warn-bg:#33240f; --err:#ff8a80; --err-bg:#3a1714; --ok:#7ee0c6; } }
+:root { color-scheme: light dark; --bg:#f3f6f4; --panel:#fff; --ink:#122019; --muted:#566660; --line:#d6e1db; --accent:#1c8a74; --accent-ink:#fff; --soft:rgba(28,138,116,.12); --warn:#b4570a; --warn-bg:#fff2e0; --err:#b3261e; --err-bg:#fde8e6; --ok:#146b5a; --log-ok:#15803d; --log-warn:#a16207; --log-err:#b3261e; --log-step:#1d5fd1; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0c1311; --panel:#15201d; --ink:#e7efeb; --muted:#9bada6; --line:#25352f; --accent:#4cc9ad; --accent-ink:#06201a; --soft:rgba(76,201,173,.14); --warn:#f0a65a; --warn-bg:#33240f; --err:#ff8a80; --err-bg:#3a1714; --ok:#7ee0c6; --log-ok:#4ade80; --log-warn:#f5d04c; --log-err:#ff8a80; --log-step:#7aa7ff; } }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
@@ -92,3 +92,12 @@ dialog::backdrop { background: rgba(0, 0, 0, .55); }
 .copybox { display: flex; gap: 8px; align-items: center; }
 .copybox input { font-family: ui-monospace, Menlo, Consolas, monospace; }
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; max-width: 90vw; }
+
+/* publish log: one coloured line each; only warnings and errors need attention */
+.log { white-space: pre-wrap; max-height: 280px; overflow: auto; margin: 8px 0 0; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.log .ln { display: block; }
+.log .ln.ok { color: var(--log-ok); font-weight: 600; }
+.log .ln.warn { color: var(--log-warn); font-weight: 600; }
+.log .ln.err { color: var(--log-err); font-weight: 700; }
+.log .ln.step { color: var(--log-step); }
+.log .ln.dim { color: var(--muted); opacity: .85; }
