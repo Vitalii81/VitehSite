@@ -229,6 +229,7 @@ function pickFile(kind, current) {
 async function uploadFile(file) {
   const r = await api("upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}`, headers: { "Content-Type": "application/octet-stream" } });
   S.uploads = r.uploads;
+  await VTwin.attach(file, r.item, (query, blob) => api("upload", { method: "POST", raw: blob, query, headers: { "Content-Type": "application/octet-stream" } }));      // JPEG twin of a WebP (PDF only)
   return r;
 }
 

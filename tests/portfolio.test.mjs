@@ -105,3 +105,19 @@ test("the public texts do not call the controller by its internal name", () => {
   const visible = JSON.stringify([site, JSON.parse(read("data/products.json")).map(({ title, summary, tags }) => ({ title, summary, tags }))]);
   assert.ok(!/cronos/i.test(visible.replace(/"img":"[^"]*"/g, "")), "Cronos is an internal file name only");
 });
+
+test("services in the portfolio: the public page hides the home page's **bold**/{{tag}} markers, the editor binds every text to its site.json path", async () => {
+  const { servicesHtml } = await import("../assets/portfolio-render.js");
+  const marked = structuredClone(site);
+  marked.services.items[0].text.en = "**Bold** and {{tag}}.";
+  marked.services.items[0].points[0].en = "{{Kotlin}} app";
+  const section = { note: { en: "Note" } };
+  const pub = servicesHtml(section, marked, "en");
+  assert.ok(!/\*\*|\{\{|\}\}|data-p/.test(pub), "no markers and no editor attributes on the public page");
+  assert.match(pub, /Bold and tag\./);
+  const ve = servicesHtml(section, marked, "en", "portfolioPage.sections.3");
+  assert.match(ve, /data-p="services\.items\.0\.title"/);
+  assert.match(ve, /data-p="services\.items\.0\.text">\*\*Bold\*\* and \{\{tag\}\}\./, "the editor shows the stored text");
+  assert.match(ve, /data-p="services\.items\.0\.points\.0"/);
+  assert.match(ve, /data-p="portfolioPage\.sections\.3\.note"/);
+});

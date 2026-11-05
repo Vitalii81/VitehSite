@@ -25,13 +25,13 @@ function paint() {
   document.title = t(ui.title);
   document.querySelector('meta[name="description"]')?.setAttribute("content", t(ui.description));
   const bar = document.getElementById("ppBar");
-  bar.innerHTML = `<a class="pp-back" href="../?lang=${lang}"${dp("ui.back")}>${esc(t(ui.back))}</a><span class="pp-actions"><span class="pp-lang" role="group" aria-label="Language">${LANGS.map((l) => `<button type="button" data-lang="${l}" aria-pressed="${l === lang}">${l.toUpperCase()}</button>`).join("")}</span><a class="pp-btn" href="../assets/portfolio/${PDF[lang]}" type="application/pdf" download>${esc(t(ui.pdf))}</a><button class="pp-btn" type="button" id="ppPrint">${esc(t(ui.print))}</button></span>`;
+  bar.innerHTML = `<a class="pp-back" href="../?lang=${lang}"${dp("ui.back")}>${esc(t(ui.back))}</a><span class="pp-actions"><span class="pp-lang" role="group" aria-label="Language">${LANGS.map((l) => `<button type="button" data-lang="${l}" aria-pressed="${l === lang}">${l.toUpperCase()}</button>`).join("")}</span><a class="pp-btn" href="../assets/portfolio/${PDF[lang]}" type="application/pdf" download${dp("ui.pdf")}>${esc(t(ui.pdf))}</a><button class="pp-btn" type="button" id="ppPrint"${dp("ui.print")}>${esc(t(ui.print))}</button></span>`;
   bar.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { lang = b.dataset.lang; store.set("viteh.lang", lang); const u = new URL(location.href); u.searchParams.set("lang", lang); history.replaceState(null, "", u); paint(); }));
   document.getElementById("ppPrint")?.addEventListener("click", () => window.print());
   const c = page.cover;
   const sections = sectionsFor(page, site, projects, manifest, lang, { ve });
   document.getElementById("ppMain").innerHTML = `<header class="pp-cover"><p class="kicker"${dp("ui.year")}>${esc(t(ui.year))}</p><h1${dp("cover.name")}>${esc(t(c.name))}</h1><p${dp("cover.roles")}>${esc(t(c.roles))}</p><p${dp("cover.text")}>${esc(t(c.text))}</p></header>`
-    + sections.map((s) => `<section class="pp-sec" id="${esc(s.id)}"${ve ? ` data-sec="${esc(s.id)}"` : ""}><p class="kicker"${s.path ? ` data-p="${s.path}.kicker"` : ""}>${esc(s.kicker)}</p><h2${s.path ? ` data-p="${s.path}.title"` : ""}>${esc(s.title)}</h2>${s.lead ? `<p class="lead"${s.path ? ` data-p="${s.path}.lead"` : ""}>${esc(s.lead)}</p>` : ""}${s.body}</section>`).join("");
+    + sections.map((s) => `<section class="pp-sec" id="${esc(s.id)}"${ve ? ` data-sec="${esc(s.id)}"` : ""}><p class="kicker"${s.path ? ` data-p="${s.path}.kicker"` : ""}>${esc(s.kicker)}</p><h2${s.path ? ` data-p="${s.path}.title"` : ""}>${esc(s.title)}</h2>${s.lead ? `<p class="lead"${s.leadPath ? ` data-p="${s.leadPath}"` : ""}>${esc(s.lead)}</p>` : ""}${s.body}</section>`).join("");
 }
 
 (async () => {

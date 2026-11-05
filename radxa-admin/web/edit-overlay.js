@@ -99,6 +99,8 @@
   window.addEventListener("beforeunload", (e) => { if (S.dirty || S.saving || S.typing) { e.preventDefault(); e.returnValue = ""; } });
 
   /* ---------- the bottom bar ---------- */
+  const PAGE_LINK = { home: "← Головна", portfolio: "Портфоліо →", impressum: "Імпресум →", datenschutz: "Конфіденційність →" };
+  const PAGE_LABEL = { home: "головна", portfolio: "портфоліо", impressum: "імпресум", datenschutz: "конфіденційність" };
   const bar = h("div", { class: "ve-ui ve-toolbar", role: "region", "aria-label": "Режим редагування" });
   const shownState = () => C.saveIndicator(S);                 // typing counts as unsaved even before the field is left
   const stateLabel = { saved: "Збережено", dirty: "Є зміни…", saving: "Зберігаю…", error: "Помилка", conflict: "Конфлікт" };
@@ -106,12 +108,11 @@
   function paintBar() {
     const problem = S.problems[0];
     bar.replaceChildren(...[
-      h("strong", { class: "ve-title" }, boot.page === "portfolio" ? "Редагування: портфоліо" : "Редагування"),
+      h("strong", { class: "ve-title" }, boot.page === "home" ? "Редагування" : `Редагування: ${PAGE_LABEL[boot.page]}`),
       h("span", { class: `ve-state ve-${shownState()}`, role: "status" }, stateLabel[shownState()] + (S.message ? `: ${S.message}` : "")),
       S.conflict ? h("button", { class: "ve-btn", type: "button", onclick: () => location.reload() }, "Оновити сторінку") : h("button", { class: "ve-btn", type: "button", onclick: () => { document.activeElement?.blur?.(); save(); } }, "Зберегти"),
       h("button", { class: "ve-btn", type: "button", onclick: otherTexts }, "Інші тексти…"),
-      boot.page === "portfolio" ? h("a", { class: "ve-btn ve-link", href: pageUrl("home"), onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, "← Головна")
-        : h("a", { class: "ve-btn ve-link", href: pageUrl("portfolio"), onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, "Портфоліо →"),
+      ...Object.keys(PAGE_LABEL).filter((p) => p !== boot.page).map((p) => h("a", { class: "ve-btn ve-link", href: pageUrl(p), onclick: (e) => { e.preventDefault(); gotoPage(e.currentTarget.href); } }, PAGE_LINK[p])),
       !boot.gallery ? h("span", { class: "ve-note" }, "3D вимкнено в чернетці: моделі не потраплять у збірку") : null,
       problem ? h("span", { class: "ve-note ve-warn", title: S.problems.map((p) => `${p.where}: ${p.message}`).join("\n") }, `Збірка не пройде: ${problem.message}`) : null,
       h("a", { class: "ve-btn ve-link", href: boot.adminUrl, onclick: async (e) => { e.preventDefault(); if (await flush()) location.href = boot.adminUrl; } }, "До адмінки (зібрати й опублікувати)"),
@@ -121,8 +122,9 @@
   /* ---------- text editing ---------- */
   const MODE = (() => { const probe = document.createElement("div"); probe.contentEditable = "plaintext-only"; return probe.contentEditable === "plaintext-only" ? "plaintext-only" : "true"; })();
 
-  function textHost(el) {                   // an element with an icon next to its text: only the text is editable
+  function textHost(el, rich) {             // an element with an icon next to its text: only the text is editable
     if (!el.children.length) return el;
+    if (rich) { el.replaceChildren(); return el; }          // the rendered **bold** / {{tag}} markup is replaced by the stored text, so the whole paragraph is editable (not just its last fragment)
     const existing = $(":scope > .ve-t", el);
     if (existing) return existing;
     for (const node of [...el.childNodes].reverse()) {
@@ -140,7 +142,7 @@
     if (!el) return;
     const binding = C.bindingFor(desc, env());
     if (!binding) return;
-    const node = textHost(el);
+    const node = textHost(el, /\*\*|\{\{/.test(C.readText(binding, env(), lang())));
     if (!node) return;
     BIND.set(node, binding);
     node.classList.add("ve-editable");
@@ -224,7 +226,8 @@
     const n = e.target.closest?.(".ve-editable");
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); n?.blur(); save(); return; }
     if (!n) return;
-    if (e.key === "Enter") { e.preventDefault(); n.blur(); }
+    if (e.key === "Enter" && BIND.get(n)?.multiline) { e.preventDefault(); if (e.shiftKey || e.ctrlKey || e.metaKey) n.blur(); else document.execCommand("insertText", false, "\n"); }      // a legal paragraph keeps its line breaks: Enter = new line, Shift+Enter = done
+    else if (e.key === "Enter") { e.preventDefault(); n.blur(); }
     else if (e.key === "Escape") { e.preventDefault(); n.textContent = n.dataset.veOrig ?? n.textContent; n.blur(); }
     else if (e.key === " ") e.stopPropagation();       // a space inside <summary> must type a space, not toggle the answer
   }, true);
@@ -380,6 +383,16 @@
     }
   }
 
+  /** IMPRESSUM / DATENSCHUTZ: the legal texts (site.json `legal`, kept in draft.texts): the page title and, per block, its heading and paragraph. */
+  function bindLegal() {
+    const kind = document.documentElement.dataset.legal;
+    attach($("#legalTitle"), { i18n: `legal.${kind}.title` });
+    $$("#legalBody > section").forEach((sec, i) => {
+      attach($("h2", sec), { i18n: `legal.${kind}.sections.${i}.h` });
+      attach($("p", sec), { i18n: `legal.${kind}.sections.${i}.p` });
+    });
+  }
+
   /* ---------- texts that cannot be edited in place ---------- */
   // Filter buttons (a click filters), <option>s of the form, the "3D" badge, the skip link, ARIA/theme labels and the page title/description are not editable where they sit.
   const OTHER = /^(?:ui\.|meta\.|nav\.|work\.(?:all|categories\.\d+\.label|archive\.(?:all|categories\.\d+\.label))$|contact\.form\.(?:types|attachErrors)\.)/;
@@ -417,6 +430,7 @@
         try {
           const r = await call("upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}` });
           boot.uploads = r.uploads;
+          await window.VTwin?.attach(file, r.item, (query, blob) => call("upload", { method: "POST", raw: blob, query }));      // JPEG twin of a WebP (PDF only)
           pick(r.item.ref);
         } catch (e) { msg.textContent = e.message; msg.hidden = false; }
       });
@@ -438,7 +452,7 @@
     bindTexts();
     bindSections();
     bindCards();
-    if (boot.page === "portfolio") bindPortfolio(); else bindGallery();
+    if (boot.page === "portfolio") bindPortfolio(); else if (boot.page === "home") bindGallery(); else bindLegal();
   }
   const schedule = () => { if (!queued) { queued = true; queueMicrotask(refresh); } };
 
@@ -449,6 +463,7 @@
     const grid = $(sel);
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true });
   }
+  if (boot.page === "impressum" || boot.page === "datenschutz") { const body = $("#legalBody"); if (body) new MutationObserver(schedule).observe(body, { childList: true }); schedule(); }
   if (boot.page === "portfolio") { const main = $("#ppMain"); if (main) new MutationObserver(schedule).observe(main, { childList: true }); schedule(); }
   if (window.vitehRender) refresh();
   refreshProblems();
