@@ -58,20 +58,35 @@
 
   /* ---------- avatar: a polite animated helper (wave, nod, think, talk, open-palm "present") ---------- */
   const AVATAR_WRAP = (inner) => '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true" focusable="false">' + inner + "</svg>";
+  const customFrames = () => {          // the owner's own pictures per mood (built into the page as data-assistant-frames)
+    try { const f = JSON.parse(document.documentElement.dataset.assistantFrames || "null"); return f && f.idle ? f : null; } catch { return null; }
+  };
   const avatarId = () => {
     const set = window.VITEH_AVATARS;
     const want = document.documentElement.dataset.assistantAvatar;
+    if (want === "custom" && customFrames()) return "custom";
     return set && set.items[want] ? want : set && set.order[0];
   };
   const avatars = [];
+  /** A custom avatar is a picture: the frame of the current mood (idle when the owner gave none for it). */
+  const showFrame = (node, name) => {
+    const frames = customFrames();
+    const img = node.querySelector && node.querySelector("img");
+    if (frames && img) img.src = frames[name] || frames.idle;
+  };
   const avatarNode = (uid) => {
+    if (avatarId() === "custom") {
+      const box = el("span", { class: "asst-av asst-custom", "aria-hidden": "true" });
+      box.append(el("img", { src: customFrames().idle, alt: "", decoding: "async" }));
+      return box;
+    }
     const holder = el("div");
     const markup = window.VITEH_AVATARS.items[avatarId()].svg.replace(/id="([a-z]+)"/g, `id="$1${uid}"`).replace(/url\(#([a-z]+)\)/g, `url(#$1${uid})`);
     holder.innerHTML = AVATAR_WRAP(markup);      // static markup of assistant-avatars.js only (no user or model text)
     return holder.firstChild;
   };
   const makeAvatar = () => {
-    if (!window.VITEH_AVATARS) return el("span");
+    if (!window.VITEH_AVATARS && !customFrames()) return el("span");
     const node = avatarNode("a" + (avatars.length + 1));          // ids (gradients) must be unique per copy: a hidden SVG does not render another one's gradients
     avatars.push(node);
     return node;
@@ -83,7 +98,7 @@
       if (!r.ok) return;
       const want = (await r.json()).assistantAvatar;
       const set = window.VITEH_AVATARS;
-      if (!set || !set.items[want] || want === avatarId()) return;
+      if (!(want === "custom" ? customFrames() : set && set.items[want]) || want === avatarId()) return;
       document.documentElement.dataset.assistantAvatar = want;
       avatars.forEach((old, i) => { const fresh = avatarNode("a" + (i + 1)); fresh.setAttribute("data-mood", old.getAttribute("data-mood") || "idle"); old.replaceWith(fresh); avatars[i] = fresh; });
     } catch { /* offline or no Worker: keep the built-in look */ }
@@ -92,8 +107,8 @@
   /** mood: idle | wave | nod | think | talk | present. A timed mood falls back to idle (or to the sticky one). */
   function mood(name, ms = 0, sticky = "idle") {
     clearTimeout(moodTimer);
-    for (const a of avatars) a.setAttribute("data-mood", name);
-    if (ms) moodTimer = setTimeout(() => { for (const a of avatars) a.setAttribute("data-mood", sticky); }, ms);
+    for (const a of avatars) { a.setAttribute("data-mood", name); showFrame(a, name); }
+    if (ms) moodTimer = setTimeout(() => { for (const a of avatars) { a.setAttribute("data-mood", sticky); showFrame(a, sticky); } }, ms);
   }
 
   /* ---------- DOM ---------- */

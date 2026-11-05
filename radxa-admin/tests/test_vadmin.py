@@ -1763,6 +1763,54 @@ class CompatTests(unittest.TestCase):
                             self.assertTrue(m in stdlib or m == "vadmin", "%s imports %s" % (name, m))
 
 
+class CustomAvatarTests(ApiTests):
+    PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 40
+
+    def zip_of(self, names):
+        import io, zipfile
+        b = io.BytesIO()
+        with zipfile.ZipFile(b, "w") as z:
+            for n in names:
+                z.writestr(n, self.PNG if n.lower().endswith(".png") else b"x" * 30)
+        return b.getvalue()
+
+    def test_zip_moods_are_matched_by_file_name(self):
+        from vadmin import avatar
+        picked = avatar.pick([("pack/Talk.png", b"t"), ("pack/face.png", b"f"), ("pack/avatar-wave.png", b"w")])
+        self.assertEqual(picked, {"talk": b"t", "wave": b"w", "idle": b"f"})
+        self.assertEqual(avatar.pick([("only.png", b"o")]), {"idle": b"o"})
+        with self.assertRaises(Exception):
+            avatar.pick([])
+
+    def test_upload_stores_pictures_and_refuses_svg_and_bad_zip(self):
+        from vadmin import avatar
+        frames = avatar.store(self.w.paths, self.zip_of(["a/idle.png", "a/talk.png", "__MACOSX/._idle.png", "readme.txt", "a/logo.svg"]), "x.zip")
+        self.assertEqual(sorted(frames), ["idle", "talk"])
+        self.assertTrue(all(v.startswith("u:") for v in frames.values()))
+        single = avatar.store(self.w.paths, self.PNG, "me.png")
+        self.assertEqual(list(single), ["idle"])
+        with self.assertRaises(Exception):
+            avatar.store(self.w.paths, b"<svg onload=alert(1)></svg>", "x.svg")
+        with self.assertRaises(Exception):
+            avatar.store(self.w.paths, b"PK\x03\x04 not really", "x.zip")
+
+    def test_custom_reaches_the_page_only_with_a_picture(self):
+        from vadmin import avatar, schema
+        frames = avatar.store(self.w.paths, self.PNG, "me.png")
+        draft = self.w.draft()
+        draft["assistant"].update(enabled=True, avatar="custom", customAvatar=frames)
+        clean = schema.sanitize(draft, schema.Context(self.w.paths))
+        self.assertEqual(clean["assistant"]["avatar"], "custom")
+        draft["assistant"]["customAvatar"] = {"idle": "u:0123456789abcdef"}                 # an upload that does not exist
+        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["avatar"], "consultant-f")
+
+    def test_apply_now_is_refused_for_a_custom_avatar(self):
+        from vadmin import settings
+        with self.assertRaises(Exception) as cm:
+            settings.apply(self.w.paths, {"assistant": {"avatar": "custom"}}, lambda *a: "{}")
+        self.assertIn("needs_publish", getattr(cm.exception, "code", ""))
+
+
 class LiveSettingsTests(ApiTests):
     def test_apply_sends_only_the_avatar_with_the_bearer_key(self):
         from vadmin import settings
@@ -2189,6 +2237,17 @@ class AssistantTests(unittest.TestCase):
         bid = self.build({"enabled": False, "avatar": "core"})
         self.assertNotIn("assistant", self.w.read(bid, "index.html"))
         self.assertFalse(os.path.exists(os.path.join(self.w.site(bid), "assets/assistant-avatars.js")))
+
+    def test_custom_avatar_pictures_are_packaged_and_announced(self):
+        from vadmin import avatar
+        frames = avatar.store(self.w.paths, b"\x89PNG\r\n\x1a\n" + b"\x00" * 40, "me.png")
+        bid = self.build({"enabled": True, "avatar": "custom", "customAvatar": frames})
+        html = self.w.read(bid, "index.html")
+        self.assertIn('data-assistant-avatar="custom"', html)
+        m = re.search(r"data-assistant-frames='([^']+)'", html)
+        self.assertTrue(m, "the page lists the pictures")
+        path = json.loads(m.group(1))["idle"]
+        self.assertTrue(path.startswith("assets/u/") and os.path.isfile(os.path.join(self.w.site(bid), path)), "the picture is in the package")
 
     def test_only_public_true_records_reach_the_kb(self):
         extra = [{"id": "x-aaaa0001", "public": True, "topic": {"uk": "Відкрите", "en": "Open", "de": "Offen"}, "text": {"uk": "ПУБЛІЧНИЙ-ФАКТ", "en": "PUBLIC-FACT", "de": "OEFFENTLICH"}},

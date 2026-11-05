@@ -124,3 +124,13 @@
 .asst-av .av-owl-s { stroke: var(--av-owl); }
 .asst-av .av-owl2c { fill: var(--av-owl2); stroke: var(--av-owl); stroke-width: 2; }
 .asst-av g.av-mouth { stroke: none; fill: none; }
+
+/* the owner's own picture as avatar: one image per mood, moved by CSS only */
+.asst-custom { display: inline-block; overflow: hidden; border-radius: 50%; }
+.asst-custom img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (prefers-reduced-motion: no-preference) {
+  .asst-custom { animation: av-breathe 4s ease-in-out infinite; }
+  .asst-custom[data-mood="wave"] { animation: av-tilt 2.2s ease-in-out 1; }
+  .asst-custom[data-mood="nod"] { animation: av-nod .55s ease-in-out 2; }
+  .asst-custom[data-mood="talk"] { animation: av-pulse 1.1s ease-in-out infinite; }
+}

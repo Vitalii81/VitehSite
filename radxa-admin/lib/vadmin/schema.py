@@ -390,6 +390,8 @@ def clean_site(raw, ctx):
 
 
 ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "expert", "engineer", "core")                  # looks in assets/assistant-avatars.js
+CUSTOM_AVATAR = "custom"                                                                            # the owner's own pictures (draft.assistant.customAvatar, see avatar.py)
+CUSTOM_MOODS = ("idle", "wave", "nod", "think", "talk", "present")
 ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
 
 
@@ -398,7 +400,17 @@ def clean_assistant(raw, ctx):
     `extra` holds records the owner added; `hidden` is the list of words the output filter always removes. A record is public only with public === true."""
     raw = raw if isinstance(raw, dict) else {}
     factory = {f.get("id"): f for f in ctx.assistant_kb if isinstance(f, dict) and isinstance(f.get("id"), str)}
-    out = {"enabled": boolean(raw.get("enabled"), False), "avatar": raw.get("avatar") if raw.get("avatar") in ASSISTANT_AVATARS else "consultant-f", "hidden": [], "facts": {}, "extra": []}
+    frames = {}
+    src_frames = raw.get("customAvatar") if isinstance(raw.get("customAvatar"), dict) else {}
+    for mood in CUSTOM_MOODS:
+        ref = src_frames.get(mood)
+        if isinstance(ref, str) and re.fullmatch(r"u:[0-9a-f]{16}", ref) and ctx.uploads.get(ref[2:], {}).get("kind") == "image":
+            frames[mood] = ref
+    avatar = raw.get("avatar")
+    if avatar == CUSTOM_AVATAR and "idle" not in frames:
+        avatar = None                                                    # custom without a picture is not a choice
+    out = {"enabled": boolean(raw.get("enabled"), False), "avatar": avatar if avatar in ASSISTANT_AVATARS + (CUSTOM_AVATAR,) else "consultant-f", "customAvatar": frames,
+           "hidden": [], "facts": {}, "extra": []}
     seen = set()
     for word in (raw.get("hidden") if isinstance(raw.get("hidden"), list) else [])[:ASSISTANT_LIMITS["hidden"]]:
         w = text(word, ASSISTANT_LIMITS["hiddenLen"])
@@ -436,7 +448,7 @@ def empty_draft():
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
             "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}},
             "site": {"gallery": {"hidden": [], "order": []}},
-            "assistant": {"enabled": False, "avatar": "consultant-f", "hidden": [], "facts": {}, "extra": []}}
+            "assistant": {"enabled": False, "avatar": "consultant-f", "customAvatar": {}, "hidden": [], "facts": {}, "extra": []}}
 
 
 def sanitize(raw, ctx):
