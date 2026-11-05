@@ -175,6 +175,9 @@ def _handle(paths, method, action, headers, body, query, client):
             clean = schema.sanitize(data.get("draft"), ctx)
             clean["rev"] = current["rev"]
             return _json(200, {"ok": True, "rev": save_draft(paths, clean), "draft": clean})
+        if action == "apply-settings":                         # parameters that need no new publication (see settings.py)
+            from . import settings
+            return _json(200, settings.apply(paths, read_draft(paths, ctx)))
         if action == "template":
             data = _body_json(body)
             draft = read_draft(paths, ctx)

@@ -5,6 +5,7 @@
 import { EmailMessage } from "cloudflare:email";
 import { FILE_LIMITS, LIMITS, buildMime, leadPayload, originAllowed, validate, validateFiles } from "./contact.mjs";
 import { handleAssistant } from "./assistant-api.mjs";
+import { handleSettings } from "./settings.mjs";
 import { FORM_LIMITS, findForm, validateForm } from "./forms.mjs";
 
 const json = (status, body, extra = {}) =>
@@ -83,6 +84,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/assistant") return handleAssistant(request, env, url);
+    if (url.pathname === "/api/settings") return handleSettings(request, env);
     if (url.pathname === "/api/form") return handleForm(request, env, url);
     if (url.pathname !== "/api/contact") return json(404, { error: "not_found" });
     if (request.method !== "POST") return json(405, { error: "method" }, { allow: "POST" });

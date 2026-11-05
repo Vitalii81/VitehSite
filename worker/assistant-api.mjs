@@ -10,10 +10,12 @@ const localGate = new Gate();          // used when the Durable Object binding A
 
 /** Durable Object: one global instance that keeps the queue, leases and per-IP counters. Binding name ASSIST_GATE (see docs/assistant-llama-server.md). */
 export class AssistantGate {
-  constructor() { this.gate = new Gate(); }
+  constructor(state) { this.state = state; this.gate = new Gate(); }
   async fetch(request) {
     const body = await request.json();
     const path = new URL(request.url).pathname;
+    if (path === "/settings-get") return jsonResponse(200, { value: (await this.state.storage.get("settings")) || {} });          // see settings.mjs
+    if (path === "/settings-set") { await this.state.storage.put("settings", body.value || {}); return jsonResponse(200, { ok: true }); }
     this.gate.setBackends(Array.isArray(body.ids) ? body.ids : [], body.slots && typeof body.slots === "object" ? body.slots : {});
     if (path === "/acquire") return jsonResponse(200, await this.gate.acquire(String(body.ip || "unknown"), Array.isArray(body.avoid) ? body.avoid : []));
     if (path === "/release") { this.gate.release(String(body.lease)); return jsonResponse(200, { ok: true }); }

@@ -563,6 +563,9 @@ const VIEWS = {
       h("p", { class: "muted" }, "Вимкнено: у HTML нічого не додається і файли бота не потрапляють у пакет. Увімкнено: потрібні секрет ASSISTANT_BACKENDS у Worker і запущений llama-server (див. docs/assistant-llama-server.md). Без бекендів бот чесно скаже, що недоступний, і запропонує форму контакту.")));
 
     main.append(h("h2", { style: "margin-top:22px" }, "Аватар помічника"), avatarPicker(A));
+    main.append(h("div", { class: "row" },
+      h("button", { class: "btn", type: "button", onclick: async () => { try { await save(); await api("apply-settings", { method: "POST", body: {} }); toast("Аватар застосовано на сайті без публікації (кілька секунд)"); } catch (e) { fail(e); } } }, "Застосувати аватар зараз"),
+      h("span", { class: "muted" }, "Живий параметр: сайт візьме його сам, збірка й публікація не потрібні. Решта змін чернетки без публікації на сайті не з'являться.")));
     main.append(h("h2", { style: "margin-top:22px" }, "Заводські факти (data/assistant-kb.json)"));
     for (const f of S.catalog.assistantFacts || []) {
       A.facts[f.id] ||= { public: f.public === true, topic: clone(f.topic), text: clone(f.text) };

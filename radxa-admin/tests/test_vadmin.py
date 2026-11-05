@@ -1763,6 +1763,30 @@ class CompatTests(unittest.TestCase):
                             self.assertTrue(m in stdlib or m == "vadmin", "%s imports %s" % (name, m))
 
 
+class LiveSettingsTests(ApiTests):
+    def test_apply_sends_only_the_avatar_with_the_bearer_key(self):
+        from vadmin import settings
+        cookie = self.login()
+        st, _, out = self.call("POST", "apply-settings", {}, cookie=cookie)
+        self.assertEqual((st, out["error"]), (409, "no_token"), "no key file yet")
+        with open(settings.token_path(self.w.paths), "w") as f:
+            f.write("k-123\n")
+        sent = {}
+
+        class Answer:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return b'{"ok": true, "settings": {"assistantAvatar": "consultant-f"}}'
+
+        def opener(request, timeout=0):
+            sent.update(url=request.full_url, auth=request.get_header("Authorization"), body=json.loads(request.data))
+            return Answer()
+        draft = self.w.draft()
+        self.assertEqual(settings.apply(self.w.paths, draft, opener)["ok"], True)
+        self.assertEqual(sent, {"url": "https://viteh.org/api/settings", "auth": "Bearer k-123", "body": {"assistantAvatar": "consultant-f"}})
+        self.assertEqual(self.call("POST", "apply-settings", {})[0], 401, "needs a session")
+
+
 class IdeasCatalogTests(ApiTests):
     """The admin-only service-ideas catalog: sanitised like any custom service, added DISABLED, never part of a package."""
 

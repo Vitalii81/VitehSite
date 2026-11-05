@@ -64,15 +64,29 @@
     return set && set.items[want] ? want : set && set.order[0];
   };
   const avatars = [];
-  const makeAvatar = () => {
-    if (!window.VITEH_AVATARS) return el("span");
+  const avatarNode = (uid) => {
     const holder = el("div");
-    const uid = "a" + (avatars.length + 1);          // ids (gradients) must be unique per copy: a hidden SVG does not render another one's gradients
     const markup = window.VITEH_AVATARS.items[avatarId()].svg.replace(/id="([a-z]+)"/g, `id="$1${uid}"`).replace(/url\(#([a-z]+)\)/g, `url(#$1${uid})`);
     holder.innerHTML = AVATAR_WRAP(markup);      // static markup of assistant-avatars.js only (no user or model text)
-    const node = holder.firstChild;
+    return holder.firstChild;
+  };
+  const makeAvatar = () => {
+    if (!window.VITEH_AVATARS) return el("span");
+    const node = avatarNode("a" + (avatars.length + 1));          // ids (gradients) must be unique per copy: a hidden SVG does not render another one's gradients
     avatars.push(node);
     return node;
+  };
+  /** The owner can change the look in the admin without a new publication: /api/settings holds it, the page's own value is the fallback. */
+  const applyLiveAvatar = async () => {
+    try {
+      const r = await fetch("/api/settings", { headers: { accept: "application/json" } });
+      if (!r.ok) return;
+      const want = (await r.json()).assistantAvatar;
+      const set = window.VITEH_AVATARS;
+      if (!set || !set.items[want] || want === avatarId()) return;
+      document.documentElement.dataset.assistantAvatar = want;
+      avatars.forEach((old, i) => { const fresh = avatarNode("a" + (i + 1)); fresh.setAttribute("data-mood", old.getAttribute("data-mood") || "idle"); old.replaceWith(fresh); avatars[i] = fresh; });
+    } catch { /* offline or no Worker: keep the built-in look */ }
   };
   let moodTimer = 0;
   /** mood: idle | wave | nod | think | talk | present. A timed mood falls back to idle (or to the sticky one). */
@@ -307,7 +321,7 @@
     if (!ui || document.documentElement.dataset.page !== "home") return;
     S.ui = ui;
     S.lang = (detail.lang || document.documentElement.lang || FALLBACK);
-    if (!S.built) build(); else texts();
+    if (!S.built) { build(); applyLiveAvatar(); } else texts();
   }
   document.addEventListener("viteh:render", (e) => start(e.detail));
   if (window.vitehRender) start(window.vitehRender);
