@@ -60,8 +60,7 @@
 .asst-av .av-shirt { fill: var(--accent); }
 .asst-av .av-collar { fill: none; stroke: var(--accent-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
 .asst-av .av-sleeve { fill: none; stroke: var(--accent); stroke-width: 11; stroke-linecap: round; }
-.asst-av .av-hand { opacity: 0; transition: opacity .25s; }
-.asst-av[data-mood="wave"] .av-armR .av-hand, .asst-av[data-mood="present"] .av-armL .av-hand { opacity: 1; }
+.asst-av .av-armL, .asst-av .av-armR { opacity: 0; transform: translateY(40px); }
 .asst-av .av-face { fill: var(--av-skin); stroke: var(--accent-strong); stroke-width: 3; }
 .asst-av .av-ear { fill: var(--accent-2, var(--accent)); }
 .asst-av .av-visor { fill: color-mix(in srgb, var(--accent-strong) 78%, #04100d); }
@@ -73,14 +72,14 @@
 .asst-av .av-bulb { fill: var(--warm, #f0a65a); }
 .asst-av .av-dots { fill: var(--accent-strong); opacity: 0; }
 .asst-av .av-head, .asst-av .av-armL, .asst-av .av-armR, .asst-av .av-body { transform-box: view-box; }
-.asst-av .av-armR { transform-origin: 90px 98px; }
-.asst-av .av-armL { transform-origin: 30px 98px; }
+.asst-av .av-armR { transform-origin: 100px 100px; }
+.asst-av .av-armL { transform-origin: 20px 100px; }
 .asst-av .av-head { transform-origin: 60px 82px; }
 @media (prefers-reduced-motion: no-preference) {
   .asst-av .av-eyes { animation: av-blink 5.2s infinite; }
   .asst-av .av-body { animation: av-breathe 4s ease-in-out infinite; transform-origin: 60px 120px; }
   .asst-av .av-bulb { animation: av-pulse 2.6s ease-in-out infinite; }
-  .asst-av[data-mood="wave"] .av-armR { animation: av-wave 2.4s ease-in-out 1; }
+    .asst-av[data-mood="wave"] .av-armR { animation: av-raise 2.6s ease-in-out 1 both; opacity: 1; }
   .asst-av[data-mood="wave"] .av-head { animation: av-tilt 2.2s ease-in-out 1; }
   .asst-av[data-mood="nod"] .av-head { animation: av-nod .55s ease-in-out 2; }
   .asst-av[data-mood="think"] .av-head { transform: rotate(-7deg); transition: transform .3s; }
@@ -88,19 +87,19 @@
   .asst-av[data-mood="think"] .av-eyes { transform: translate(-2px, -3px); transition: transform .3s; }
   .asst-av[data-mood="talk"] .av-mouth { animation: av-talk .28s ease-in-out infinite alternate; }
   .asst-av[data-mood="talk"] .av-head { animation: av-bob 1.2s ease-in-out infinite; }
-  .asst-av[data-mood="present"] .av-armL { animation: av-present 2.4s ease-in-out 1; }
+    .asst-av[data-mood="present"] .av-armL { animation: av-open 2.4s ease-in-out 1 both; opacity: 1; }
   .asst-av[data-mood="present"] .av-head { animation: av-nod .55s ease-in-out 1; }
 }
 @keyframes av-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 @keyframes av-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.6px); } }
 @keyframes av-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
-@keyframes av-wave { 0%, 100% { transform: rotate(0); } 14%, 46%, 78% { transform: rotate(-150deg); } 30%, 62% { transform: rotate(-122deg); } }
+@keyframes av-raise { 0% { transform: translateY(40px); } 16% { transform: translateY(0) rotate(0); } 26%, 50%, 74% { transform: translateY(0) rotate(-15deg); } 38%, 62%, 86% { transform: translateY(0) rotate(13deg); } 92% { transform: translateY(0) rotate(0); } 100% { transform: translateY(40px); } }
 @keyframes av-tilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(5deg); } 70% { transform: rotate(-3deg); } }
 @keyframes av-nod { 0%, 100% { transform: rotate(0) translateY(0); } 50% { transform: rotate(0) translateY(5px); } }
 @keyframes av-dots { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
 @keyframes av-talk { from { transform: scaleY(1); } to { transform: scaleY(1.9) scaleX(.9); } }
 @keyframes av-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px) rotate(1.5deg); } }
-@keyframes av-present { 0% { transform: rotate(0); } 25%, 75% { transform: rotate(38deg); } 100% { transform: rotate(0); } }
+@keyframes av-open { 0% { transform: translateY(40px); } 22%, 78% { transform: translateY(2px) rotate(16deg); } 100% { transform: translateY(40px); } }
 
 .asst-av .av-skin { fill: var(--av-tone); stroke: none; }
 .asst-av .av-outline { stroke: var(--accent-strong); stroke-width: 2; }
@@ -124,3 +123,4 @@
 .asst-av .av-owlc { fill: var(--av-owl); stroke: none; }
 .asst-av .av-owl-s { stroke: var(--av-owl); }
 .asst-av .av-owl2c { fill: var(--av-owl2); stroke: var(--av-owl); stroke-width: 2; }
+.asst-av g.av-mouth { stroke: none; fill: none; }
