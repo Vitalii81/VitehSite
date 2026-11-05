@@ -1813,6 +1813,7 @@ class CustomAvatarTests(ApiTests):
         from vadmin import avatar, schema
         picked = avatar.pick([("Greeting.png", b"g"), ("talking.png", b"t"), ("thinking.png", b"k"), ("goodbye.png", b"b"), ("idle.png", b"i")])
         self.assertEqual(picked, {"greeting": b"g", "talk": b"t", "think": b"k", "goodbye": b"b", "idle": b"i"})
+        self.assertEqual(avatar.pick([("mouth_open.png", b"m"), ("idle.png", b"i")]), {"mouth_open": b"m", "idle": b"i"}, "the overlay picture is kept as its own frame")
         draft = self.w.draft()
         self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "female", "default")
         draft["assistant"]["voice"] = "male"

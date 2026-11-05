@@ -74,13 +74,18 @@
   const MOOD_BASE = { greeting: "wave", goodbye: "wave", happy: "wave", respect: "nod", listening: "nod", thinking: "think", talking: "talk", presenting: "present" };
   const showFrame = (node, name) => {
     const frames = customFrames();
-    const img = node.querySelector && node.querySelector("img");
+    const img = node.querySelector && node.querySelector("img.asst-pose, img");
     if (frames && img) img.src = frames[name] || frames[MOOD_BASE[name]] || frames.idle;
   };
   const avatarNode = (uid) => {
     if (avatarId() === "custom") {
       const box = el("span", { class: "asst-av asst-custom", "aria-hidden": "true" });
-      box.append(el("img", { src: customFrames().idle, alt: "", decoding: "async" }));
+      box.append(el("img", { class: "asst-pose", src: customFrames().idle, alt: "", decoding: "async" }));
+      const mouth = customFrames().mouth_open;
+      if (mouth) {                                          // a pack with an open-mouth picture: it is laid over the face and driven by the voice
+        box.dataset.mouth = voiceGender();
+        box.append(el("img", { class: "asst-mouth", src: mouth, alt: "", decoding: "async" }));
+      }
       return box;
     }
     const holder = el("div");
@@ -110,7 +115,7 @@
   /** mood: idle | wave | nod | think | talk | present (or a name of the nine-state set, see MOOD_BASE). A timed mood falls back to idle (or to the sticky one). */
   function mood(name, ms = 0, sticky = "idle") {
     clearTimeout(moodTimer);
-    const paint = (m) => { for (const a of avatars) { a.setAttribute("data-mood", MOOD_BASE[m] || m); showFrame(a, m); } };
+    const paint = (m) => { for (const a of avatars) { a.setAttribute("data-mood", MOOD_BASE[m] || m); a.setAttribute("data-state", m); showFrame(a, m); } };
     paint(name);
     if (ms) moodTimer = setTimeout(() => paint(sticky), ms);
   }
@@ -157,13 +162,18 @@
     return out;
   }
   let lipTimer = 0;
-  /** While the voice runs the mouth moves: the "talk" picture alternates with the calm one (the drawn avatars animate their mouth with CSS). */
+  const mouthLevel = (level) => { for (const a of avatars) { a.style.setProperty("--m-open", String(level)); } };
+  /** While the voice runs the mouth moves. A pack with an open-mouth picture gets it faded in and out over the face at a speech-like rhythm; a pack without
+   *  alternates its "talk" picture with the calm one; the drawn avatars animate their mouth with CSS. */
   function lips(on) {
     clearInterval(lipTimer);
     lipTimer = 0;
+    mouthLevel(0);
     if (on) {
-      mood("talk");
-      if (customFrames() && !reduceMotion()) { let open = false; lipTimer = setInterval(() => { open = !open; for (const a of avatars) showFrame(a, open ? "idle" : "talk"); }, 190); }
+      const frames = customFrames();
+      if (frames && frames.mouth_open) { mood("talking"); for (const av of avatars) showFrame(av, "idle"); if (!reduceMotion()) lipTimer = setInterval(() => mouthLevel(Math.random() < 0.2 ? 0.15 : 0.45 + Math.random() * 0.55), 120); else mouthLevel(0.6); }
+      else if (frames && !reduceMotion()) { mood("talking"); let open = false; lipTimer = setInterval(() => { open = !open; for (const a of avatars) showFrame(a, open ? "idle" : "talk"); }, 190); }
+      else mood("talk");
     } else mood("idle");
   }
   const speaking = { node: null };
@@ -186,6 +196,7 @@
       if (voice) u.voice = voice;
       if (!voice || (gender === "male" ? !MALE_NAMES.test(voice.name) : !FEMALE_NAMES.test(voice.name))) u.pitch = gender === "male" ? 0.8 : 1.1;   // no voice of that sex installed: nudge the pitch
       if (i === 0) u.onstart = () => lips(true);
+      u.onboundary = () => { if (lipTimer && customFrames() && customFrames().mouth_open) mouthLevel(1); };           // a word starts: the mouth opens fully
       const last = i === chunks.length - 1;
       u.onend = () => { if (last) stopSpeech(); };
       u.onerror = () => { if (last) stopSpeech(); };

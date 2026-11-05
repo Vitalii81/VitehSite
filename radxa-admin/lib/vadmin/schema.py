@@ -392,7 +392,8 @@ def clean_site(raw, ctx):
 ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "expert", "expert-f", "engineer", "senior", "core")                  # looks in assets/assistant-avatars.js
 CUSTOM_AVATAR = "custom"                                                                            # the owner's own pictures (draft.assistant.customAvatar, see avatar.py)
 CUSTOM_MOODS = ("idle", "wave", "nod", "think", "talk", "present",       # the six basic moods, then the optional extras of the nine-state set (a missing extra falls back to its basic mood in the widget)
-                "greeting", "listening", "happy", "respect", "goodbye")
+                "greeting", "listening", "happy", "respect", "goodbye",
+                "mouth_open")                                           # not a pose: a small open-mouth picture the widget lays over the face while the voice speaks
 ASSISTANT_VOICES = ("female", "male")                                    # which voice reads the answers of a custom avatar (the built-in looks have their own)
 ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
 
