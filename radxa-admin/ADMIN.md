@@ -282,3 +282,9 @@ PDF pictures: PNG with transparency/16 bit is converted to JPEG on white (`lib/v
 - **Build**: `data/portfolio.json` has the portfolio (all enabled items in the portfolio's order, read by `/portfolio/` and the PDF) and, only when the home page has its own selection, `"home": [slug…]` (read by `assets/portfolio.js`). The PDF and `/portfolio/` ignore `draft.site` and the `portfolioLink` widget's effect on the PDF.
 - **Migration**: older drafts kept portfolio parts in `images.portfolio`, `images.portfolioAlt`, `disabled.portfolio`, `texts["portfolioPage.*"]`; `sanitize` moves them into `draft.portfolio` (nothing is lost, the old keys disappear on the next save). An empty draft still builds the factory files byte for byte (`site.json` and `products.json` are copied as they are when nothing changed).
 - **On-page editing**: `edit-page` (home) edits the site's texts and only the selection of portfolio items; `edit-page&page=portfolio` shows `/portfolio/` with every text marked (`data-p`, only when the page carries `data-ve`, which only the admin's view sets) and edits the portfolio. The overlay is never in a package.
+
+## Бот-помічник (вкладка «Помічник»)
+
+Окрема від редагування сайту вкладка: перемикач (за замовчуванням вимкнено), заводські та власні факти з позначкою «публічний», список прихованих слів для фільтра відповідей.
+База знань генерується під час збірки з тексту сайту, що ввімкнений у чернетці, плюс публічні факти, і лягає в `api/_private/assistant.json` пакета (недоступно з браузера).
+Налаштування бекендів і llama-server: `docs/assistant-llama-server.md`. Не перевірено на реальному Radxa і реальних моделях.

@@ -2115,5 +2115,121 @@ class EditableEverythingGuardPages(unittest.TestCase):
             self.assertIn("legal." + k, texts)
 
 
+class AssistantTests(unittest.TestCase):
+    """The site assistant: off by default (nothing added), a knowledge base of public facts only, the card list the bot may offer."""
+    CARD_ID = re.compile(r"^(?:service:\d{1,2}|project:[a-z0-9][a-z0-9-]{0,31}|portfolio)$")      # the same pattern as assets/assistant.js
+
+    def setUp(self):
+        self.w = World(copy_src=True)
+        self.addCleanup(self.w.close)
+
+    def build(self, assistant=None, **draft):
+        d = self.w.draft()
+        d.update(draft)
+        if assistant is not None:
+            d["assistant"] = assistant
+        self.w.save(d)
+        r = build.build(self.w.paths)
+        self.assertTrue(r["ok"], r)
+        return r["id"]
+
+    def kb(self, bid):
+        return json.loads(self.w.read(bid, "api/_private/assistant.json"))
+
+    def test_off_by_default_adds_nothing(self):
+        self.assertIs(self.w.draft()["assistant"]["enabled"], False)
+        bid = self.build()
+        html = self.w.read(bid, "index.html")
+        self.assertEqual(html, read_file(os.path.join(self.w.src, "index.html")), "the home page is the factory page byte for byte")
+        self.assertNotIn("assistant", html)
+        for rel in ("assets/assistant.js", "assets/assistant.css", "api/_private/assistant.json"):
+            self.assertFalse(os.path.exists(os.path.join(self.w.site(bid), rel)), rel)
+        self.assertEqual(self.w.read(bid, "data/site.json"), self.w.read(bid, "data/site.json"))
+
+    def test_on_adds_script_style_files_and_a_private_kb(self):
+        bid = self.build({"enabled": True})
+        html = self.w.read(bid, "index.html")
+        self.assertIn('<link rel="stylesheet" href="assets/assistant.css">', html)
+        self.assertIn('<script src="assets/assistant.js" defer></script>', html)
+        self.assertEqual(html.count("assistant.js"), 1)
+        for rel in ("assets/assistant.js", "assets/assistant.css", "api/_private/assistant.json"):
+            self.assertTrue(os.path.isfile(os.path.join(self.w.site(bid), rel)), rel)
+        self.assertNotIn("assistant-kb", json.dumps(os.listdir(os.path.join(self.w.site(bid), "data"))), "the factory fact file itself is not published")
+        self.assertIn("ASSISTANT_BACKENDS", "".join(read_file(os.path.join(REPO, "docs", "assistant-llama-server.md")).split()), "the docs name the secret")
+        self.assertNotIn("token", self.w.read(bid, "api/_private/assistant.json").lower().replace("tokens", ""), "no credentials in the package")
+
+    def test_only_public_true_records_reach_the_kb(self):
+        extra = [{"id": "x-aaaa0001", "public": True, "topic": {"uk": "Відкрите", "en": "Open", "de": "Offen"}, "text": {"uk": "ПУБЛІЧНИЙ-ФАКТ", "en": "PUBLIC-FACT", "de": "OEFFENTLICH"}},
+                 {"id": "x-aaaa0002", "public": False, "topic": {"uk": "Закрите", "en": "Closed", "de": "Zu"}, "text": {"uk": "ПРИВАТНИЙ-ФАКТ", "en": "PRIVATE-FACT", "de": "PRIVAT"}},
+                 {"id": "x-aaaa0003", "topic": {"uk": "Без прапорця", "en": "No flag", "de": "Ohne"}, "text": {"uk": "БЕЗ-ПРАПОРЦЯ", "en": "NO-FLAG", "de": "OHNE-FLAGGE"}},
+                 {"id": "x-aaaa0004", "public": "yes", "topic": {"uk": "Рядок", "en": "String", "de": "Text"}, "text": {"uk": "РЯДОК-TRUE", "en": "STRING-TRUE", "de": "TEXT-TRUE"}}]
+        kb_text = json.dumps(self.kb(self.build({"enabled": True, "extra": extra})), ensure_ascii=False)
+        self.assertIn("ПУБЛІЧНИЙ-ФАКТ", kb_text)
+        for secret in ("ПРИВАТНИЙ-ФАКТ", "PRIVATE-FACT", "БЕЗ-ПРАПОРЦЯ", "NO-FLAG", "РЯДОК-TRUE", "Приклад непублічного запису"):
+            self.assertNotIn(secret, kb_text, "a record without public === true must never be written")
+
+    def test_factory_facts_can_be_overridden_and_hidden_from_the_kb(self):
+        kb_text = json.dumps(self.kb(self.build({"enabled": True, "facts": {"prices": {"public": False}, "scope": {"text": {"uk": "НОВИЙ-ТЕКСТ", "en": "", "de": ""}}}})), ensure_ascii=False)
+        self.assertNotIn("fact:prices", kb_text)
+        self.assertIn("НОВИЙ-ТЕКСТ", kb_text)
+        self.assertIn("fact:scope", kb_text)
+
+    def test_kb_follows_the_draft_disabled_items_and_sections_are_gone(self):
+        site = self.w.ctx().site
+        first = site["services"]["items"][0]["title"]["uk"]
+        kb = self.kb(self.build({"enabled": True}))
+        self.assertIn("service:0", [c["id"] for c in kb["cards"]])
+        self.assertIn(first, json.dumps(kb, ensure_ascii=False))
+        pid = self.w.ctx().products[0]["id"]
+        kb = self.kb(self.build({"enabled": True}, disabled={"services": ["s0"], "projects": [pid]}))
+        ids = [c["id"] for c in kb["cards"]]
+        self.assertNotIn("project:" + pid, ids, "a project switched off in the draft cannot be offered")
+        self.assertNotIn("project:" + pid, [r["id"] for r in kb["records"]])
+        self.assertNotIn(site["services"]["items"][1]["title"]["uk"] + "-never", ids)
+        sections = {s: True for s in schema.SECTION_IDS}
+        sections.update({"work": False, "faq": False})
+        kb = self.kb(self.build({"enabled": True}, sections=sections))
+        self.assertEqual([c for c in kb["cards"] if c["kind"] == "project"], [])
+        self.assertFalse([r for r in kb["records"] if r["id"].startswith(("faq:", "project:"))])
+        kb = self.kb(self.build({"enabled": True}, widgets={"portfolioLink": False}))
+        self.assertNotIn("portfolio", [c["id"] for c in kb["cards"]])
+
+    def test_card_ids_are_strict_and_match_what_the_page_renders(self):
+        kb = self.kb(self.build({"enabled": True}))
+        self.assertTrue(kb["cards"])
+        for card in kb["cards"]:
+            self.assertRegex(card["id"], self.CARD_ID)
+            self.assertTrue(all(card["title"][lang] for lang in ("uk", "en", "de")), card)
+        self.assertEqual(len({c["id"] for c in kb["cards"]}), len(kb["cards"]))
+        self.assertEqual(len([c for c in kb["cards"] if c["kind"] == "service"]), len(self.w.ctx().site["services"]["items"]))
+        self.assertEqual(sorted(c["id"] for c in kb["cards"] if c["kind"] == "project"), sorted("project:" + p["id"] for p in self.w.ctx().products))
+
+    def test_hidden_words_and_limits_are_sanitised(self):
+        d = schema.sanitize({"assistant": {"enabled": "yes", "hidden": ["Alpha", "alpha", "  ", "x" * 200, 5, "Beta"] + ["w%d" % i for i in range(100)], "extra": [{"id": "../bad", "public": True}] * 40}}, self.w.ctx())["assistant"]
+        self.assertIs(d["enabled"], False, "only a real true switches it on")
+        self.assertEqual(d["hidden"][:2], ["Alpha", "x" * 60])
+        self.assertLessEqual(len(d["hidden"]), 60)
+        self.assertEqual(len(d["extra"]), 30)
+        self.assertEqual(len({x["id"] for x in d["extra"]}), 30)
+        self.assertTrue(all(x["id"].startswith("x-") for x in d["extra"]))
+        kb = self.kb(self.build({"enabled": True, "hidden": ["Alpha", "Beta"]}))
+        self.assertEqual(kb["hidden"], ["Alpha", "Beta"])
+
+    def test_kb_is_not_a_public_file_and_the_package_has_no_foreign_requests(self):
+        bid = self.build({"enabled": True})
+        self.assertTrue(self.w.read(bid, "api/_private/assistant.json").startswith("{"))
+        self.assertTrue(os.path.isdir(os.path.join(self.w.site(bid), "api", "_private")))
+        self.assertEqual(build.scan_external(self.w.site(bid)), [])
+        js = self.w.read(bid, "assets/assistant.js")
+        self.assertEqual(sorted(set(re.findall(r"fetch\(\s*([A-Za-z_]+)", js))), ["ENDPOINT"])
+        self.assertIn('const ENDPOINT = "/api/assistant"', js)
+        self.assertNotRegex(js, r"https?://")
+
+    def test_private_kb_survives_the_empty_draft_rebuild(self):
+        self.build({"enabled": True})
+        bid = self.build()           # switched off again: the private file and the assets disappear from the new package
+        self.assertFalse(os.path.exists(os.path.join(self.w.site(bid), "api")))
+
+
 if __name__ == "__main__":
     unittest.main()

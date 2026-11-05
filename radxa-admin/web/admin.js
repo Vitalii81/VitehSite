@@ -98,6 +98,7 @@ const NAV = [
   ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["ideas", "Каталог ідей"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
   ["Портфоліо", [["portfolio", "Елементи портфоліо"], ["portfolio-page", "Сторінка й PDF: розділи, тексти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
+  ["Помічник", [["assistant", "Бот-помічник: база знань і фільтр"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
 
@@ -527,6 +528,33 @@ const VIEWS = {
     main.append(h("div", { class: "row" }, ...Object.entries(S.catalog.templates.sections).map(([id, label]) => templateButton("section", `Розділ із шаблону: ${uk(label)}`, id))));
   },
 
+  assistant(main) {
+    const A = (S.draft.assistant ||= { enabled: false, hidden: [], facts: {}, extra: [] });
+    main.append(...head("Бот-помічник для клієнтів", "Окрема від редагування сайту вкладка. Бот відповідає лише з бази знань: тексти сайту (що зараз ввімкнено в чернетці) + факти нижче. Запис без позначки «публічний» у відповіді не потрапляє."));
+    main.append(h("div", { class: "card" }, toggle("Показувати чат на сайті (за замовчуванням вимкнено)", A.enabled === true, (v) => { A.enabled = v; }),
+      h("p", { class: "muted" }, "Вимкнено: у HTML нічого не додається і файли бота не потрапляють у пакет. Увімкнено: потрібні секрет ASSISTANT_BACKENDS у Worker і запущений llama-server (див. docs/assistant-llama-server.md). Без бекендів бот чесно скаже, що недоступний, і запропонує форму контакту.")));
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Заводські факти (data/assistant-kb.json)"));
+    for (const f of S.catalog.assistantFacts || []) {
+      A.facts[f.id] ||= { public: f.public === true, topic: clone(f.topic), text: clone(f.text) };
+      const item = A.facts[f.id];
+      const reset = h("button", { class: "btn small", type: "button", onclick: () => { delete A.facts[f.id]; touch(); rerender(); } }, "Скинути до заводського");
+      main.append(h("div", { class: "card" }, h("div", { class: "row between" }, toggle("Публічний (може потрапити у відповідь)", item.public === true, (v) => { item.public = v; }), reset),
+        i18nField(item, "topic", { max: 120, label: "Тема" }), i18nField(item, "text", { multiline: true, max: 1200, label: "Текст" })));
+    }
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Ваші факти"));
+    A.extra.forEach((item, i) => main.append(h("div", { class: "card" },
+      h("div", { class: "row between" }, toggle("Публічний (може потрапити у відповідь)", item.public === true, (v) => { item.public = v; }),
+        h("button", { class: "btn small", type: "button", onclick: () => { A.extra.splice(i, 1); touch(); rerender(); } }, "Видалити")),
+      i18nField(item, "topic", { max: 120, label: "Тема" }), i18nField(item, "text", { multiline: true, max: 1200, label: "Текст" }))));
+    main.append(h("button", { class: "btn", type: "button", onclick: () => { A.extra.push({ id: uid("x-"), public: false, topic: { uk: "", en: "", de: "" }, text: { uk: "", en: "", de: "" } }); touch(); rerender(); } }, "Додати факт"));
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Приховані слова"));
+    main.append(h("div", { class: "card" },
+      h("p", { class: "muted" }, "Одне слово чи фраза на рядок (до 60 символів, до 60 рядків). Фільтр прибирає ці слова з кожної відповіді бота, навіть якщо модель їх напише. Ключі, токени, IP-адреси, внутрішні хости, шляхи й адреси приватних репозиторіїв фільтр прибирає завжди."),
+      h("textarea", { rows: "6", "aria-label": "Приховані слова", value: (A.hidden || []).join("\n"), oninput: (e) => { A.hidden = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 60); touch(); } })));
+  },
   widgets(main) {
     main.append(...head("Віджети й візуальні ефекти"));
     for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, cardHead(`widget:${w.id}`, { title: w.label }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; }))));

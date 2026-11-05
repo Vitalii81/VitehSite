@@ -89,6 +89,7 @@ def catalog(paths, ctx):
         "texts": dict((k, v) for k, v in groups.items() if not k.startswith("portfolioPage")),
         "portfolioTexts": dict((k, v) for k, v in groups.items() if k.startswith("portfolioPage")),
         "plain": schema.editable_plain(ctx.site),
+        "assistantFacts": [f for f in ctx.assistant_kb if isinstance(f, dict)],         # factory records of data/assistant-kb.json (the tab «Помічник» overrides them by id)
     }
 
 
