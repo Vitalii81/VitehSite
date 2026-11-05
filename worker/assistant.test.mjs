@@ -133,6 +133,18 @@ test("gate: priority order, one request per backend, then a queue, then 'busy'",
   assert.deepEqual(d, { ok: false, reason: "busy" }, "no slot freed within waitMs");
 });
 
+test("gate: a backend with slots: 2 serves two visitors in parallel, the third waits", async () => {
+  const g = new Gate({ waitMs: 60 });
+  g.setBackends(["fed"], { fed: 2 });
+  const a = await g.acquire("1.1.1.1");
+  const b = await g.acquire("2.2.2.2");
+  assert.deepEqual([a.ok, b.ok, a.backend, b.backend], [true, true, "fed", "fed"]);
+  const c = await g.acquire("3.3.3.3");
+  assert.deepEqual(c, { ok: false, reason: "busy" });
+  assert.equal(parseBackends(JSON.stringify([{ url: "https://x", slots: 9 }]))[0].slots, 4, "slots are capped at 4");
+  assert.equal(parseBackends(JSON.stringify([{ url: "https://x" }]))[0].slots, 1);
+});
+
 test("gate: a failed backend is skipped for a while; with none left the answer is 'none'", async () => {
   let t = 0;
   const g = new Gate({ now: () => t, downMs: 1000 });
@@ -239,9 +251,9 @@ test("handler: the first backend fails, the second answers; the failed one is sk
   await withFetch((url) => (url.startsWith("http://fed") ? new Response("no", { status: 500 }) : new Response(sse(["Добре."]))), async (calls) => {
     const events = await read(await ask(userSays("hi"), { deps: { gate } }));
     assert.equal(events.map((e) => e.t || "").join(""), "Добре.");
-    assert.deepEqual(calls.map((c) => c.url.split("/")[2]), ["fed.invalid", "amd.invalid"]);
+    assert.deepEqual(calls.map((c) => c.url.split("/")[2]), ["fed.invalid", "fed.invalid", "amd.invalid"], "one quick retry on the same backend before it is marked down");
     await read(await ask(userSays("again"), { deps: { gate } }));
-    assert.equal(calls.filter((c) => c.url.includes("fed.invalid")).length, 1, "fed is marked down");
+    assert.equal(calls.filter((c) => c.url.includes("fed.invalid")).length, 2, "fed is marked down (only the first request tried it, twice)");
   });
 });
 
