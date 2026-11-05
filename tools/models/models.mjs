@@ -131,33 +131,65 @@ export function customElectronics(scene) {
   buildBoard(scene, P, boardLayout());
 }
 
-/* ---------- 2. sensor node: IP-rated outdoor housing with a cable gland, antenna and LED ring ---------- */
+/* ---------- 2. sensor node: pole-mounted autonomous LoRa node (solar panel, sealed enclosure, radiation shield, antenna) ---------- */
+function solarTexture(scene) {
+  const s = new Raster(256, 160, [14, 30, 62, 255]);
+  for (let cy = 0; cy < 4; cy++) for (let cx = 0; cx < 6; cx++) {
+    const x = 6 + cx * 41, y = 6 + cy * 37;
+    s.rect(x, y, 38, 34, [26, 58, 112, 255]);
+    s.rect(x + 1, y + 1, 36, 32, [32, 72, 132, 255]);
+    for (let k = 1; k < 4; k++) s.rect(x + k * 9, y + 1, 1, 32, [60, 110, 170, 255]);   // busbars
+    s.rect(x, y + 16, 38, 1, [48, 92, 150, 255]);
+  }
+  scene.texture("solarPanel", s, { opaque: true });
+}
+
 export function sensorNode(scene) {
-  const P = makeParts(scene);
-  const bracket = scene.part("bracket");
-  roundedBox(bracket.geo("steel"), { size: [4.4, 0.22, 2.4], r: 0.09, n: 2, at: [0, 0.11, 0] });
-  scene.inst(bracket);
-  for (const x of [-1.85, 1.85]) for (const z of [-0.85, 0.85]) scene.inst(P.hole, { at: [x, 0.22, z] });
-  const housing = scene.part("housing");
-  cylinder(housing.geo("rubber"), { r: 1.52, h: 0.34, bevel: 0.07, seg: 56, at: [0, 0.4, 0] });
-  cylinder(housing.geo("accent"), { r: 1.4, h: 1.5, bevel: 0.12, seg: 56, steps: 4, at: [0, 1.32, 0] });
-  for (let i = 0; i < 5; i++) torus(housing.geo("accentMetal"), { R: 1.405, t: 0.028, seg: 56, tube: 8, at: [0, 0.85 + i * 0.22, 0] });
-  sphere(housing.geo("accent"), { r: 1.4, seg: 56, rings: 20, half: true, scaleY: 0.5, at: [0, 2.07, 0] });
-  cylinder(housing.geo("glass"), { r: 0.56, h: 0.07, bevel: 0.015, seg: 40, axis: "z", at: [0, 1.38, 1.4] });
-  torus(housing.geo("chrome"), { R: 0.62, t: 0.05, seg: 40, tube: 12, axis: "z", at: [0, 1.38, 1.4] });
-  torus(housing.geo("glow"), { R: 0.84, t: 0.032, seg: 48, tube: 8, axis: "z", at: [0, 1.38, 1.36] });
-  sphere(housing.geo("ledGreen"), { r: 0.07, seg: 14, rings: 7, half: true, axis: "z", scaleY: 0.6, at: [0.95, 0.72, 1.36] });
-  scene.inst(housing);
+  solarTexture(scene);
+  const base = scene.part("pole-base");
+  cylinder(base.geo("steel"), { r: 1.25, h: 0.2, bevel: 0.05, seg: 40, at: [0, 0.1, -0.3] });
+  cylinder(base.geo("rubber"), { r: 0.45, h: 0.3, bevel: 0.05, seg: 24, at: [0, 0.35, -0.3] });
+  cylinder(base.geo("steel"), { r: 0.17, h: 4.6, bevel: 0.03, seg: 24, at: [0, 2.5, -0.3] });
+  scene.inst(base);
+  const clamp = scene.part("clamp");
+  roundedBox(clamp.geo("steel"), { size: [1.3, 0.16, 0.5], r: 0.05, n: 2, at: [0, 0, 0] });
+  scene.inst(clamp, { at: [0, 1.35, -0.28] });
+  scene.inst(clamp, { at: [0, 3.25, -0.28] });
+  const box = scene.part("enclosure");
+  roundedBox(box.geo("graphite"), { size: [2.8, 3.0, 1.3], r: 0.16, n: 3, at: [0, 2.3, 0.45] });
+  roundedBox(box.geo("accent"), { size: [2.52, 2.72, 0.1], r: 0.1, n: 2, at: [0, 2.3, 1.14] });
+  roundedBox(box.geo("glass"), { size: [1.55, 0.5, 0.05], r: 0.08, n: 2, at: [0, 2.95, 1.21] });
+  roundedBox(box.geo("graphite"), { size: [0.9, 0.14, 0.03], r: 0.03, n: 1, at: [-0.3, 2.95, 1.24] });
+  torus(box.geo("glow"), { R: 0.3, t: 0.03, seg: 36, tube: 8, axis: "z", at: [0, 2.0, 1.2] });
+  sphere(box.geo("ledGreen"), { r: 0.09, seg: 14, rings: 7, half: true, axis: "z", scaleY: 0.6, at: [0, 2.0, 1.2] });
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) cylinder(box.geo("chrome"), { r: 0.085, h: 0.05, seg: 12, axis: "z", at: [sx * 1.03, 2.3 + sy * 1.14, 1.2] });
+  for (const x of [-0.65, 0.65]) {
+    cylinder(box.geo("steel"), { r: 0.2, h: 0.2, seg: 6, flat: true, at: [x, 0.7, 0.45] });
+    cylinder(box.geo("rubber"), { r: 0.14, h: 0.34, bevel: 0.03, seg: 18, at: [x, 0.5, 0.45] });
+  }
+  tube(box.geo("rubber"), { path: bezier([-0.65, 0.5, 0.45], [-0.65, 0.2, 0.45], [-1.5, 0.3, 0.9], [-2.7, 0.24, 1.1], 22), r: 0.07, seg: 12 });
+  scene.inst(box);
+  const panel = scene.part("solar-panel");
+  roundedBox(panel.geo("alu"), { size: [4.3, 0.14, 2.7], r: 0.06, n: 2, at: [0, 0, 0] });
+  quadUV(panel.geo("solarPanel", true), [[-2.0, 0.075, 1.2], [2.0, 0.075, 1.2], [2.0, 0.075, -1.2], [-2.0, 0.075, -1.2]], [0, 1, 0], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  scene.inst(panel, { at: [0, 5.15, 0.0], rot: [0.5, 0, 0] });
+  const brace = scene.part("panel-brace");
+  roundedBox(brace.geo("steel"), { size: [0.5, 0.5, 0.2], r: 0.04, n: 2, at: [0, 0, 0] });
+  scene.inst(brace, { at: [0, 4.95, -0.4] });
+  const arm = scene.part("arms");
+  cylinder(arm.geo("steel"), { r: 0.07, h: 2.6, seg: 14, axis: "x", at: [1.3, 3.95, -0.3] });
+  cylinder(arm.geo("steel"), { r: 0.07, h: 2.4, seg: 14, axis: "x", at: [-1.2, 3.95, -0.3] });
+  scene.inst(arm);
+  const shield = scene.part("radiation-shield");
+  cylinder(shield.geo("steel"), { r: 0.06, h: 1.0, seg: 12, at: [2.6, 3.45, -0.3] });
+  for (let i = 0; i < 5; i++) cylinder(shield.geo("alu"), { r: 0.52 - i * 0.02, h: 0.07, bevel: 0.025, seg: 36, at: [2.6, 3.0 + i * 0.17, -0.3] });
+  cylinder(shield.geo("glass"), { r: 0.14, h: 0.3, bevel: 0.03, seg: 16, at: [2.6, 2.75, -0.3] });
+  scene.inst(shield);
   const antenna = scene.part("antenna");
-  cylinder(antenna.geo("steel"), { r: 0.2, h: 0.26, seg: 6, flat: true, at: [0.75, 2.55, -0.2] });
-  cylinder(antenna.geo("rubber"), { r: 0.085, h: 2.1, bevel: 0.04, seg: 20, at: [0.75, 3.6, -0.2] });
-  sphere(antenna.geo("rubber"), { r: 0.085, seg: 16, rings: 8, half: true, at: [0.75, 4.65, -0.2] });
+  cylinder(antenna.geo("steel"), { r: 0.17, h: 0.24, seg: 6, flat: true, at: [-2.4, 4.1, -0.3] });
+  cylinder(antenna.geo("rubber"), { r: 0.075, h: 2.2, bevel: 0.04, seg: 18, at: [-2.4, 5.3, -0.3] });
+  sphere(antenna.geo("rubber"), { r: 0.075, seg: 14, rings: 7, half: true, at: [-2.4, 6.4, -0.3] });
   scene.inst(antenna);
-  const gland = scene.part("gland");
-  cylinder(gland.geo("steel"), { r: 0.34, h: 0.28, seg: 6, flat: true, axis: "x", at: [-1.52, 1.0, 0] });
-  cylinder(gland.geo("rubber"), { r: 0.26, h: 0.5, bevel: 0.05, seg: 24, axis: "x", at: [-1.9, 1.0, 0] });
-  tube(gland.geo("rubber"), { path: bezier([-2.12, 1.0, 0], [-2.8, 1.0, 0], [-3.0, 0.3, 0.6], [-3.9, 0.17, 1.2], 22), r: 0.13, seg: 14 });
-  scene.inst(gland);
 }
 
 /* ---------- 4. service: software (laptop with a code editor) ---------- */
