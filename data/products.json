@@ -218,5 +218,33 @@
     ],
     "poster": "assets/posters/toyota-hv-display",
     "orbit": "-28deg 70deg 105%"
+  },
+  {
+    "id": "lvgl-smartwatch",
+    "category": "automation",
+    "image": "assets/product-controller.svg",
+    "model": "assets/models/lvgl-smartwatch.glb",
+    "title": {
+      "uk": "Смарт-годинник на LVGL",
+      "en": "LVGL smartwatch",
+      "de": "LVGL-Smartwatch"
+    },
+    "summary": {
+      "uk": "Власна прошивка смарт-годинника з сенсорним екраном: головне меню, файли, календар, акумулятор і годинник. 3D-модель стилізована; екран відтворює головне меню.",
+      "en": "Custom smartwatch firmware with a touch screen: home menu, files, calendar, battery and clock. The 3D model is stylised; the screen mirrors the home menu.",
+      "de": "Eigene Smartwatch-Firmware mit Touchscreen: Hauptmenü, Dateien, Kalender, Akku und Uhr. Das 3D-Modell ist stilisiert; der Bildschirm gibt das Hauptmenü wieder."
+    },
+    "status": {
+      "uk": "Прототип",
+      "en": "Prototype",
+      "de": "Prototyp"
+    },
+    "tags": [
+      "LVGL",
+      "IoT",
+      "HMI"
+    ],
+    "poster": "assets/posters/lvgl-smartwatch",
+    "orbit": "-22deg 74deg 112%"
   }
 ]

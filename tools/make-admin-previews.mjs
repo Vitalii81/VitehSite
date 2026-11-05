@@ -27,7 +27,7 @@ const sampleHtml = (variant) => { if (!samples.has(variant)) samples.set(variant
 const SHOTS = {};
 for (const id of ["hero", "trust", "services", "ai", "process", "work", "stack", "pricing", "faq", "contact"]) SHOTS[`section:${id}`] = { page: "home", sel: id === "hero" ? "section.hero" : id === "trust" ? "section.trust" : `section#${id}`, height: 0.7 };
 for (let i = 0; i < 12; i++) SHOTS[`service:s${i}`] = { page: "home", sel: `#serviceGrid .card[data-s="${i}"]`, pad: 8 };
-for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node", "toyota-hv-monitor"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
+for (const id of ["cronos-controller", "cronos-controller-v1", "iot-module", "custom-electronics", "agent-assistant", "device-monitor", "sensor-node", "toyota-hv-monitor", "lvgl-smartwatch"]) SHOTS[`project:${id}`] = { page: "home", sel: `#productGrid .product-card[data-id="${id}"]`, pad: 8 };
 for (const t of ["hero", "services", "projects", "gallery3d", "agents", "steps", "stack", "pricing", "faq", "form", "text_image", "gallery", "cta"]) SHOTS[`block:${t}`] = { page: ["projects", "gallery3d"].includes(t) ? `sample:${t}` : "sample", sel: `#pv-${t}`, height: 0.7 };
 SHOTS["block:divider"] = { page: "sample", sel: "hr.divider", pad: 70 };
 SHOTS["portfolio:item"] = { page: "home", sel: '#archiveGrid .archive-card[data-slug="toyota-hv-monitor"]', pad: 8 };        // an item of the portfolio (data/portfolio.json)

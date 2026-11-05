@@ -209,6 +209,9 @@
  "project:toyota-hv-monitor": {
   "image": "previews/project-toyota-hv-monitor.webp"
  },
+ "project:lvgl-smartwatch": {
+  "image": "previews/project-lvgl-smartwatch.webp"
+ },
  "portfolio:item": {
   "title": "Елемент портфоліо",
   "text": "Картка проєкту: назва, опис, роки, теги й до трьох фото. З неї збираються сторінка /portfolio/ і PDF; головна лише вибирає, які картки показати. Вимкнена картка зникає звідусіль.",
