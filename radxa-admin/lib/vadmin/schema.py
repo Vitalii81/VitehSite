@@ -390,7 +390,8 @@ def clean_site(raw, ctx):
 
 
 ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "expert", "expert-f", "engineer", "senior", "core")                  # looks in assets/assistant-avatars.js
-CUSTOM_AVATAR = "custom"                                                                            # the owner's own pictures (draft.assistant.customAvatar, see avatar.py)
+CUSTOM_AVATAR = "custom"                                                                            # prefix of the owner's own avatars: draft.assistant.avatar is "custom-<id>" for an entry of draft.assistant.customAvatars (see avatar.py)
+CUSTOM_LIMIT = 12
 CUSTOM_MOODS = ("idle", "wave", "nod", "think", "talk", "present",       # the six basic moods, then the optional extras of the nine-state set (a missing extra falls back to its basic mood in the widget)
                 "greeting", "talking", "listening", "thinking", "happy", "respect", "presenting", "goodbye",      # the nine-state set under its own names
                 "mouth_open",                                           # not a pose: a small open-mouth picture the widget lays over the face while the voice speaks
@@ -399,21 +400,42 @@ ASSISTANT_VOICES = ("female", "male")                                    # which
 ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
 
 
+def clean_custom_avatars(raw, ctx):
+    """The owner's library: [{id, name, voice, frames: {mood: "u:<id>"}}]. Entries without an existing idle picture are dropped. The first version kept ONE avatar
+    (draft.assistant.customAvatar + voice): it is migrated into the library as id "mine"."""
+    items = [i for i in (raw.get("customAvatars") if isinstance(raw.get("customAvatars"), list) else []) if isinstance(i, dict)]
+    legacy = raw.get("customAvatar") if isinstance(raw.get("customAvatar"), dict) else {}
+    if legacy and not any(i.get("id") == "mine" for i in items):
+        items.append({"id": "mine", "name": "Мій аватар", "voice": raw.get("voice"), "frames": legacy})
+    out, seen = [], set()
+    for item in items:
+        cid = item.get("id")
+        if not isinstance(cid, str) or not re.fullmatch(r"[0-9a-f]{8}|mine", cid) or cid in seen:
+            continue
+        src = item.get("frames") if isinstance(item.get("frames"), dict) else {}
+        frames = {}
+        for mood in CUSTOM_MOODS:
+            ref = src.get(mood)
+            if isinstance(ref, str) and re.fullmatch(r"u:[0-9a-f]{16}", ref) and ctx.uploads.get(ref[2:], {}).get("kind") == "image":
+                frames[mood] = ref
+        if "idle" not in frames:
+            continue
+        seen.add(cid)
+        out.append({"id": cid, "name": text(item.get("name"), 40) or "Аватар", "voice": item.get("voice") if item.get("voice") in ASSISTANT_VOICES else "female", "frames": frames})
+    return out[:CUSTOM_LIMIT]
+
+
 def clean_assistant(raw, ctx):
     """The site assistant (draft.assistant). OFF by default. `facts` overrides the factory records of data/assistant-kb.json by id (only real differences are kept);
     `extra` holds records the owner added; `hidden` is the list of words the output filter always removes. A record is public only with public === true."""
     raw = raw if isinstance(raw, dict) else {}
     factory = {f.get("id"): f for f in ctx.assistant_kb if isinstance(f, dict) and isinstance(f.get("id"), str)}
-    frames = {}
-    src_frames = raw.get("customAvatar") if isinstance(raw.get("customAvatar"), dict) else {}
-    for mood in CUSTOM_MOODS:
-        ref = src_frames.get(mood)
-        if isinstance(ref, str) and re.fullmatch(r"u:[0-9a-f]{16}", ref) and ctx.uploads.get(ref[2:], {}).get("kind") == "image":
-            frames[mood] = ref
+    customs = clean_custom_avatars(raw, ctx)
     avatar = raw.get("avatar")
-    if avatar == CUSTOM_AVATAR and "idle" not in frames:
-        avatar = None                                                    # custom without a picture is not a choice
-    out = {"enabled": boolean(raw.get("enabled"), False), "avatar": avatar if avatar in ASSISTANT_AVATARS + (CUSTOM_AVATAR,) else "consultant-f", "customAvatar": frames, "voice": raw.get("voice") if raw.get("voice") in ASSISTANT_VOICES else "female",
+    if avatar == CUSTOM_AVATAR and customs:
+        avatar = "%s-%s" % (CUSTOM_AVATAR, customs[0]["id"])             # the single avatar of the first version: its entry is migrated as "mine"
+    custom_ids = {"%s-%s" % (CUSTOM_AVATAR, c["id"]) for c in customs}
+    out = {"enabled": boolean(raw.get("enabled"), False), "avatar": avatar if avatar in ASSISTANT_AVATARS or avatar in custom_ids else "consultant-f", "customAvatars": customs,
            "hidden": [], "facts": {}, "extra": []}
     seen = set()
     for word in (raw.get("hidden") if isinstance(raw.get("hidden"), list) else [])[:ASSISTANT_LIMITS["hidden"]]:
@@ -452,7 +474,7 @@ def empty_draft():
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
             "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}},
             "site": {"gallery": {"hidden": [], "order": []}},
-            "assistant": {"enabled": False, "avatar": "consultant-f", "customAvatar": {}, "voice": "female", "hidden": [], "facts": {}, "extra": []}}
+            "assistant": {"enabled": False, "avatar": "consultant-f", "customAvatars": [], "hidden": [], "facts": {}, "extra": []}}
 
 
 def sanitize(raw, ctx):

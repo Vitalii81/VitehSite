@@ -374,32 +374,49 @@ const avatarPicker = (A) => {
   const mine = h("div", { class: "avatar-custom" });
   const frameUrl = (ref) => `${API}?action=file&id=${encodeURIComponent(String(ref).slice(2))}`;
   const paintMine = () => {
-    const frames = A.customAvatar || {};
+    const list = (A.customAvatars ||= []);
     const input = h("input", { type: "file", accept: ".zip,image/png,image/jpeg,image/webp,image/avif", hidden: true });
     input.addEventListener("change", async () => {
       const file = input.files[0];
       if (!file) return;
       try {
         const r = await api("avatar-upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}`, headers: { "Content-Type": "application/octet-stream" } });
-        S.uploads = r.uploads; A.customAvatar = r.frames; A.avatar = "custom"; touch(); fill(); paintMine();
-        toast("Свій аватар завантажено: " + Object.keys(r.frames).join(", "));
+        S.uploads = r.uploads;
+        list.push(...r.avatars);                                               // an import ADDS: nothing already in the library is replaced
+        A.avatar = "custom-" + r.avatars[0].id;
+        touch(); fill(); paintMine();
+        toast("Додано аватарів: " + r.avatars.length + " (" + r.avatars.map((c) => c.name).join(", ") + "). Перший обрано");
       } catch (e) { fail(e); }
     });
-    mine.replaceChildren(
-      h("h3", { style: "margin:14px 0 6px" }, "Свій аватар"),
-      h("p", { class: "muted" }, "Одна картинка (PNG, JPEG, WebP, AVIF; SVG не приймається) або ZIP з картинками на кожен стан: idle, wave, nod, think, talk, present (за назвою файлу; можна й greeting, listening, happy, respect, goodbye, а також talking, thinking, presenting). Достатньо idle: решта стане нею ж, а додаткові стани, яких немає, беруть найближчий основний. Картинка в кружку; рух дає сторінка (дихання, кивок, привітання, «говорить»)."),
-      h("div", { class: "row" },
-        h("button", { class: "btn", type: "button", onclick: () => input.click() }, frames.idle ? "Замінити файл або ZIP" : "Завантажити файл або ZIP"),
-        frames.idle ? h("button", { class: `btn${A.avatar === "custom" ? " primary" : ""}`, type: "button", onclick: () => { A.avatar = "custom"; touch(); fill(); paintMine(); } }, A.avatar === "custom" ? "Обрано" : "Обрати свій") : null,
-        input),
-      h("label", { class: "row", style: "margin-top:8px;align-items:center;gap:8px" }, "Голос озвучення (якщо відвідувач вмикає звук):",
-        h("select", { onchange: (e) => { A.voice = e.target.value; touch(); } }, ...[["female", "жіночий"], ["male", "чоловічий"]].map(([v, l]) => h("option", { value: v, selected: (A.voice || "female") === v }, l)))),
-      h("div", { class: "row", style: "margin-top:8px" }, ...NINE_STATES.map(([state, own, base]) => {
+    const card = (c) => {
+      const id = "custom-" + c.id, on = A.avatar === id, frames = c.frames;
+      const strip = h("div", { class: "row", style: "gap:6px;margin-top:6px" }, ...NINE_STATES.map(([state, own, base]) => {
         const ref = frames[own] || frames[base] || frames.idle;                      // the widget does the same: own picture, else the basic pose, else idle
-        return h("figure", { style: "margin:0;text-align:center" + (frames[own] || (base && frames[base]) ? "" : ";opacity:.55") },
-          h("img", { src: frameUrl(ref), alt: state, style: "width:64px;height:64px;object-fit:cover;border-radius:50%" }),
-          h("figcaption", { class: "muted" }, state, frames[own] ? "" : h("br"), frames[own] ? "" : "= " + (frames[base] ? base : "idle")));
-      }), Object.keys(frames).some((k) => k.startsWith("viseme_")) ? h("p", { class: "muted", style: "flex-basis:100%;margin:4px 0 0" }, "Форми рота (під час мовлення): " + Object.keys(frames).filter((k) => k.startsWith("viseme_")).map((k) => k.slice(7)).join(", ")) : null, frames.mouth_open ? h("figure", { style: "margin:0;text-align:center" }, h("img", { src: frameUrl(frames.mouth_open), alt: "mouth_open", style: "width:64px;height:40px;object-fit:contain" }), h("figcaption", { class: "muted" }, "mouth_open")) : null));
+        const mine = frames[own] || (base && frames[base]);
+        return h("figure", { style: "margin:0;text-align:center" + (mine ? "" : ";opacity:.5"), title: mine ? state : state + " = " + (frames[base] ? base : "idle") },
+          h("img", { src: frameUrl(ref), alt: state, style: "width:48px;height:48px;object-fit:cover;object-position:50% 12%;border-radius:10px;background:#dff3ee" }),
+          h("figcaption", { class: "muted", style: "font-size:11px" }, state));
+      }));
+      const visemes = Object.keys(frames).filter((k) => k.startsWith("viseme_")).map((k) => k.slice(7));
+      return h("div", { class: "card", style: "margin-top:8px" + (on ? ";outline:2px solid var(--accent)" : "") },
+        h("div", { class: "row", style: "align-items:center;gap:8px" },
+          h("input", { type: "text", value: c.name, maxlength: "40", "aria-label": "Назва аватара", style: "flex:1;min-width:120px", oninput: (e) => { c.name = e.target.value; touch(); } }),
+          h("select", { "aria-label": "Голос озвучення", onchange: (e) => { c.voice = e.target.value; touch(); } }, ...[["female", "голос жіночий"], ["male", "голос чоловічий"]].map(([v, l]) => h("option", { value: v, selected: c.voice === v }, l))),
+          h("button", { class: `btn${on ? " primary" : ""}`, type: "button", onclick: () => { A.avatar = id; touch(); fill(); paintMine(); } }, on ? "Обрано" : "Обрати"),
+          h("button", { class: "btn", type: "button", onclick: () => {
+            if (!confirm(`Видалити аватар «${c.name}»? Файли лишаються серед завантажень.`)) return;
+            A.customAvatars = list.filter((x) => x !== c);
+            if (on) A.avatar = "consultant-f";
+            touch(); fill(); paintMine();
+          } }, "Видалити")),
+        strip,
+        visemes.length || frames.mouth_open ? h("p", { class: "muted", style: "margin:6px 0 0" }, (visemes.length ? "Форми рота під час мовлення: " + visemes.join(", ") + ". " : "") + (frames.mouth_open ? "Є шар відкритого рота." : "")) : null);
+    };
+    mine.replaceChildren(
+      h("h3", { style: "margin:14px 0 6px" }, "Мої аватари"),
+      h("p", { class: "muted" }, "Кожен імпорт додає нові аватари до списку, нічого не замінюючи. Одна картинка (PNG, JPEG, WebP, AVIF; SVG не приймається) або ZIP з картинками на стани: idle, greeting, talking, listening, thinking, happy, respect, presenting, goodbye (або старі короткі назви wave, nod, think, talk, present) і за бажанням форми рота viseme_closed, viseme_narrow, viseme_round, viseme_open, viseme_wide чи один шар mouth_open. Потрібен лише idle: стан без власної картинки бере найближчу (напівпрозорі на картках). ZIP з папками male і female дає одразу два аватари. На сайті аватар у заокругленій рамці, сама рамка не рухається."),
+      h("div", { class: "row" }, h("button", { class: "btn", type: "button", onclick: () => input.click() }, "Додати файл або ZIP"), input),
+      ...(list.length ? list.map(card) : [h("p", { class: "muted" }, "Власних аватарів ще немає.")]));
   };
   paintMine();
   return h("div", { class: "card" }, h("p", { class: "muted" }, "Вигляд помічника на сайті: кнопка в кутку і шапка чату. Усі варіанти рухаються однаково (привітання, кивок, думає, говорить). Наведіть курсор, щоб побачити привітання. Зміна потрапить на сайт після збірки й публікації (вибір готового вигляду можна застосувати кнопкою нижче без публікації)."), box, mine);

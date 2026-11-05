@@ -29,7 +29,7 @@ def _curl(url, token, body):
 
 
 def apply(paths, draft, run=_curl):
-    if draft["assistant"]["avatar"] == "custom":
+    if draft["assistant"]["avatar"].startswith("custom"):
         raise ApiError("needs_publish", "Свій аватар складається з ваших файлів, тому потрапить на сайт лише зі звичайною збіркою й публікацією", 409)
     try:
         with open(token_path(paths), encoding="utf-8") as f:

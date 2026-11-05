@@ -65,7 +65,7 @@
   const avatarId = () => {
     const set = window.VITEH_AVATARS;
     const want = document.documentElement.dataset.assistantAvatar;
-    if (want === "custom" && customFrames()) return "custom";
+    if (/^custom/.test(want || "") && customFrames()) return "custom";
     return set && set.items[want] ? want : set && set.order[0];
   };
   const avatars = [];
@@ -112,7 +112,7 @@
       if (!r.ok) return;
       const want = (await r.json()).assistantAvatar;
       const set = window.VITEH_AVATARS;
-      if (!(want === "custom" ? customFrames() : set && set.items[want]) || want === avatarId()) return;
+      if (!(/^custom/.test(want) ? customFrames() : set && set.items[want]) || want === avatarId()) return;
       document.documentElement.dataset.assistantAvatar = want;
       avatars.forEach((old, i) => { const fresh = avatarNode("a" + (i + 1)); fresh.setAttribute("data-mood", old.getAttribute("data-mood") || "idle"); old.replaceWith(fresh); avatars[i] = fresh; });
     } catch { /* offline or no Worker: keep the built-in look */ }

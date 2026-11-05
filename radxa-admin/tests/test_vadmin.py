@@ -1789,11 +1789,14 @@ class CustomAvatarTests(ApiTests):
 
     def test_upload_stores_pictures_and_refuses_svg_and_bad_zip(self):
         from vadmin import avatar
-        frames = avatar.store(self.w.paths, self.zip_of(["a/idle.png", "a/talk.png", "__MACOSX/._idle.png", "readme.txt", "a/logo.svg"]), "x.zip")
+        entries = avatar.store(self.w.paths, self.zip_of(["a/idle.png", "a/talk.png", "__MACOSX/._idle.png", "readme.txt", "a/logo.svg"]), "x.zip")
+        self.assertEqual(len(entries), 1)
+        frames = entries[0]["frames"]
         self.assertEqual(sorted(frames), ["idle", "talk"])
         self.assertTrue(all(v.startswith("u:") for v in frames.values()))
         single = avatar.store(self.w.paths, self.PNG, "me.png")
-        self.assertEqual(list(single), ["idle"])
+        self.assertEqual(list(single[0]["frames"]), ["idle"])
+        self.assertEqual(single[0]["name"], "me")
         with self.assertRaises(Exception):
             avatar.store(self.w.paths, b"<svg onload=alert(1)></svg>", "x.svg")
         with self.assertRaises(Exception):
@@ -1801,13 +1804,34 @@ class CustomAvatarTests(ApiTests):
 
     def test_custom_reaches_the_page_only_with_a_picture(self):
         from vadmin import avatar, schema
-        frames = avatar.store(self.w.paths, self.PNG, "me.png")
+        entry = avatar.store(self.w.paths, self.PNG, "me.png")[0]
         draft = self.w.draft()
-        draft["assistant"].update(enabled=True, avatar="custom", customAvatar=frames)
+        draft["assistant"].update(enabled=True, avatar="custom-" + entry["id"], customAvatars=[entry])
         clean = schema.sanitize(draft, schema.Context(self.w.paths))
-        self.assertEqual(clean["assistant"]["avatar"], "custom")
-        draft["assistant"]["customAvatar"] = {"idle": "u:0123456789abcdef"}                 # an upload that does not exist
+        self.assertEqual(clean["assistant"]["avatar"], "custom-" + entry["id"])
+        draft["assistant"]["customAvatars"] = [dict(entry, frames={"idle": "u:0123456789abcdef"})]          # an upload that does not exist
         self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["avatar"], "consultant-f")
+
+    def test_each_import_adds_and_a_zip_with_folders_gives_several_avatars(self):
+        from vadmin import avatar
+        one = avatar.store(self.w.paths, self.PNG, "first.png")
+        two = avatar.store(self.w.paths, self.zip_of(["pack/female/idle.png", "pack/female/talking.png", "pack/male/idle.png", "pack/male/viseme_open.png", "pack/code.js"]), "pack.zip")
+        self.assertEqual([(a["name"], a["voice"]) for a in two], [("female", "female"), ("male", "male")])
+        self.assertEqual(sorted(two[1]["frames"]), ["idle", "viseme_open"])
+        self.assertEqual(len({one[0]["id"], two[0]["id"], two[1]["id"]}), 3, "every avatar gets its own id")
+
+    def test_deleting_the_chosen_avatar_falls_back_and_the_first_version_is_migrated(self):
+        from vadmin import avatar, schema
+        entry = avatar.store(self.w.paths, self.PNG, "me.png")[0]
+        draft = self.w.draft()
+        draft["assistant"].update(avatar="custom-" + entry["id"], customAvatars=[entry])
+        draft["assistant"]["customAvatars"] = []                                              # the owner deleted it
+        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["avatar"], "consultant-f")
+        old = self.w.draft()
+        old["assistant"].update(avatar="custom", customAvatar=entry["frames"], voice="male")
+        old["assistant"].pop("customAvatars", None)
+        clean = schema.sanitize(old, schema.Context(self.w.paths))["assistant"]
+        self.assertEqual((clean["avatar"], clean["customAvatars"][0]["id"], clean["customAvatars"][0]["voice"]), ("custom-mine", "mine", "male"))
 
     def test_nine_state_names_and_the_voice_of_a_custom_avatar(self):
         from vadmin import avatar, schema
@@ -1815,12 +1839,6 @@ class CustomAvatarTests(ApiTests):
         self.assertEqual(picked, {"greeting": b"g", "talking": b"t", "thinking": b"k", "goodbye": b"b", "idle": b"i"})
         self.assertEqual(avatar.pick([("viseme_open.png", b"o"), ("viseme_closed.png", b"c"), ("idle.png", b"i")]), {"viseme_open": b"o", "viseme_closed": b"c", "idle": b"i"})
         self.assertEqual(avatar.pick([("mouth_open.png", b"m"), ("idle.png", b"i")]), {"mouth_open": b"m", "idle": b"i"}, "the overlay picture is kept as its own frame")
-        draft = self.w.draft()
-        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "female", "default")
-        draft["assistant"]["voice"] = "male"
-        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "male")
-        draft["assistant"]["voice"] = "robot"
-        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "female")
 
     def test_a_publication_clears_the_live_overrides(self):
         from vadmin import settings
@@ -2269,10 +2287,12 @@ class AssistantTests(unittest.TestCase):
 
     def test_custom_avatar_pictures_are_packaged_and_announced(self):
         from vadmin import avatar
-        frames = avatar.store(self.w.paths, b"\x89PNG\r\n\x1a\n" + b"\x00" * 40, "me.png")
-        bid = self.build({"enabled": True, "avatar": "custom", "customAvatar": frames})
+        entry = avatar.store(self.w.paths, b"\x89PNG\r\n\x1a\n" + b"\x00" * 40, "me.png")[0]
+        entry["voice"] = "male"
+        bid = self.build({"enabled": True, "avatar": "custom-" + entry["id"], "customAvatars": [entry]})
         html = self.w.read(bid, "index.html")
-        self.assertIn('data-assistant-avatar="custom"', html)
+        self.assertIn('data-assistant-avatar="custom-%s"' % entry["id"], html)
+        self.assertIn('data-assistant-voice="male"', html)
         m = re.search(r"data-assistant-frames='([^']+)'", html)
         self.assertTrue(m, "the page lists the pictures")
         path = json.loads(m.group(1))["idle"]

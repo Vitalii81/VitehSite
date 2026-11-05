@@ -161,10 +161,13 @@ def transform_home(html, draft, ctx, assets, forms):
         head_add += '  <link rel="stylesheet" href="assets/assistant.css">\n'
         html = html.replace('<script src="assets/app.js" defer></script>\n', '<script src="assets/app.js" defer></script>\n  <script src="assets/assistant-avatars.js" defer></script>\n  <script src="assets/assistant.js" defer></script>\n', 1)
         frames = ""
-        if draft["assistant"]["avatar"] == schema.CUSTOM_AVATAR:        # the owner's pictures: the widget swaps them by mood
-            urls = {m: assets.url(ref).lstrip("/") for m, ref in draft["assistant"]["customAvatar"].items()}
+        voice = "female"
+        chosen = next((c for c in draft["assistant"]["customAvatars"] if draft["assistant"]["avatar"] == "%s-%s" % (schema.CUSTOM_AVATAR, c["id"])), None)
+        if chosen:                                                       # the owner's pictures: the widget swaps them by mood
+            urls = {m: assets.url(ref).lstrip("/") for m, ref in chosen["frames"].items()}
             frames = " data-assistant-frames='%s'" % json.dumps({m: u for m, u in urls.items() if u}, separators=(",", ":"))
-        html = html.replace('<html ', '<html data-assistant-avatar="%s" data-assistant-voice="%s"%s ' % (draft["assistant"]["avatar"], draft["assistant"]["voice"], frames), 1)
+            voice = chosen["voice"]
+        html = html.replace('<html ', '<html data-assistant-avatar="%s" data-assistant-voice="%s"%s ' % (draft["assistant"]["avatar"], voice, frames), 1)
     if head_add:
         html = re.sub(r'(<link rel="stylesheet" href="assets/styles.css">\n)', lambda m: m.group(1) + head_add, html, count=1)
     return html

@@ -4,12 +4,13 @@ The draft keeps {mood: "u:<id>"}; the build copies the used uploads into the pac
 import io
 import os
 import re
+import uuid
 import zipfile
 
 from . import uploads
 from .core import ApiError
 
-from .schema import CUSTOM_MOODS as MOODS
+from .schema import CUSTOM_LIMIT, CUSTOM_MOODS as MOODS
 
 MAX_ENTRIES = 40
 MAX_PICKED = len(MOODS)
@@ -62,11 +63,36 @@ def unzip(data):
     return out
 
 
+def groups(files):
+    """[(name, files)]: one group per folder that holds mood-named pictures (a pack with male/ and female/ folders gives two avatars); otherwise all pictures are one avatar."""
+    by = {}
+    for name, data in files:
+        by.setdefault(os.path.dirname(name), []).append((name, data))
+    named = sorted((d, fs) for d, fs in by.items() if any(mood_of(n) for n, _ in fs))
+    if len(named) > 1:
+        return [(os.path.basename(d) or "avatar", fs) for d, fs in named]
+    return [(None, files)]
+
+
+def voice_of(text):
+    """female/male from a folder or file name (female is checked first: "female" contains "male")."""
+    low = (text or "").lower()
+    if re.search(r"female|woman|жін|she", low):
+        return "female"
+    return "male" if re.search(r"male|man|чол|he", low) else "female"
+
+
 def store(paths, data, filename):
-    """Stores the pictures as uploads and returns {mood: "u:<id>"}."""
+    """Stores the pictures as uploads and returns NEW library entries [{id, name, voice, frames: {mood: "u:<id>"}}]: one per picture, ZIP, or male/female folder of a ZIP."""
     if data[:2] == b"PK":
         files = unzip(data)
     else:
         files = [(filename or "idle", data)]
-    frames = pick(files)
-    return {mood: uploads.store(paths, blob, "avatar-%s" % mood)["ref"] for mood, blob in frames.items()}
+    stem = os.path.splitext(os.path.basename(filename or ""))[0]
+    out = []
+    for name, group in groups(files)[:CUSTOM_LIMIT]:
+        frames = pick(group)
+        label = (name or stem or "Аватар")[:40]
+        out.append({"id": uuid.uuid4().hex[:8], "name": label, "voice": voice_of(name or stem),
+                    "frames": {mood: uploads.store(paths, blob, "avatar-%s" % mood)["ref"] for mood, blob in frames.items()}})
+    return out
