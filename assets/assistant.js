@@ -57,24 +57,17 @@
   }
 
   /* ---------- avatar: a polite animated helper (wave, nod, think, talk, open-palm "present") ---------- */
-  const AVATAR = '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true" focusable="false">'
-    + '<g class="av-body"><path class="av-shirt" d="M22 120c0-22 16-34 38-34s38 12 38 34z"/><path class="av-collar" d="M48 87l12 12 12-12"/></g>'
-    + '<g class="av-armL"><path class="av-sleeve" d="M30 98c-9 4-14 12-14 20"/><circle class="av-hand" cx="16" cy="104" r="6.5"/></g>'
-    + '<g class="av-armR"><path class="av-sleeve" d="M90 98c9 4 14 12 14 20"/><circle class="av-hand" cx="104" cy="106" r="6.5"/></g>'
-    + '<g class="av-head">'
-    + '<path class="av-ant" d="M60 22v-10"/><circle class="av-bulb" cx="60" cy="10" r="4.5"/>'
-    + '<rect class="av-ear" x="23" y="44" width="8" height="18" rx="4"/><rect class="av-ear" x="89" y="44" width="8" height="18" rx="4"/>'
-    + '<rect class="av-face" x="28" y="22" width="64" height="58" rx="26"/>'
-    + '<rect class="av-visor" x="35" y="36" width="50" height="26" rx="13"/>'
-    + '<g class="av-eyes"><ellipse class="av-eye" cx="50" cy="49" rx="5" ry="6.5"/><ellipse class="av-eye" cx="70" cy="49" rx="5" ry="6.5"/></g>'
-    + '<ellipse class="av-cheek" cx="40" cy="68" rx="5" ry="3"/><ellipse class="av-cheek" cx="80" cy="68" rx="5" ry="3"/>'
-    + '<path class="av-mouth" d="M52 68q8 7 16 0"/>'
-    + '<g class="av-dots"><circle cx="46" cy="14" r="2.4"/><circle cx="60" cy="14" r="2.4"/><circle cx="74" cy="14" r="2.4"/></g>'
-    + '</g></svg>';
+  const AVATAR_WRAP = (inner) => '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true" focusable="false">' + inner + "</svg>";
+  const avatarId = () => {
+    const set = window.VITEH_AVATARS;
+    const want = document.documentElement.dataset.assistantAvatar;
+    return set && set.items[want] ? want : set && set.order[0];
+  };
   const avatars = [];
   const makeAvatar = () => {
+    if (!window.VITEH_AVATARS) return el("span");
     const holder = el("div");
-    holder.innerHTML = AVATAR;                       // static markup of this file only (no user or model text)
+    holder.innerHTML = AVATAR_WRAP(window.VITEH_AVATARS.items[avatarId()].svg);      // static markup of assistant-avatars.js only (no user or model text)
     const node = holder.firstChild;
     avatars.push(node);
     return node;
@@ -219,7 +212,7 @@
     try {
       const { action } = await ask("chat", S.messages, (piece) => {
         answer += piece;
-        if (avatars[0].getAttribute("data-mood") !== "talk") mood("talk");
+        if (avatars[0] && avatars[0].getAttribute("data-mood") !== "talk") mood("talk");
         bubble.classList.remove("asst-pending");
         bubble.textContent = answer.replace(/^\s+/, "");
         log.scrollTop = log.scrollHeight;

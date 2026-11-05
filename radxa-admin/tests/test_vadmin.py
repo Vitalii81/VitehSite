@@ -2158,6 +2158,19 @@ class AssistantTests(unittest.TestCase):
         self.assertIn("ASSISTANT_BACKENDS", "".join(read_file(os.path.join(REPO, "docs", "assistant-llama-server.md")).split()), "the docs name the secret")
         self.assertNotIn("token", self.w.read(bid, "api/_private/assistant.json").lower().replace("tokens", ""), "no credentials in the package")
 
+    def test_avatar_choice_is_validated_and_reaches_the_page(self):
+        self.assertEqual(self.w.draft()["assistant"]["avatar"], "consultant-f", "the default look")
+        bid = self.build({"enabled": True, "avatar": "engineer"})
+        html = self.w.read(bid, "index.html")
+        self.assertIn('data-assistant-avatar="engineer"', html)
+        self.assertLess(html.index("assistant-avatars.js"), html.index("assets/assistant.js"), "the avatars load before the widget")
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(bid), "assets/assistant-avatars.js")))
+        bid = self.build({"enabled": True, "avatar": "<script>x</script>"})
+        self.assertIn('data-assistant-avatar="consultant-f"', self.w.read(bid, "index.html"), "an unknown look falls back")
+        bid = self.build({"enabled": False, "avatar": "core"})
+        self.assertNotIn("assistant", self.w.read(bid, "index.html"))
+        self.assertFalse(os.path.exists(os.path.join(self.w.site(bid), "assets/assistant-avatars.js")))
+
     def test_only_public_true_records_reach_the_kb(self):
         extra = [{"id": "x-aaaa0001", "public": True, "topic": {"uk": "Відкрите", "en": "Open", "de": "Offen"}, "text": {"uk": "ПУБЛІЧНИЙ-ФАКТ", "en": "PUBLIC-FACT", "de": "OEFFENTLICH"}},
                  {"id": "x-aaaa0002", "public": False, "topic": {"uk": "Закрите", "en": "Closed", "de": "Zu"}, "text": {"uk": "ПРИВАТНИЙ-ФАКТ", "en": "PRIVATE-FACT", "de": "PRIVAT"}},

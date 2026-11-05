@@ -342,6 +342,32 @@ function addBlockControl(blocks, paint, open) {
 }
 
 /* ---------- views ---------- */
+/* The assistant's avatar choices: previews use the site's own files (/site-assets/assistant-avatars.js and assistant.css), so they are exactly what visitors see. */
+let avatarAssets = null;
+const loadAvatarAssets = () => avatarAssets ||= new Promise((resolve) => {
+  const css = h("link", { rel: "stylesheet", href: "/site-assets/assistant.css" });
+  const js = h("script", { src: "/site-assets/assistant-avatars.js" });
+  js.addEventListener("load", () => resolve(true)); js.addEventListener("error", () => resolve(false));
+  document.head.append(css, js);
+});
+const avatarPicker = (A) => {
+  const box = h("div", { class: "avatar-grid" });
+  const fill = () => {
+    const set = window.VITEH_AVATARS;
+    if (!set) { box.replaceChildren(h("p", { class: "muted" }, "Не вдалося завантажити аватари (файл site-assets/assistant-avatars.js).")); return; }
+    box.replaceChildren(...set.order.map((id) => {
+      const holder = h("div", { class: "avatar-preview" });
+      holder.innerHTML = '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true">' + set.items[id].svg + "</svg>";   // static markup shipped with the site
+      const svg = holder.firstChild;
+      const choose = () => { A.avatar = id; touch(); fill(); };
+      return h("button", { type: "button", class: "avatar-card" + (A.avatar === id ? " on" : ""), "aria-pressed": String(A.avatar === id), onclick: choose,
+        onmouseenter: () => svg.setAttribute("data-mood", "wave"), onmouseleave: () => svg.setAttribute("data-mood", "idle") }, holder, h("span", {}, set.items[id].name.uk));
+    }));
+  };
+  loadAvatarAssets().then(fill);
+  return h("div", { class: "card" }, h("p", { class: "muted" }, "Вигляд помічника на сайті: кнопка в кутку і шапка чату. Усі варіанти рухаються однаково (привітання, кивок, думає, говорить). Наведіть курсор, щоб побачити привітання. Зміна потрапить на сайт після збірки й публікації."), box);
+};
+
 const VIEWS = {
   sections(main) {
     main.append(...head("Розділи головної сторінки", "Вимкнений розділ не потрапляє в HTML публічного сайту."));
@@ -529,11 +555,13 @@ const VIEWS = {
   },
 
   assistant(main) {
-    const A = (S.draft.assistant ||= { enabled: false, hidden: [], facts: {}, extra: [] });
+    const A = (S.draft.assistant ||= { enabled: false, avatar: "consultant-f", hidden: [], facts: {}, extra: [] });
+    A.avatar ||= "consultant-f";
     main.append(...head("Бот-помічник для клієнтів", "Окрема від редагування сайту вкладка. Бот відповідає лише з бази знань: тексти сайту (що зараз ввімкнено в чернетці) + факти нижче. Запис без позначки «публічний» у відповіді не потрапляє."));
     main.append(h("div", { class: "card" }, toggle("Показувати чат на сайті (за замовчуванням вимкнено)", A.enabled === true, (v) => { A.enabled = v; }),
       h("p", { class: "muted" }, "Вимкнено: у HTML нічого не додається і файли бота не потрапляють у пакет. Увімкнено: потрібні секрет ASSISTANT_BACKENDS у Worker і запущений llama-server (див. docs/assistant-llama-server.md). Без бекендів бот чесно скаже, що недоступний, і запропонує форму контакту.")));
 
+    main.append(h("h2", { style: "margin-top:22px" }, "Аватар помічника"), avatarPicker(A));
     main.append(h("h2", { style: "margin-top:22px" }, "Заводські факти (data/assistant-kb.json)"));
     for (const f of S.catalog.assistantFacts || []) {
       A.facts[f.id] ||= { public: f.public === true, topic: clone(f.topic), text: clone(f.text) };

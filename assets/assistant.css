@@ -50,7 +50,8 @@
   .asst-msg { max-width: 94%; }
 }
 
-/* avatar */
+/* avatar looks (assistant-avatars.js): colours come from the theme tokens plus a few fixed natural tones */
+.asst-av { --av-fur: #d9822b; --av-fur2: #f3b36b; --av-owl: #8a6a4a; --av-owl2: #cdb08a; --av-hair: #3b2a22; --av-tone: #f0c8a0; --av-ink: #1b2b27; }
 .asst-av { width: 44px; height: 44px; flex: none; overflow: visible; --av-skin: color-mix(in srgb, var(--surface) 88%, var(--accent) 12%); }
 .asst-fab .asst-av { width: 62px; height: 62px; margin: -12px 0 -6px; padding: 3px; box-sizing: border-box; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 3px var(--accent-ink); }
 .asst-head .asst-av { width: 54px; height: 54px; padding: 3px; box-sizing: border-box; border-radius: 50%; background: var(--accent-soft); }
@@ -99,3 +100,26 @@
 @keyframes av-talk { from { transform: scaleY(1); } to { transform: scaleY(1.9) scaleX(.9); } }
 @keyframes av-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px) rotate(1.5deg); } }
 @keyframes av-present { 0% { transform: rotate(0); } 25%, 75% { transform: rotate(38deg); } 100% { transform: rotate(0); } }
+
+.asst-av .av-skin { fill: var(--av-tone); stroke: none; }
+.asst-av .av-outline { stroke: var(--accent-strong); stroke-width: 2; }
+.asst-av .av-hair { fill: var(--av-hair); }
+.asst-av .av-dark { fill: var(--av-ink); }
+.asst-av .av-glasses { fill: none; stroke: var(--accent-strong); stroke-width: 2.6; }
+.asst-av .av-fur { fill: var(--av-fur); stroke: none; }
+.asst-av .av-fur-s { stroke: var(--av-fur); }
+.asst-av .av-fur2 { fill: var(--av-fur2); stroke: var(--av-fur); stroke-width: 2; }
+.asst-av .av-fur-in { fill: var(--av-fur2); }
+.asst-av .av-muzzle { fill: #fff6ea; }
+.asst-av .av-scarf { fill: var(--accent); }
+.asst-av .av-belly { fill: var(--av-owl2); }
+.asst-av .av-eyewhite { fill: #fff; }
+.asst-av .av-beak { fill: var(--warm, #f0a65a); }
+.asst-av .av-orb { fill: var(--accent); }
+.asst-av .av-gloss { fill: #fff; opacity: .35; }
+.asst-av .av-orb-h { fill: var(--accent-soft); stroke: var(--accent-strong); stroke-width: 2; }
+.asst-av .av-mouth-light { stroke: var(--accent-ink); }
+.asst-av .av-sleeve.av-fur-s { stroke: var(--av-fur); }
+.asst-av .av-owlc { fill: var(--av-owl); stroke: none; }
+.asst-av .av-owl-s { stroke: var(--av-owl); }
+.asst-av .av-owl2c { fill: var(--av-owl2); stroke: var(--av-owl); stroke-width: 2; }

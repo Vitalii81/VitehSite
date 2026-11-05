@@ -389,6 +389,7 @@ def clean_site(raw, ctx):
     return {"gallery": {"hidden": sorted({x for x in hidden if isinstance(x, str) and x in slugs}), "order": _slug_order(g.get("order"), slugs)}}
 
 
+ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "engineer", "core")                  # looks in assets/assistant-avatars.js
 ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
 
 
@@ -397,7 +398,7 @@ def clean_assistant(raw, ctx):
     `extra` holds records the owner added; `hidden` is the list of words the output filter always removes. A record is public only with public === true."""
     raw = raw if isinstance(raw, dict) else {}
     factory = {f.get("id"): f for f in ctx.assistant_kb if isinstance(f, dict) and isinstance(f.get("id"), str)}
-    out = {"enabled": boolean(raw.get("enabled"), False), "hidden": [], "facts": {}, "extra": []}
+    out = {"enabled": boolean(raw.get("enabled"), False), "avatar": raw.get("avatar") if raw.get("avatar") in ASSISTANT_AVATARS else "consultant-f", "hidden": [], "facts": {}, "extra": []}
     seen = set()
     for word in (raw.get("hidden") if isinstance(raw.get("hidden"), list) else [])[:ASSISTANT_LIMITS["hidden"]]:
         w = text(word, ASSISTANT_LIMITS["hiddenLen"])
@@ -435,7 +436,7 @@ def empty_draft():
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
             "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}},
             "site": {"gallery": {"hidden": [], "order": []}},
-            "assistant": {"enabled": False, "hidden": [], "facts": {}, "extra": []}}
+            "assistant": {"enabled": False, "avatar": "consultant-f", "hidden": [], "facts": {}, "extra": []}}
 
 
 def sanitize(raw, ctx):
