@@ -4,7 +4,6 @@ The draft keeps {mood: "u:<id>"}; the build copies the used uploads into the pac
 import io
 import os
 import re
-import uuid
 import zipfile
 
 from . import uploads
@@ -93,6 +92,6 @@ def store(paths, data, filename):
     for name, group in groups(files)[:CUSTOM_LIMIT]:
         frames = pick(group)
         label = (name or stem or "Аватар")[:40]
-        out.append({"id": uuid.uuid4().hex[:8], "name": label, "voice": voice_of(name or stem),
+        out.append({"id": os.urandom(4).hex(), "name": label, "voice": voice_of(name or stem),
                     "frames": {mood: uploads.store(paths, blob, "avatar-%s" % mood)["ref"] for mood, blob in frames.items()}})
     return out
