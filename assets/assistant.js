@@ -56,13 +56,45 @@
     return true;
   }
 
+  /* ---------- avatar: a polite animated helper (wave, nod, think, talk, open-palm "present") ---------- */
+  const AVATAR = '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true" focusable="false">'
+    + '<g class="av-body"><path class="av-shirt" d="M22 120c0-22 16-34 38-34s38 12 38 34z"/><path class="av-collar" d="M48 87l12 12 12-12"/></g>'
+    + '<g class="av-armL"><path class="av-sleeve" d="M30 98c-9 4-14 12-14 20"/><circle class="av-hand" cx="16" cy="104" r="6.5"/></g>'
+    + '<g class="av-armR"><path class="av-sleeve" d="M90 98c9 4 14 12 14 20"/><circle class="av-hand" cx="104" cy="106" r="6.5"/></g>'
+    + '<g class="av-head">'
+    + '<path class="av-ant" d="M60 22v-10"/><circle class="av-bulb" cx="60" cy="10" r="4.5"/>'
+    + '<rect class="av-ear" x="23" y="44" width="8" height="18" rx="4"/><rect class="av-ear" x="89" y="44" width="8" height="18" rx="4"/>'
+    + '<rect class="av-face" x="28" y="22" width="64" height="58" rx="26"/>'
+    + '<rect class="av-visor" x="35" y="36" width="50" height="26" rx="13"/>'
+    + '<g class="av-eyes"><ellipse class="av-eye" cx="50" cy="49" rx="5" ry="6.5"/><ellipse class="av-eye" cx="70" cy="49" rx="5" ry="6.5"/></g>'
+    + '<ellipse class="av-cheek" cx="40" cy="68" rx="5" ry="3"/><ellipse class="av-cheek" cx="80" cy="68" rx="5" ry="3"/>'
+    + '<path class="av-mouth" d="M52 68q8 7 16 0"/>'
+    + '<g class="av-dots"><circle cx="46" cy="14" r="2.4"/><circle cx="60" cy="14" r="2.4"/><circle cx="74" cy="14" r="2.4"/></g>'
+    + '</g></svg>';
+  const avatars = [];
+  const makeAvatar = () => {
+    const holder = el("div");
+    holder.innerHTML = AVATAR;                       // static markup of this file only (no user or model text)
+    const node = holder.firstChild;
+    avatars.push(node);
+    return node;
+  };
+  let moodTimer = 0;
+  /** mood: idle | wave | nod | think | talk | present. A timed mood falls back to idle (or to the sticky one). */
+  function mood(name, ms = 0, sticky = "idle") {
+    clearTimeout(moodTimer);
+    for (const a of avatars) a.setAttribute("data-mood", name);
+    if (ms) moodTimer = setTimeout(() => { for (const a of avatars) a.setAttribute("data-mood", sticky); }, ms);
+  }
+
   /* ---------- DOM ---------- */
-  let fab, panel, log, form, input, sendBtn, note, titleEl, closeBtn, handoffBtn;
+  let fab, fabLabel, panel, log, form, input, sendBtn, note, titleEl, closeBtn, handoffBtn;
 
   function build() {
     if (S.built) return;
     S.built = true;
-    fab = el("button", { class: "asst-fab", type: "button", "aria-expanded": "false", "aria-controls": "asst-panel", onclick: () => setOpen(panel.hidden) });
+    fabLabel = el("span", { class: "asst-fab-label" });
+    fab = el("button", { class: "asst-fab", type: "button", "aria-expanded": "false", "aria-controls": "asst-panel", onclick: () => setOpen(panel.hidden) }, makeAvatar(), fabLabel);
     titleEl = el("h2", { class: "asst-title", id: "asst-title" });
     closeBtn = el("button", { class: "asst-close", type: "button", onclick: () => setOpen(false) }, "×");
     log = el("div", { class: "asst-log", role: "log", "aria-live": "polite", "aria-relevant": "additions text", tabindex: "0" });
@@ -72,17 +104,20 @@
     note = el("p", { class: "asst-note" });
     form = el("form", { class: "asst-form", onsubmit: (e) => { e.preventDefault(); send(); } }, input, sendBtn);
     panel = el("section", { class: "asst-panel", id: "asst-panel", role: "dialog", "aria-modal": "false", "aria-labelledby": "asst-title", hidden: true },
-      el("header", { class: "asst-head" }, titleEl, closeBtn), log, handoffBtn, form, note);
+      el("header", { class: "asst-head" }, makeAvatar(), titleEl, closeBtn), log, handoffBtn, form, note);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
     input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 120) + "px"; });
     panel.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } });
     document.body.append(fab, panel);
+    mood("idle");
+    let nudges = 0;
+    const nudge = setInterval(() => { if (!panel.hidden || ++nudges > 3) { if (nudges > 3) clearInterval(nudge); return; } mood("wave", 2200); }, 28000);
     texts();
     addMessage("assistant", t("greeting"), { greeting: true });
   }
 
   function texts() {
-    fab.textContent = t("open");
+    fabLabel.textContent = t("open");
     fab.setAttribute("aria-label", t("title"));
     titleEl.textContent = t("title");
     closeBtn.setAttribute("aria-label", t("close"));
@@ -101,6 +136,7 @@
     fab.setAttribute("aria-expanded", String(open));
     fab.classList.toggle("asst-fab-hidden", open);
     if (open) {
+      mood("wave", 2600);
       clearHighlight();
       if (focus) input.focus();
       log.scrollTop = log.scrollHeight;
@@ -178,10 +214,12 @@
     S.messages.push({ role: "user", content: text });
     const bubble = addMessage("assistant", t("thinking"));
     bubble.classList.add("asst-pending");
+    mood("think");
     let answer = "";
     try {
       const { action } = await ask("chat", S.messages, (piece) => {
         answer += piece;
+        if (avatars[0].getAttribute("data-mood") !== "talk") mood("talk");
         bubble.classList.remove("asst-pending");
         bubble.textContent = answer.replace(/^\s+/, "");
         log.scrollTop = log.scrollHeight;
@@ -193,9 +231,10 @@
         bubble.classList.remove("asst-pending");
         S.handoffReady = true;
         handoffBtn.hidden = false;
-        if (action) offerCard(action);
+        if (action) { offerCard(action); mood("present", 2600); } else mood("nod", 1100);
       }
     } catch (e) {
+      mood("idle");
       bubble.classList.remove("asst-pending");
       bubble.textContent = e.name === "AbortError" ? "" : fail(e.status, e.code);
       if (!bubble.textContent) bubble.remove();
