@@ -46,6 +46,8 @@ This site is independent from NanoKVM and from the OTA file server.
 | `tests/gallery3d.test.mjs` | Tests for the gallery logic and the generated models |
 | `radxa-admin/` | Private admin and page builder that runs on the Radxa (see "Admin on the Radxa" below, instructions in `radxa-admin/ADMIN.md`) |
 | `data/blocks.json`, `data/templates.json` | Block library (14 blocks, field schemas, three-language examples) and templates (service, project card, section, pages, forms); used by the admin, **not** published |
+| `worker/assistant.mjs`, `worker/assistant-api.mjs`, `worker/assistant.test.mjs` | Site assistant backend (`POST /api/assistant`): model-pool gate, prompt, injection detector, output filter; tests |
+| `assets/assistant.js`, `assets/assistant.css`, `data/assistant-kb.json` | Chat widget (shipped only while switched on in the admin) and the factory extra facts (`public: true/false`); see `docs/assistant-llama-server.md` |
 | `worker/forms.mjs` | Validation of submissions from forms made in the admin (`POST /api/form`); `worker/forms.test.mjs` = tests |
 | `assets/blocks.css`, `assets/forms.js` | Styles and script of generated pages (`/s/<slug>/`) and extra home sections |
 

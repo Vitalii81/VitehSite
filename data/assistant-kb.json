@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "note": "Extra facts for the site assistant. Only records with public:true can ever reach an answer. Edit them in the admin tab 'Помічник'.",
+  "facts": [
+    {
+      "id": "scope",
+      "public": true,
+      "topic": {
+        "uk": "Які задачі беремо",
+        "en": "What we take on",
+        "de": "Welche Aufgaben wir übernehmen"
+      },
+      "text": {
+        "uk": "Програмне забезпечення, електронні пристрої, інтеграція AI-агентів. Задачі легкої й середньої складності: прототипи, малі серії, внутрішні інструменти, інтеграції. Для дуже складних систем спершу окремо обговорюємо обсяг.",
+        "en": "Software, electronic devices and AI-agent integration. Light to medium complexity: prototypes, small series, internal tools, integrations. Very complex systems start with a separate scoping conversation.",
+        "de": "Software, elektronische Geräte und KI-Agenten-Integration. Leichte bis mittlere Komplexität: Prototypen, Kleinserien, interne Werkzeuge, Integrationen. Sehr komplexe Systeme beginnen mit einem separaten Scoping-Gespräch."
+      }
+    },
+    {
+      "id": "first-step",
+      "public": true,
+      "topic": {
+        "uk": "З чого почати",
+        "en": "How to start",
+        "de": "Wie man beginnt"
+      },
+      "text": {
+        "uk": "Опишіть задачу у формі контакту: що потрібно створити, для кого і в які терміни. Перша розмова безкоштовна, після неї ми пропонуємо формат співпраці.",
+        "en": "Describe the task in the contact form: what should be built, for whom and by when. The first conversation is free; afterwards we propose a working format.",
+        "de": "Beschreiben Sie die Aufgabe im Kontaktformular: was entstehen soll, für wen und bis wann. Das Erstgespräch ist kostenlos; danach schlagen wir ein Arbeitsformat vor."
+      }
+    },
+    {
+      "id": "languages",
+      "public": true,
+      "topic": {
+        "uk": "Мови спілкування",
+        "en": "Languages",
+        "de": "Sprachen"
+      },
+      "text": {
+        "uk": "Сайт і спілкування доступні українською, англійською та німецькою.",
+        "en": "The site and communication are available in Ukrainian, English and German.",
+        "de": "Website und Kommunikation sind auf Ukrainisch, Englisch und Deutsch verfügbar."
+      }
+    },
+    {
+      "id": "prices",
+      "public": true,
+      "topic": {
+        "uk": "Ціни",
+        "en": "Prices",
+        "de": "Preise"
+      },
+      "text": {
+        "uk": "Фіксованих цін на сайті немає: конкретні суми називаємо після короткої розмови про задачу. Бот не називає цифр.",
+        "en": "There are no fixed prices on the site: exact figures follow a short conversation about the task. The assistant does not quote numbers.",
+        "de": "Es gibt keine festen Preise auf der Website: konkrete Beträge nennen wir nach einem kurzen Gespräch. Der Assistent nennt keine Zahlen."
+      }
+    },
+    {
+      "id": "internal-note",
+      "public": false,
+      "topic": {
+        "uk": "Внутрішня примітка (приклад)",
+        "en": "Internal note (example)",
+        "de": "Interne Notiz (Beispiel)"
+      },
+      "text": {
+        "uk": "Приклад непублічного запису: він ніколи не потрапляє у відповіді бота.",
+        "en": "Example of a non-public record: it never reaches the assistant's answers.",
+        "de": "Beispiel für einen nicht öffentlichen Eintrag: er gelangt nie in die Antworten des Assistenten."
+      }
+    }
+  ]
+}

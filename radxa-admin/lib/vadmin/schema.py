@@ -38,6 +38,7 @@ class Context:
         self.products = read_json(os.path.join(data, "products.json"), []) or []
         self.portfolio_images = read_json(os.path.join(data, "portfolio-images.json"), []) or []
         self.portfolio_projects = (read_json(os.path.join(data, "portfolio.json"), {}) or {}).get("projects", []) or []
+        self.assistant_kb = (read_json(os.path.join(data, "assistant-kb.json"), {}) or {}).get("facts", [])
         self.uploads = (read_json(paths.uploads_index, {}) or {}).get("items", {})
 
     def categories(self):
@@ -388,11 +389,53 @@ def clean_site(raw, ctx):
     return {"gallery": {"hidden": sorted({x for x in hidden if isinstance(x, str) and x in slugs}), "order": _slug_order(g.get("order"), slugs)}}
 
 
+ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
+
+
+def clean_assistant(raw, ctx):
+    """The site assistant (draft.assistant). OFF by default. `facts` overrides the factory records of data/assistant-kb.json by id (only real differences are kept);
+    `extra` holds records the owner added; `hidden` is the list of words the output filter always removes. A record is public only with public === true."""
+    raw = raw if isinstance(raw, dict) else {}
+    factory = {f.get("id"): f for f in ctx.assistant_kb if isinstance(f, dict) and isinstance(f.get("id"), str)}
+    out = {"enabled": boolean(raw.get("enabled"), False), "hidden": [], "facts": {}, "extra": []}
+    seen = set()
+    for word in (raw.get("hidden") if isinstance(raw.get("hidden"), list) else [])[:ASSISTANT_LIMITS["hidden"]]:
+        w = text(word, ASSISTANT_LIMITS["hiddenLen"])
+        if w and w.lower() not in seen:
+            seen.add(w.lower())
+            out["hidden"].append(w)
+    src = raw.get("facts") if isinstance(raw.get("facts"), dict) else {}
+    for fid, base in factory.items():
+        item = src.get(fid)
+        if not isinstance(item, dict):
+            continue
+        kept = {}
+        if "public" in item and boolean(item.get("public"), False) != (base.get("public") is True):          # a missing flag keeps the factory one
+            kept["public"] = boolean(item.get("public"), False)
+        for field, limit in (("topic", 120), ("text", ASSISTANT_LIMITS["fact"])):
+            val = i18n(item.get(field), limit, field == "text")
+            if any(val.values()) and val != {k: (base.get(field) or {}).get(k, "") for k in LANGS}:
+                kept[field] = val
+        if kept:
+            out["facts"][fid] = kept
+    ids = set()
+    for item in (raw.get("extra") if isinstance(raw.get("extra"), list) else [])[:ASSISTANT_LIMITS["extra"]]:
+        if not isinstance(item, dict):
+            continue
+        fid = text(item.get("id"), 32)
+        if not (ID_RE.match(fid) and fid.startswith("x-")) or fid in ids:
+            fid = new_id("x-")
+        ids.add(fid)
+        out["extra"].append({"id": fid, "public": boolean(item.get("public"), False), "topic": i18n(item.get("topic"), 120), "text": i18n(item.get("text"), ASSISTANT_LIMITS["fact"], True)})
+    return out
+
+
 def empty_draft():
     return {"rev": 0, "sections": {}, "order": [], "disabled": {"services": [], "projects": []}, "widgets": {}, "effects": {}, "texts": {},
             "extra": {"services": [], "projects": [], "home": []}, "images": {"hero": "", "projects": {}, "models": {}, "serviceModels": {}},
             "pages": [], "forms": {}, "plain": {}, "products": {}, "portfolio": {"disabled": [], "order": [], "items": {}, "images": {}, "alts": {}, "disabledSections": [], "texts": {}},
-            "site": {"gallery": {"hidden": [], "order": []}}}
+            "site": {"gallery": {"hidden": [], "order": []}},
+            "assistant": {"enabled": False, "hidden": [], "facts": {}, "extra": []}}
 
 
 def sanitize(raw, ctx):
@@ -433,6 +476,7 @@ def sanitize(raw, ctx):
     d["portfolio"] = clean_portfolio(raw, ctx)
     d["site"] = clean_site(raw.get("site"), ctx)
     d["products"] = clean_products(raw.get("products"), ctx)
+    d["assistant"] = clean_assistant(raw.get("assistant"), ctx)
     plain, src = editable_plain(ctx.site), raw.get("plain") if isinstance(raw.get("plain"), dict) else {}
     for path, value in list(src.items())[:LIMITS["texts"]]:
         if isinstance(path, str) and PLAIN_PATH.match(path) and path in plain:
