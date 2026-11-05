@@ -36,6 +36,8 @@ def main(argv):
                 state["published"] = args[0]
                 core.write_json(paths.state, state)
             print("published =", args[0])
+            from vadmin import settings                         # the new build carries the newest built-in values: drop the live overrides
+            print("live overrides cleared" if settings.reset(paths) else "live overrides not cleared (no key or no answer): use the apply button if needed")
             return 0
         if cmd == "deploy-next":
             with core.locked(paths):

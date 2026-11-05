@@ -40,9 +40,10 @@ def hand(p, x, flip, tone):
 
 def arms(p, tone, cuff="#f4f6f5"):
     def one(cls, x, flip):
-        return (f'<g class="{cls}"><path d="M{x} 130V92" fill="none" stroke="url(#{p}j)" stroke-width="13"/>'
-                f'<path d="M{x - 3} 128V94" stroke="#fff" stroke-opacity=".12" stroke-width="2" fill="none"/>'
-                f'<rect x="{x - 6.5}" y="88" width="13" height="5" rx="2" fill="{cuff}"/>{hand(p, x, flip, tone)}</g>')
+        # a rect, not a stroked line: a gradient on a zero-width box paints nothing (the arm looked like a thread)
+        return (f'<g class="{cls}"><rect x="{x - 6.5}" y="90" width="13" height="26" rx="5.500" fill="url(#{p}j)"/>'
+                f'<rect x="{x - 4}" y="92" width="2.600" height="22" rx="1.300" fill="#fff" opacity=".13"/>'
+                f'<rect x="{x - 7.200}" y="87.500" width="14.400" height="6" rx="2.400" fill="{cuff}"/>{hand(p, x, flip, tone)}</g>')
     return one("av-armL", 20, True) + one("av-armR", 100, False)
 
 
@@ -140,7 +141,7 @@ def person(p, palette, *, back="", body, hair_front="", extra="", brow="#2b1b14"
     head = (back + neck(p, deep) + ears(p, deep, ring) + f'<path d="{FACE}" fill="url(#{p}f)"/>' + face_shading(p, deep, blush)
             + f'<g class="av-eyes">{eye(p, 50, 0, lash, "#2a1b17", deep)}{eye(p, 70, 1, lash, "#2a1b17", deep)}</g>'
             + brows(brow, thick, brow_y) + nose(deep) + mouth(p, lip, lip2, deep) + extra + (glasses() if glass else "") + hair_front)
-    return d + (back_body(p, palette) if False else "") + body + arms(p, deep) + wrap_head(head)
+    return d + arms(p, deep) + body + wrap_head(head)          # arms first: the sleeve comes out from behind the torso, not floating beside it
 
 
 def back_body(p, palette):

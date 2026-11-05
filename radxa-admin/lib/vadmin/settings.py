@@ -45,3 +45,14 @@ def apply(paths, draft, run=_curl):
     if not answer.get("ok"):
         raise ApiError("apply_failed", "Сайт не прийняв параметри: %s" % answer.get("error", "?"), 502)
     return {"ok": True, "settings": answer.get("settings", {})}
+
+
+def reset(paths, run=_curl):
+    """After a publication the page's own (built-in) values are the newest: clear the live overrides so an old «apply now» cannot hide the new build.
+    Best effort: returns True when the Worker accepted it."""
+    try:
+        with open(token_path(paths), encoding="utf-8") as f:
+            token = f.read().strip()
+        return bool(token) and bool(json.loads(run(SITE_URL + "/api/settings", token, "{}") or "{}").get("ok"))
+    except Exception:
+        return False
