@@ -389,7 +389,7 @@ def clean_site(raw, ctx):
     return {"gallery": {"hidden": sorted({x for x in hidden if isinstance(x, str) and x in slugs}), "order": _slug_order(g.get("order"), slugs)}}
 
 
-ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "engineer", "core")                  # looks in assets/assistant-avatars.js
+ASSISTANT_AVATARS = ("consultant-f", "consultant-m", "expert", "engineer", "core")                  # looks in assets/assistant-avatars.js
 ASSISTANT_LIMITS = {"hidden": 60, "hiddenLen": 60, "extra": 30, "fact": 1200}
 
 
