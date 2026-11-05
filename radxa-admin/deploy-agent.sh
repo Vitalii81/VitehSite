@@ -22,7 +22,7 @@ while :; do
     [0-9]*-[0-9]*-[0-9a-f]*)
       echo "$(date '+%F %T') deploying $ID"
       LOG=$(mktemp); REPO_DIR=$(mktemp -d)
-      if GIT_TERMINAL_PROMPT=0 git clone --quiet --depth 1 "${VITEH_REPO:-https://github.com/Vitalii81/VitehSite.git}" "$REPO_DIR/src" >"$LOG" 2>&1 \
+      if GIT_TERMINAL_PROMPT=0 git clone --quiet --depth 1 ${VITEH_BRANCH:+-b "$VITEH_BRANCH"} "${VITEH_REPO:-https://github.com/Vitalii81/VitehSite.git}" "$REPO_DIR/src" >"$LOG" 2>&1 \
          && WORKER_SRC="$REPO_DIR/src" sh "$HERE/deploy-from-radxa.sh" "$ID" >>"$LOG" 2>&1; then R=ok; else R=fail; fi
       rm -rf "$REPO_DIR"
       tail -c 6000 "$LOG" | remote deploy-report "$ID" "$R" || echo "could not report $R for $ID" >&2

@@ -138,7 +138,9 @@ test("cronos v1: yellow buttons", () => {
 
 test("3D stages follow the site theme: light and dark tokens in the stylesheet, themed poster tool", () => {
   const css = readFileSync(join(root, "assets/styles.css"), "utf8");
-  assert.equal((css.match(/--stage-a:/g) || []).length, 3, "light, dark (data-theme) and dark (system)");
+  const base = css.slice(0, css.indexOf("colour palettes"));          // the palettes below redefine the same tokens per accent
+  assert.equal((base.match(/--stage-a:/g) || []).length, 3, "light, dark (data-theme) and dark (system)");
+  assert.equal((css.match(/--stage-a:/g) || []).length, 3 + 4 * 3, "four palettes x light, dark, dark (system)");
   assert.ok(!/radial-gradient\(ellipse at 50% 40%, #1d312b/.test(css), "no hard-coded dark stage left");
   assert.match(readFileSync(join(root, "tools/poster.html"), "utf8"), /data-theme="dark"/);
 });

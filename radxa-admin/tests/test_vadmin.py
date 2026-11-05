@@ -1763,6 +1763,25 @@ class CompatTests(unittest.TestCase):
                             self.assertTrue(m in stdlib or m == "vadmin", "%s imports %s" % (name, m))
 
 
+class LiveSettingsTests(ApiTests):
+    def test_apply_sends_only_the_avatar_with_the_bearer_key(self):
+        from vadmin import settings
+        cookie = self.login()
+        st, _, out = self.call("POST", "apply-settings", {}, cookie=cookie)
+        self.assertEqual((st, out["error"]), (409, "no_token"), "no key file yet")
+        with open(settings.token_path(self.w.paths), "w") as f:
+            f.write("k-123\n")
+        sent = {}
+
+        def run(url, token, body):
+            sent.update(url=url, auth=token, body=json.loads(body))
+            return '{"ok": true, "settings": {"assistantAvatar": "consultant-f"}}'
+        draft = self.w.draft()
+        self.assertEqual(settings.apply(self.w.paths, draft, run)["ok"], True)
+        self.assertEqual(sent, {"url": "https://viteh.org/api/settings", "auth": "k-123", "body": {"assistantAvatar": "consultant-f"}})
+        self.assertEqual(self.call("POST", "apply-settings", {})[0], 401, "needs a session")
+
+
 class IdeasCatalogTests(ApiTests):
     """The admin-only service-ideas catalog: sanitised like any custom service, added DISABLED, never part of a package."""
 
@@ -2157,6 +2176,19 @@ class AssistantTests(unittest.TestCase):
         self.assertNotIn("assistant-kb", json.dumps(os.listdir(os.path.join(self.w.site(bid), "data"))), "the factory fact file itself is not published")
         self.assertIn("ASSISTANT_BACKENDS", "".join(read_file(os.path.join(REPO, "docs", "assistant-llama-server.md")).split()), "the docs name the secret")
         self.assertNotIn("token", self.w.read(bid, "api/_private/assistant.json").lower().replace("tokens", ""), "no credentials in the package")
+
+    def test_avatar_choice_is_validated_and_reaches_the_page(self):
+        self.assertEqual(self.w.draft()["assistant"]["avatar"], "consultant-f", "the default look")
+        bid = self.build({"enabled": True, "avatar": "engineer"})
+        html = self.w.read(bid, "index.html")
+        self.assertIn('data-assistant-avatar="engineer"', html)
+        self.assertLess(html.index("assistant-avatars.js"), html.index("assets/assistant.js"), "the avatars load before the widget")
+        self.assertTrue(os.path.isfile(os.path.join(self.w.site(bid), "assets/assistant-avatars.js")))
+        bid = self.build({"enabled": True, "avatar": "<script>x</script>"})
+        self.assertIn('data-assistant-avatar="consultant-f"', self.w.read(bid, "index.html"), "an unknown look falls back")
+        bid = self.build({"enabled": False, "avatar": "core"})
+        self.assertNotIn("assistant", self.w.read(bid, "index.html"))
+        self.assertFalse(os.path.exists(os.path.join(self.w.site(bid), "assets/assistant-avatars.js")))
 
     def test_only_public_true_records_reach_the_kb(self):
         extra = [{"id": "x-aaaa0001", "public": True, "topic": {"uk": "Відкрите", "en": "Open", "de": "Offen"}, "text": {"uk": "ПУБЛІЧНИЙ-ФАКТ", "en": "PUBLIC-FACT", "de": "OEFFENTLICH"}},

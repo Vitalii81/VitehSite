@@ -88,6 +88,7 @@ const setLanguage = (lang, { persist = true } = {}) => {
     history.replaceState(null, "", url);
   }
   render();
+  renderPalette();
 };
 
 /* ---------- theme ---------- */
@@ -106,6 +107,46 @@ const toggleTheme = () => {
   document.documentElement.dataset.theme = next;
   store.set("viteh.theme", next);
   updateThemeButton();
+};
+
+/* ---------- colour palettes (CSS: [data-palette]; the choice is kept in this browser only) ---------- */
+const PALETTES = [["teal", "#1c8a74"], ["ocean", "#2161ab"], ["amber", "#a65f0b"], ["rose", "#b13b62"], ["graphite", "#4f5e70"]];
+const PALETTE_NAMES = { uk: ["Бірюза", "Океан", "Бурштин", "Роза", "Графіт"], en: ["Teal", "Ocean", "Amber", "Rose", "Graphite"], de: ["Türkis", "Ozean", "Bernstein", "Rose", "Graphit"] };
+const PALETTE_LABEL = { uk: "Кольорова схема", en: "Colour scheme", de: "Farbschema" };
+const currentPalette = () => document.documentElement.dataset.palette || "teal";
+
+const renderPalette = () => {
+  const box = $("#paletteBox"), toggle = $("#paletteToggle");
+  if (!box || !toggle) return;
+  const lang = PALETTE_NAMES[state.lang] ? state.lang : "en";
+  toggle.setAttribute("aria-label", PALETTE_LABEL[lang]);
+  box.querySelector("#paletteMenu")?.remove();
+  const menu = document.createElement("div");
+  menu.className = "palette-menu"; menu.id = "paletteMenu"; menu.hidden = true; menu.setAttribute("role", "group"); menu.setAttribute("aria-label", PALETTE_LABEL[lang]);
+  PALETTES.forEach(([id, color], i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "palette-item"; b.setAttribute("aria-pressed", String(currentPalette() === id));
+    const dot = document.createElement("span"); dot.className = "palette-dot"; dot.style.background = color;
+    b.append(dot, PALETTE_NAMES[lang][i]);
+    b.addEventListener("click", () => {
+      if (id === "teal") delete document.documentElement.dataset.palette; else document.documentElement.dataset.palette = id;
+      store.set("viteh.palette", id === "teal" ? "" : id);
+      renderPalette(); menu.hidden = false; toggle.setAttribute("aria-expanded", "true");
+      box.querySelector(`.palette-item[aria-pressed="true"]`)?.focus();
+    });
+    menu.append(b);
+  });
+  box.append(menu);
+};
+
+const initPalette = () => {
+  const box = $("#paletteBox"), toggle = $("#paletteToggle");
+  if (!box || !toggle) return;
+  const close = () => { const m = $("#paletteMenu"); if (m) m.hidden = true; toggle.setAttribute("aria-expanded", "false"); };
+  toggle.addEventListener("click", () => { const m = $("#paletteMenu"); if (!m) return; m.hidden = !m.hidden; toggle.setAttribute("aria-expanded", String(!m.hidden)); });
+  document.addEventListener("click", (e) => { if (!box.contains(e.target)) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { close(); toggle.focus(); } });
+  renderPalette();
 };
 
 /* ---------- renderers ---------- */
@@ -508,6 +549,7 @@ const init = async () => {
   document.documentElement.lang = state.lang;
 
   $("#themeToggle")?.addEventListener("click", toggleTheme);
+  initPalette();
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", updateThemeButton);
   setupHeader();
   if (isHome) { setupForm(); setupScrollSpy(); }

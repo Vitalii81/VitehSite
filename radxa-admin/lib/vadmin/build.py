@@ -17,7 +17,7 @@ BUILD_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$")
 PUBLIC_FILES = ("index.html", "impressum.html", "datenschutz.html", "robots.txt")
 GALLERY_DIRS = ("vendor", "models", "env", "posters")           # 3D gallery: library, models, lighting, posters
 GALLERY_FILES = ("gallery3d.js", "viewer-settings.js")
-ASSISTANT_FILES = ("assistant.js", "assistant.css")              # shipped only while the assistant is switched on in the draft
+ASSISTANT_FILES = ("assistant.js", "assistant.css", "assistant-avatars.js")              # shipped only while the assistant is switched on in the draft
 PDF_NAMES = {"en": "Vitalii_Krutikov_Engineering_Portfolio_2026.pdf", "uk": "Vitalii_Krutikov_Engineering_Portfolio_2026_uk.pdf", "de": "Vitalii_Krutikov_Engineering_Portfolio_2026_de.pdf"}
 # Lists that the public JS renders from site.json; a disabled section gets empty lists (the heading texts stay).
 SECTION_LISTS = {"hero": ["hero.badges"], "trust": ["trust.items"], "services": ["services.items"], "ai": ["ai.features"], "process": ["process.steps"],
@@ -158,7 +158,8 @@ def transform_home(html, draft, ctx, assets, forms):
             html = html.replace("</body>", '  <script src="assets/forms.js" defer></script>\n</body>', 1)
     if draft["assistant"]["enabled"]:                       # off (the default): nothing at all is added to the HTML
         head_add += '  <link rel="stylesheet" href="assets/assistant.css">\n'
-        html = html.replace('<script src="assets/app.js" defer></script>\n', '<script src="assets/app.js" defer></script>\n  <script src="assets/assistant.js" defer></script>\n', 1)
+        html = html.replace('<script src="assets/app.js" defer></script>\n', '<script src="assets/app.js" defer></script>\n  <script src="assets/assistant-avatars.js" defer></script>\n  <script src="assets/assistant.js" defer></script>\n', 1)
+        html = html.replace('<html ', '<html data-assistant-avatar="%s" ' % draft["assistant"]["avatar"], 1)
     if head_add:
         html = re.sub(r'(<link rel="stylesheet" href="assets/styles.css">\n)', lambda m: m.group(1) + head_add, html, count=1)
     return html
