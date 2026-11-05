@@ -357,7 +357,8 @@ const avatarPicker = (A) => {
     if (!set) { box.replaceChildren(h("p", { class: "muted" }, "Не вдалося завантажити аватари (файл site-assets/assistant-avatars.js).")); return; }
     box.replaceChildren(...set.order.map((id) => {
       const holder = h("div", { class: "avatar-preview" });
-      holder.innerHTML = '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true">' + set.items[id].svg + "</svg>";   // static markup shipped with the site
+      const uid = "p" + id.replace(/[^a-z]/g, "");
+      holder.innerHTML = '<svg class="asst-av" viewBox="0 0 120 120" aria-hidden="true">' + set.items[id].svg.replace(/id="([a-z]+)"/g, `id="$1${uid}"`).replace(/url\(#([a-z]+)\)/g, `url(#$1${uid})`) + "</svg>";   // static markup shipped with the site
       const svg = holder.firstChild;
       const choose = () => { A.avatar = id; touch(); fill(); };
       return h("button", { type: "button", class: "avatar-card" + (A.avatar === id ? " on" : ""), "aria-pressed": String(A.avatar === id), onclick: choose,

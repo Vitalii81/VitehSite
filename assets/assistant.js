@@ -67,7 +67,9 @@
   const makeAvatar = () => {
     if (!window.VITEH_AVATARS) return el("span");
     const holder = el("div");
-    holder.innerHTML = AVATAR_WRAP(window.VITEH_AVATARS.items[avatarId()].svg);      // static markup of assistant-avatars.js only (no user or model text)
+    const uid = "a" + (avatars.length + 1);          // ids (gradients) must be unique per copy: a hidden SVG does not render another one's gradients
+    const markup = window.VITEH_AVATARS.items[avatarId()].svg.replace(/id="([a-z]+)"/g, `id="$1${uid}"`).replace(/url\(#([a-z]+)\)/g, `url(#$1${uid})`);
+    holder.innerHTML = AVATAR_WRAP(markup);      // static markup of assistant-avatars.js only (no user or model text)
     const node = holder.firstChild;
     avatars.push(node);
     return node;

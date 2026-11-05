@@ -60,7 +60,8 @@
 .asst-av .av-shirt { fill: var(--accent); }
 .asst-av .av-collar { fill: none; stroke: var(--accent-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
 .asst-av .av-sleeve { fill: none; stroke: var(--accent); stroke-width: 11; stroke-linecap: round; }
-.asst-av .av-hand { fill: var(--av-skin); stroke: var(--accent-strong); stroke-width: 2; }
+.asst-av .av-hand { opacity: 0; transition: opacity .25s; }
+.asst-av[data-mood="wave"] .av-armR .av-hand, .asst-av[data-mood="present"] .av-armL .av-hand { opacity: 1; }
 .asst-av .av-face { fill: var(--av-skin); stroke: var(--accent-strong); stroke-width: 3; }
 .asst-av .av-ear { fill: var(--accent-2, var(--accent)); }
 .asst-av .av-visor { fill: color-mix(in srgb, var(--accent-strong) 78%, #04100d); }
