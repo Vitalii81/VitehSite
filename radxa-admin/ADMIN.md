@@ -70,7 +70,7 @@ python3 radxa-admin/dev-server.py        # адмінка http://127.0.0.1:8082/
 
 | Розділ | Що там |
 | --- | --- |
-| **Розділи** | Вмикання й вимкнення розділів головної (hero, довіра, послуги, AI-агенти, процес, проєкти, стек, ціни, FAQ, контакти). Вимкнений розділ **не потрапляє в HTML**, його пункт меню теж зникає. Для hero можна підставити своє фото. |
+| **Розділи** | Вмикання й вимкнення розділів головної (hero, довіра, послуги, AI-агенти, процес, проєкти, стек, ціни, FAQ, контакти). Порядок розділів змінюється в режимі «Редагувати на сторінці» (у цьому списку лишається заводський порядок). Вимкнений розділ **не потрапляє в HTML**, його пункт меню теж зникає. Для hero можна підставити своє фото. |
 | **Послуги** | Вмикання заводських послуг, додавання своїх «з шаблону» і редагування. Для кожної послуги можна замінити або додати 3D-модель (`.glb`, до 8 МБ); заводський постер при заміні прибирається, картка показує звичайну картинку, поки не буде нового постера. |
 | **Картки проєктів** | Вмикання, заміна фото та `.glb`-моделі без правки коду; нові картки з шаблону. Модель потрібна 3D-галереї. |
 | **Додаткові розділи** | Блоки з бібліотеки або з шаблонів («Про нас», «Заклик до дії», «Галерея»), що з'являються на головній перед контактами. |
@@ -83,6 +83,49 @@ python3 radxa-admin/dev-server.py        # адмінка http://127.0.0.1:8082/
 | **Версії й публікація** | Список із 20 останніх збірок: перегляд, відкат чернетки, команда публікації. |
 
 Стандартна форма контактів на головній **не змінюється**: її тексти редагуються в «Текстах» (`contact.form.*`), а набір полів лишається заводським.
+
+## Редагувати на сторінці (режим edit mode lite)
+
+Кнопка **«Редагувати на сторінці»** у верхній панелі адмінки відкриває нову вкладку: та сама головна сторінка, але з елементами керування. Працює лише з активною сесією адмінки (без неї: проста сторінка з посиланням на вхід) і лише на хості адмінки (`admin.viteh.org`), бо cookie сесії не передається на `preview.viteh.org`.
+
+- **Текст:** клацніть по тексту й пишіть. Редагується та мова, яку обрано звичайним перемикачем UA/EN/DE на сайті. Enter або клік повз = застосувати, Esc = скасувати, Ctrl+S = зберегти. Редагуються тексти з «Текстів» (заводські мовні рядки) і тексти власних послуг та власних карток проєктів (`x-…`). Тексти заводських карток проєктів (`products.json`) і прості рядки (email, телефон, стек технологій) тут не редагуються: їх немає в чернетці.
+- **Галочки «Показувати»** у кутку кожного розділу, картки послуги й картки проєкту. Вимкнене показується напівпрозорим із помаранчевою рамкою; з HTML воно зникне під час наступної збірки (як і з розділу «Розділи»).
+- **Зображення й 3D:** «Зображення…» у hero, «Фото…» і «3D…» на картках проєктів, «3D…» на картках послуг. У вікні: заводські картинки, ваші завантаження й завантаження нового файлу (ті самі обмеження, що в «Файлах»). Після вибору чернетка зберігається й сторінка перезавантажується.
+- **Порядок:** ▲/▼ у розділів від «Послуг» до «Контактів» (hero і смуга можливостей лишаються на місці). Меню сайту йде за тим самим порядком. Порядок, що збігається із заводським, зберігається як порожній, тож порожня чернетка дає заводський сайт байт у байт. Переставляти картки всередині розділу поки що не можна.
+- **Збереження:** автоматично через ~1,2 с після останньої правки і кнопкою «Зберегти»; внизу видно «Збережено / Є зміни / Зберігаю / Помилка / Конфлікт». «Є зміни…» з'являється з першого набраного символу (не чекає виходу з поля), а «Збережено» лише після успішного збереження; закрити вкладку з незафіксованим текстом браузер теж попередить. Це та сама дія `save` з перевіркою ревізії, що й в адмінці: якщо чернетку змінено в іншій вкладці, буде «Конфлікт» і кнопка «Оновити сторінку» (правки цієї вкладки, що не збереглися, пропадуть). Тому не тримайте одночасно змінену вкладку адмінки й режим редагування: після правок у режимі редагування оновіть вкладку адмінки.
+- Якщо після збереження збірка не пройшла б перевірку (наприклад, вимкнено розділ, на який веде посилання), внизу з'явиться помаранчеве «Збірка не пройде: …».
+- **Публікація** окрема: «До адмінки» → «Зібрати пакет» → «Опублікувати». Режим редагування нічого не публікує й не потрапляє в пакет (код і стилі режиму віддаються лише дією `edit-page`; тест перевіряє, що в пакеті їх немає).
+- Сторінка читає `/assets/…` з docroot адмінки (інсталятор копіює туди `assets/` поряд із `site-assets/`), а завантаження показує дією `file`. Після оновлення адмінки виконайте `install-on-radxa.sh --update-code`.
+
+## Превʼю віджетів при наведенні
+
+У списках «Розділи», «Послуги», «Картки проєктів», «Додаткові розділи» (і блоки на сторінках), «Віджети й ефекти» біля кожного пункту є кнопка-«око». Превʼю (назва, пояснення, картинка) показується:
+
+- **мишею:** наведіть курсор на рядок пункту (~0,3 с), прибираєте курсор і воно зникає;
+- **з клавіатури:** Tab на перемикач у рядку; Tab на «око» + Enter закріплює вікно;
+- **на телефоні:** довге натискання (~0,5 с) на рядок або тап по «оку»; тап поза вікном закриває; прокрутка пальцем вікно не відкриває;
+- **Esc** закриває завжди. Вікно не виходить за межі екрана (на 390 px воно під пунктом на всю доступну ширину).
+
+У «Додаткових розділах» біля вибору типу блока теж є «око»: показує вигляд обраного типу перед додаванням. Ефекти («Плавне погойдування», «Поява під час прокрутки») показують живу міні-демонстрацію на CSS (за `prefers-reduced-motion` без руху). У режимі «Редагувати на сторінці» «око» є на мініпанелі кожного розділу й картки послуги/проєкту.
+
+Як це влаштовано: картинки лежать у `radxa-admin/web/previews/*.webp` (до 40 КБ кожна, ~600 КБ разом), тексти й привʼязка до картинок у `previews/manifest.json`, логіка в `web/preview-tip.js` + `preview-tip.css`. Назви й пояснення заводських карток послуг і проєктів беруться з каталогу (`catalog.factory`), власні картки використовують загальне пояснення й свою назву. Інсталятор копіює `web/` цілком, тож `previews/` їде разом; файли превʼю **не** потрапляють у пакет для публікації.
+
+Оновити картинки після зміни заводського сайту (потрібні Chrome/Chromium і python3, мережа не потрібна):
+
+```bash
+node tools/make-admin-previews.mjs            # усі; або конкретні: node tools/make-admin-previews.mjs section:faq block:cta
+```
+
+Скрипт фотографує розділи, картки й віджети заводської головної, а типи блоків збирає з прикладів `data/blocks.json` рендерером адмінки (`tools/admin-preview-sample.py`). Нові розділ, ефект, віджет чи тип блока потребують запису в `manifest.json` й рядка в `SHOTS` скрипта; тест `PreviewTests` падає, поки для кожного id немає опису й картинки.
+
+## Каталог ідей послуг (лише в адмінці)
+
+Пункт меню **«Каталог ідей»** показує готові картки послуг (uk/en/de) з рівнем готовності («ідея», «вчу», «зможу з допомогою», «готово») і посиланнями на джерела. Аналіз ринку, на якому вони засновані: `docs/market-needs-2026.md` (бюджети там оцінки, а не дані ринку).
+
+- Кнопка **«Додати в чернетку»** створює власну послугу (той самий механізм і ті самі обмеження, що в розділі «Послуги»), але **вимкненою**. Увімкніть її в розділі «Послуги», коли освоїли тему. Повторно ту саму ідею додати не можна.
+- Каталог це файл `radxa-admin/catalog/service-ideas.json`. Він лежить поруч із кодом адмінки, віддається лише через API після входу (`action=ideas`, додавання `action=idea-add`) і **ніколи не потрапляє в пакет сайту** (покрито тестами). Інсталятор і `push-to-radxa.sh` копіюють папку `catalog/` разом із кодом.
+- Нову ідею додають у цей JSON: `id`, `readiness`, `need`, `sources`, `card` (`icon` із набору іконок, `title`/`text`/`points` трьома мовами; у тексті картки без 3D-моделі має бути виділення `**ключове**`, `{{аспект}}` або `~~другорядне~~`). Тест `tests/service-ideas.test.mjs` перевіряє довжини, мови, пари позначок.
+- Віджети для підказок при наведенні не додавались, тому `web/previews/manifest.json` не змінювався.
 
 ## 5. Зібрати → переглянути → опублікувати
 
@@ -168,8 +211,9 @@ radxa-admin/
   vadmin-cli.py         list | export | verify | mark-published | build | set-password | revoke-sessions
   dev-server.py         локальна спроба без nginx
   cgi/vadmin.py         CGI-вхід (URL /cgi-bin/vadmin-api, через обгортку з docroot)
-  lib/vadmin/           core, schema, check, build, render, richtext, uploads, auth, api
-  web/                  index.html, admin.js, admin.css
+  lib/vadmin/           core, schema, check, build, render, richtext, uploads, auth, api, editpage, ideas
+  catalog/              service-ideas.json: каталог ідей послуг (лише адмінка, не в пакеті)
+  web/                  index.html, admin.js, admin.css, preview-tip.js/.css + previews/ (превʼю при наведенні), edit-core.js, edit-overlay.js, edit-overlay.css (режим «Редагувати на сторінці»)
   tests/                test_vadmin.py (Python unittest)
 data/blocks.json        бібліотека блоків і схеми полів       data/templates.json   шаблони (послуга, картка, розділ, сторінки, форми)
 worker/forms.mjs        перевірка заявок з форм адмінки      assets/blocks.css, assets/forms.js   стилі й скрипт згенерованих сторінок
@@ -193,3 +237,54 @@ The page and the PDF share one content source, `portfolioPage` in `data/site.jso
 Adding a brand-new section or picture still means editing `site.json` / `assets/portfolio/img/` in the repository.
 
 The tab **«Зображення проєктів 2022–2025»** lists every slot (`<project>/<slot>`) with its ratio and the expected source: pick an uploaded image (the slot becomes `final` in the build) and, if needed, type its alt text in uk/en/de (empty languages keep the factory text). An alt text alone never publishes a picture.
+
+## Публічний доступ: admin.viteh.org (Cloudflare Access + пароль)
+
+Адмінка лишається на Radxa на приватних портах (`:8082` адмінка, `:8083` перегляд). В інтернет її виставляє **лише Cloudflare Tunnel**, а перед нею стоїть **Cloudflare Access**. Входів два, один за одним:
+
+1. **Cloudflare Access**: одноразовий код на вашу пошту (нічого не пишемо самі, листи шле Cloudflare);
+2. **парольна фраза адмінки** (PBKDF2, від 20 символів, блокування після невдалих спроб).
+
+Що додано в код (нічого не змінює для приватних портів):
+- uhttpd на Radxa передає CGI лише фіксований набір заголовків (`Origin`, `Referer`, `Cookie`, `Host`...), тож `X-Vadmin`, `CF-*` і `X-Forwarded-Proto` до коду не доходять. Захист від CSRF тримається на `Origin` (має збігатися з `Host`) і cookie `SameSite=Strict`; `Secure` ставиться, коли `Origin` починається з `https://`;
+- перевірки наявності Access-заголовка в коді немає: єдиний вхід з інтернету це тунель, а Access стоїть перед ним. Якщо Access-застосунок видалити, лишиться тільки парольна фраза, тому його не видаляйте, не прибравши маршрут;
+- блокування спроб через тунель рахується за адресою тунелю (`127.0.0.1`), тобто спільно для всіх відвідувачів.
+
+Налаштування (один раз, у панелі Cloudflare):
+1. **Zero Trust → Networks → Tunnels →** ваш тунель Radxa **→ Public hostname → Add**: піддомен `admin`, домен `viteh.org`, Service **HTTP** `localhost:8082`. DNS-запис Cloudflare створить сам.
+2. **Zero Trust → Access → Applications → Add → Self-hosted**: застосунок `viteh-admin`, домен `admin.viteh.org`. Політика **Allow**: *Emails* = ваша адреса (лише вона). Метод входу: **One-time PIN**. Тривалість сесії 8 годин, не довше.
+3. Перевірка: відкрийте `https://admin.viteh.org` у приватному вікні: спершу сторінка Cloudflare з полем пошти, потім код, потім форма парольної фрази. Інша адреса пошти коду не отримає.
+4. Режим «Редагувати на сторінці» (перегляд `:8083`) лишається приватним (tailnet). Публічно виставляється тільки адмінка.
+
+Відкат: видаліть Public hostname `admin` у тунелі (або Access-застосунок разом із hostname). Файли на Radxa не змінюються.
+
+## Публікація кнопкою
+
+Кнопка «Опублікувати цю версію» (розділ «Версії й публікація») сама нічого не заливає: у Radxa немає ключів Cloudflare. Вона ставить запит у чергу (`deploy.json`), а **агент `deploy-agent.sh` на основному ПК** раз на 10 с питає Radxa по ssh (лише вихідні з'єднання, нічого не слухає), запускає `deploy-from-radxa.sh`, звіряє sha256, викликає `deploy-worker.sh` і повертає результат і журнал в адмінку. Основний ПК має бути ввімкнений і агент запущений, інакше адмінка покаже «агент не на зв'язку», а запит дочекається. Команду `./deploy-from-radxa.sh <id>` можна й далі запускати вручну.
+
+Запуск на основному ПК: `RADXA_SSH=root@radxa.tail2dfcaf.ts.net DEPLOY_SCRIPT=~/Documents/Server/viteh-site/deploy-worker.sh ./radxa-admin/deploy-agent.sh` або як user-служба systemd (`Restart=always`).
+
+## Portfolio gallery: editing and the PDF
+The cards "Замовні розробки" (home page), the page `/portfolio/` and the PDF share one source, `data/portfolio.json` (+ `data/portfolio-images.json`). The draft key `portfolio` = `{disabled: [slug], order: [slug], items: {slug: {title, summary, years, tags}}}`; `sanitize` accepts only factory slugs (no new items, no paths), caps lengths (title 80, summary 600, years 20, 8 tags) and stores only real differences, so an empty draft builds the factory files byte for byte. Picture slots use `images.portfolio["<slug>/<slot>"]` (uploads only: JPEG, PNG, WebP; AVIF is refused because the public script cannot show it).
+- **Admin → «Галерея портфоліо»**: switch, ▲▼, texts uk/en/de, years, tags, pictures; hover/eye previews (`gallery:item`).
+- **Edit on the page**: the gallery is rendered (the `fetch` stub also answers `/data/portfolio*.json`); each card has the checkbox, inline title/summary, `🖼N` picture buttons and ▲▼ (among the cards the home page shows). Switched-off cards are dimmed; the build removes them (data, manifest, their picture folder). Projects marked `portfolioOnly` (Prometheus) are not on the home page, so they are edited only in the admin. Category filter labels are not editable on the page (same as the main product filters); use «Тексти».
+- **PDF**: `build` calls `lib/vadmin/portfolio_pdf.py` + `pdf.py` (standard library only, DejaVu font in `lib/vadmin/fonts/`, no network, no Chrome). While the web portfolio is on (widget «Портфоліо»), the PDF has exactly what the web shows (enabled projects and sections, current texts and pictures). While it is off, it is made from the admin's data: all projects and sections with your texts and pictures. If nothing the PDF shows differs from the factory, the factory (Chrome-made) PDFs ship unchanged. A generated PDF is simpler than the designed one (one column, flat blocks) and leaves out WebP/AVIF/alpha-PNG pictures; use JPEG for best results. Factory design PDFs: `node tools/make-portfolio.mjs` on the main PC.
+
+## "Everything visible is editable": audit
+Guard: `EditableEverythingGuard` in `tests/test_vadmin.py` fails when a visible string of `data/site.json` is neither in `schema.editable_texts` / `schema.editable_plain` nor in its explicit exemption list (each with a reason). New draft keys: `products` (text, tags, category of the FACTORY project cards), `plain` (untranslated strings: stack technology names, e-mail, phone; a changed e-mail/phone also fixes the `mailto:`/`tel:` link and drops the "demo" mark). `legal` (Impressum, Datenschutz) is now part of the editable texts («Тексти» → група `legal`).
+On the page: stack items, contact values, project tags/status/title/summary, project category (select in the card's strip), gallery years/tags/category label are edited in place; filter labels, form `<option>`s, the 3D badge, skip link, theme/ARIA labels and `meta.title/description` through the toolbar button «Інші тексти…».
+Not editable on the page (admin «Тексти» only): the pages `/impressum.html`, `/datenschutz.html` and `/portfolio/` (separate pages; the on-page editor is built for the home page only). Exempt everywhere: the ViTeh wordmark, language names, the honeypot field label and the `<noscript>` text (reasons in the test).
+PDF pictures: PNG with transparency/16 bit is converted to JPEG on white (`lib/vadmin/imgconv.py`, stdlib, ~0.3 s for a small image); WebP/AVIF cannot be decoded without extra packages: a WebP upload in a gallery slot shows on the web but is left out of a generated PDF (the factory slots have JPEG twins).
+
+## Stage 3: the portfolio is separate from the site
+- **`draft.portfolio`** is the portfolio's own object: `disabled` (item off everywhere), `order`, `items` (title/summary/years/tags overrides), `images` + `alts` (picture slots `<slug>/<slot>`, uploads only), `disabledSections`, `texts` (`portfolioPage.*`). Admin: «Портфоліо» → «Елементи портфоліо» and «Сторінка й PDF». This is the ONLY place where an item's text, pictures, order and on/off are edited (in the admin and on `/portfolio/` via «Редагувати на сторінці» → «Портфоліо →»).
+- **`draft.site.gallery`** = `{hidden: [slug], order: [slug]}` is all the home page stores: it SELECTS portfolio items by id (admin «Картки проєктів» → «Галерея на головній», or the strip of a card on the home page). Texts and pictures always come from the portfolio. Portfolio-only items (Prometheus) cannot be selected; an item switched off in the portfolio is not offered.
+- **Build**: `data/portfolio.json` has the portfolio (all enabled items in the portfolio's order, read by `/portfolio/` and the PDF) and, only when the home page has its own selection, `"home": [slug…]` (read by `assets/portfolio.js`). The PDF and `/portfolio/` ignore `draft.site` and the `portfolioLink` widget's effect on the PDF.
+- **Migration**: older drafts kept portfolio parts in `images.portfolio`, `images.portfolioAlt`, `disabled.portfolio`, `texts["portfolioPage.*"]`; `sanitize` moves them into `draft.portfolio` (nothing is lost, the old keys disappear on the next save). An empty draft still builds the factory files byte for byte (`site.json` and `products.json` are copied as they are when nothing changed).
+- **On-page editing**: `edit-page` (home) edits the site's texts and only the selection of portfolio items; `edit-page&page=portfolio` shows `/portfolio/` with every text marked (`data-p`, only when the page carries `data-ve`, which only the admin's view sets) and edits the portfolio. The overlay is never in a package.
+
+## Бот-помічник (вкладка «Помічник»)
+
+Окрема від редагування сайту вкладка: перемикач (за замовчуванням вимкнено), заводські та власні факти з позначкою «публічний», список прихованих слів для фільтра відповідей.
+База знань генерується під час збірки з тексту сайту, що ввімкнений у чернетці, плюс публічні факти, і лягає в `api/_private/assistant.json` пакета (недоступно з браузера).
+Налаштування бекендів і llama-server: `docs/assistant-llama-server.md`. Не перевірено на реальному Radxa і реальних моделях.

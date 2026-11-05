@@ -1,0 +1,32 @@
+/* Hover preview pop-up (preview-tip.js). Used by the admin and by the on-page editor; it carries its own colours so it looks the same in both. */
+.vpv-tip { position: fixed; z-index: 2147483200; width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: hidden; box-sizing: border-box; padding: 10px; border-radius: 12px;
+  background: #fff; color: #122019; border: 1px solid #8fa89c; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); pointer-events: none; font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: left; }
+.vpv-tip[hidden] { display: none; }
+.vpv-img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: cover; object-position: top; border-radius: 8px; background: #e8efeb; margin-bottom: 8px; }
+.vpv-title { display: block; font-size: 14px; margin-bottom: 3px; }
+.vpv-text { margin: 0; color: #46564e; }
+.vpv-eye { font: inherit; line-height: 1; min-width: 32px; min-height: 32px; padding: 4px 6px; border: 1px solid var(--line, #aebfb6); border-radius: 7px; background: var(--panel, #eef4f1); color: var(--ink, inherit); cursor: pointer; }
+.vpv-eye:hover { background: var(--soft, #dcebe4); border-color: var(--accent, #aebfb6); }
+.vpv-eye:focus-visible { outline: 2px solid #1d6fd1; outline-offset: 2px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }
+  :root:not([data-theme="light"]) .vpv-text { color: #a9bbb4; }
+  :root:not([data-theme="light"]) .vpv-img { background: #0c1311; }
+}
+:root[data-theme="dark"] .vpv-tip { background: #15201d; color: #e7efeb; border-color: #3b514a; }   /* the site's own theme switch on the on-page editor */
+:root[data-theme="dark"] .vpv-text { color: #a9bbb4; }
+:root[data-theme="dark"] .vpv-img { background: #0c1311; }
+
+/* live demonstrations of effects */
+.vpv-demo { height: 110px; margin-bottom: 8px; border-radius: 8px; background: #e8efeb; display: grid; place-items: center; overflow: hidden; }
+.vpv-demo-reveal { display: flex; gap: 10px; align-items: center; justify-content: center; }
+.vpv-d-card { width: 74px; height: 62px; border-radius: 10px; background: linear-gradient(135deg, #2f8f6b, #1c8a74); box-shadow: 0 6px 14px rgba(0, 0, 0, .2); }
+.vpv-d-float { animation: vpv-float 3.2s ease-in-out infinite; }
+.vpv-d-reveal { animation: vpv-reveal 3s ease-out infinite; opacity: 0; }
+.vpv-d-reveal:nth-child(2) { animation-delay: .35s; }
+.vpv-d-reveal:nth-child(3) { animation-delay: .7s; }
+@keyframes vpv-float { 0%, 100% { transform: translateY(6px); } 50% { transform: translateY(-8px); } }
+@keyframes vpv-reveal { 0% { opacity: 0; transform: translateY(18px); } 25%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: none; } }
+@media (prefers-reduced-motion: reduce) {            /* a still picture of the finished state instead of motion */
+  .vpv-d-float, .vpv-d-reveal { animation: none; opacity: 1; }
+}

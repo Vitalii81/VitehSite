@@ -1,0 +1,51 @@
+/* Site assistant: floating button and chat window. Uses the site's tokens, so light/dark follow the theme. */
+.asst-fab {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60; min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink); font: 600 15px/1 var(--font); cursor: pointer; box-shadow: var(--shadow-lg);
+}
+.asst-fab:hover { background: var(--accent-strong); }
+.asst-fab-hidden { display: none; }
+.asst-panel {
+  position: fixed; right: 16px; bottom: 16px; z-index: 61; display: flex; flex-direction: column; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 32px));
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-lg); overflow: hidden; font-family: var(--font);
+}
+.asst-panel[hidden] { display: none; }
+.asst-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 12px 12px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.asst-title { margin: 0; font-size: 16px; line-height: 1.2; }
+.asst-close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; }
+.asst-close:hover { background: var(--accent-soft); }
+.asst-log { flex: 1; overflow-y: auto; padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 10px; overscroll-behavior: contain; }
+.asst-msg { max-width: 88%; padding: 10px 13px; border-radius: 14px; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.asst-msg p { margin: 0 0 8px; white-space: normal; }
+.asst-assistant { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.asst-user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.asst-pending { color: var(--muted); font-style: italic; }
+.asst-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.asst-yes, .asst-no, .asst-handoff, .asst-send {
+  min-height: 44px; padding: 0 16px; border-radius: 999px; font: 600 14px/1 var(--font); cursor: pointer; border: 1px solid var(--accent);
+}
+.asst-yes, .asst-send { background: var(--accent); color: var(--accent-ink); }
+.asst-no, .asst-handoff { background: var(--surface); color: var(--ink); }
+.asst-handoff { margin: 4px 14px 0; align-self: stretch; border-color: var(--accent); }
+.asst-handoff[hidden] { display: none; }
+.asst-yes:hover, .asst-send:hover { background: var(--accent-strong); }
+.asst-no:hover, .asst-handoff:hover { background: var(--accent-soft); }
+.asst-panel button:disabled { opacity: .55; cursor: default; }
+.asst-form { display: flex; gap: 8px; align-items: flex-end; padding: 10px 14px 6px; }
+.asst-input {
+  flex: 1; min-height: 44px; max-height: 120px; padding: 11px 12px; resize: none; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink); font: 15px/1.3 var(--font);
+}
+.asst-note { margin: 0; padding: 0 14px 12px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.asst-fab:focus-visible, .asst-panel :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+/* the card being shown: a static ring; the pulse only when motion is allowed */
+.asst-highlight { outline: 3px solid var(--accent); outline-offset: 6px; border-radius: var(--radius); box-shadow: 0 0 0 8px var(--accent-soft); }
+@media (prefers-reduced-motion: no-preference) {
+  .asst-highlight { animation: asst-pulse 1.4s ease-in-out 3; }
+  @keyframes asst-pulse { 50% { box-shadow: 0 0 0 16px transparent; } }
+}
+@media (max-width: 520px) {
+  .asst-panel { right: 8px; left: 8px; bottom: 8px; width: auto; height: min(78dvh, 620px); }
+  .asst-fab { right: 12px; bottom: 12px; }
+  .asst-msg { max-width: 94%; }
+}

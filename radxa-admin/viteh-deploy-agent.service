@@ -1,0 +1,14 @@
+[Unit]
+Description=ViTeh admin publish agent
+After=network-online.target
+
+[Service]
+Environment=RADXA_SSH=root@radxa.tail2dfcaf.ts.net
+Environment=DEPLOY_SCRIPT=%h/Documents/Server/viteh-site/deploy-worker.sh
+WorkingDirectory=%h/Documents/Server/viteh-site
+ExecStart=/bin/sh /run/media/unixevo/AI/viteh-admin-public/radxa-admin/deploy-agent.sh
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=default.target

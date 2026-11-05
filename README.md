@@ -46,6 +46,8 @@ This site is independent from NanoKVM and from the OTA file server.
 | `tests/gallery3d.test.mjs` | Tests for the gallery logic and the generated models |
 | `radxa-admin/` | Private admin and page builder that runs on the Radxa (see "Admin on the Radxa" below, instructions in `radxa-admin/ADMIN.md`) |
 | `data/blocks.json`, `data/templates.json` | Block library (14 blocks, field schemas, three-language examples) and templates (service, project card, section, pages, forms); used by the admin, **not** published |
+| `worker/assistant.mjs`, `worker/assistant-api.mjs`, `worker/assistant.test.mjs` | Site assistant backend (`POST /api/assistant`): model-pool gate, prompt, injection detector, output filter; tests |
+| `assets/assistant.js`, `assets/assistant.css`, `data/assistant-kb.json` | Chat widget (shipped only while switched on in the admin) and the factory extra facts (`public: true/false`); see `docs/assistant-llama-server.md` |
 | `worker/forms.mjs` | Validation of submissions from forms made in the admin (`POST /api/form`); `worker/forms.test.mjs` = tests |
 | `assets/blocks.css`, `assets/forms.js` | Styles and script of generated pages (`/s/<slug>/`) and extra home sections |
 
@@ -55,6 +57,8 @@ The owner edits the site privately on the Radxa (LAN/Tailscale only, nothing in 
 from the main PC with the existing `deploy-worker.sh`. Cloudflare credentials never touch the Radxa.
 
 - Switch sections, services, project cards, widgets and effects on or off (removed from the HTML, not hidden by CSS); replace photos and `.glb` models; edit all texts in uk/en/de.
+- **Edit on the page** (button in the admin's top bar): the home page with controls, served by the admin host only for a logged-in owner. Click a text to edit it in the current language, tick sections and cards on or off, pick or upload an image or a `.glb` model, move sections up or down (`draft.order`; empty = factory order). It writes into the same draft through the same `save` action; publishing stays a separate step. The overlay files (`radxa-admin/web/edit-*.js/css`) are never part of a package. The save chip says "unsaved" from the first typed character and "saved" only after the server confirmed.
+- **Hover previews** in the admin lists (sections, services, project cards, extra blocks, widgets and effects): title, a short explanation and a picture (or a live CSS demo for effects) on hover, keyboard focus, long tap or the eye button; also in the on-page editor's mini bars. Pictures are small WebP files in `radxa-admin/web/previews/`, regenerated from the factory site with `node tools/make-admin-previews.mjs` (headless Chrome); none of it is part of a package.
 - Build pages from a block library and templates (`/s/<slug>/`), create forms from templates; a pre-build check lists every problem and builds nothing until it is fixed.
 - Backend: nginx + a short-lived `python3` CGI (standard library only, about 17 MB per request, no daemons). History of the last 20 builds with draft rollback.
 - If no draft exists (or it is damaged) the build reproduces the factory site exactly.

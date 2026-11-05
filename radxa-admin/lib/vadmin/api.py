@@ -4,7 +4,7 @@ import os
 import re
 from http.cookies import SimpleCookie
 
-from . import auth, build, core, schema, uploads
+from . import auth, build, core, deploy, editpage, ideas, schema, uploads
 from .core import ApiError, LANGS, locked, read_json, write_json
 
 COOKIE = "vadmin"
@@ -23,8 +23,14 @@ def _json(status, value, headers=None):
     return status, h + (headers or []), body
 
 
-def _session_cookie(value, clear=False):
-    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS)
+def _https(headers):
+    """True when the browser reached us over https (Cloudflare tunnel). uhttpd passes CGI only a fixed set of headers (Origin, Referer,
+    Cookie, Host, ...), not X-Forwarded-Proto or CF-*, so the page's own Origin/Referer scheme is the signal; the private http ports never match."""
+    return (headers.get("origin") or headers.get("referer") or "").lower().startswith("https://")
+
+
+def _session_cookie(value, clear=False, secure=False):
+    c = "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s" % (COOKIE, "" if clear else value, 0 if clear else auth.SESSION_SECONDS, "; Secure" if secure else "")
     return [("Set-Cookie", c)]
 
 
@@ -71,13 +77,19 @@ def catalog(paths, ctx):
             "forms": {k: v["label"] for k, v in ctx.templates.get("forms", {}).items()},
         },
         "factory": {
-            "services": [{"id": "s%d" % i, "title": it.get("title"), "icon": it.get("icon"), "model": bool(it.get("model"))} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
-            "projects": [{"id": p["id"], "title": p.get("title"), "image": p.get("image"), "model": bool(p.get("model"))} for p in ctx.products],
+            "services": [{"id": "s%d" % i, "title": it.get("title"), "text": it.get("text"), "icon": it.get("icon"), "model": bool(it.get("model"))} for i, it in enumerate(ctx.site.get("services", {}).get("items", []))],
+            "projects": [{"id": p["id"], "title": p.get("title"), "summary": p.get("summary"), "image": p.get("image"), "model": bool(p.get("model")), "status": p.get("status"), "tags": p.get("tags", []), "category": p.get("category")} for p in ctx.products],
             "categories": [{"id": c["id"], "label": c["label"]} for c in ctx.site.get("work", {}).get("categories", [])],
             "portfolio": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
+            "gallery": [{"slug": x.get("slug"), "category": x.get("category"), "years": x.get("years", ""), "title": x.get("title"), "summary": x.get("summary"), "tags": x.get("tags", []),
+                         "portfolioOnly": bool(x.get("portfolioOnly")), "slots": [{"key": "%s/%s" % (x.get("slug"), sl), "status": next((m.get("status") for m in ctx.portfolio_images if m.get("slug") == x.get("slug") and m.get("slot") == sl), "")} for sl in x.get("slots", [])]}
+                        for x in ctx.portfolio_projects],
             "portfolioSlots": [{"key": "%s/%s" % (m.get("slug"), m.get("slot")), "alt": m.get("alt"), "status": m.get("status"), "ratio": m.get("ratio"), "hint": m.get("source_hint")} for m in ctx.portfolio_images],
         },
-        "texts": groups,
+        "texts": dict((k, v) for k, v in groups.items() if not k.startswith("portfolioPage")),
+        "portfolioTexts": dict((k, v) for k, v in groups.items() if k.startswith("portfolioPage")),
+        "plain": schema.editable_plain(ctx.site),
+        "assistantFacts": [f for f in ctx.assistant_kb if isinstance(f, dict)],         # factory records of data/assistant-kb.json (the tab «Помічник» overrides them by id)
     }
 
 
@@ -88,7 +100,7 @@ def status(paths, host, ctx=None):
     manifest = read_json(os.path.join(paths.builds, state["built"], "manifest.json"), {}) if state.get("built") else {}
     changed = (manifest or {}).get("draftDigest") != build.draft_digest(read_draft(paths, ctx))
     return {"built": state.get("built"), "builtAt": state.get("builtAt"), "published": state.get("published"), "changedSinceBuild": changed,
-            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or "http://%s:%s/" % (name, os.environ.get("VADMIN_PREVIEW_PORT", "8083")), "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
+            "previewUrl": os.environ.get("VADMIN_PREVIEW_URL") or ("https://preview." + name.split(".", 1)[1] + "/" if name.startswith("admin.") else "http://%s:%s/" % (name, os.environ.get("VADMIN_PREVIEW_PORT", "8083"))), "deploy": deploy.view(paths), "deployCommand": ("./deploy-from-radxa.sh %s" % state["built"]) if state.get("built") else None}
 
 
 def handle(paths, method, action, headers, body=b"", query=None, client="local"):
@@ -107,7 +119,7 @@ def _handle(paths, method, action, headers, body, query, client):
     if method not in ("GET", "POST"):
         raise ApiError("method", "Метод не підтримується", 405)
     if method == "POST":
-        if headers.get("x-vadmin") != "1":
+        if headers.get("x-vadmin") != "1" and not headers.get("origin"):                 # uhttpd drops X-Vadmin; a browser POST always carries Origin
             raise ApiError("csrf", "Відхилено: немає службового заголовка", 403)
         if not _same_origin(headers):
             raise ApiError("origin", "Відхилено: запит з іншого походження", 403)
@@ -117,7 +129,7 @@ def _handle(paths, method, action, headers, body, query, client):
     if action == "login" and method == "POST":
         data = _body_json(body)
         cookie = auth.login(paths, str(data.get("passphrase", "")), client)
-        return _json(200, {"ok": True}, _session_cookie(cookie))
+        return _json(200, {"ok": True}, _session_cookie(cookie, secure=_https(headers)))
 
     jar = SimpleCookie()
     try:
@@ -125,10 +137,12 @@ def _handle(paths, method, action, headers, body, query, client):
     except Exception:
         pass
     if not auth.check_session(paths, jar[COOKIE].value if COOKIE in jar else ""):
+        if action == "edit-page" and method == "GET":                # opened in a browser tab: a page with a link to the login, not JSON
+            return editpage.login_page()
         raise ApiError("auth", "Потрібен вхід", 401)
 
     if action == "logout" and method == "POST":
-        return _json(200, {"ok": True}, _session_cookie("", clear=True))
+        return _json(200, {"ok": True}, _session_cookie("", clear=True, secure=_https(headers)))
 
     ctx = schema.Context(paths)
     host = headers.get("host", "")
@@ -137,6 +151,11 @@ def _handle(paths, method, action, headers, body, query, client):
         if action == "bootstrap":
             return _json(200, {"ok": True, "draft": read_draft(paths, ctx), "catalog": catalog(paths, ctx), "status": status(paths, host, ctx),
                                "uploads": uploads.listing(paths), "builds": build.list_builds(paths)})
+        if action == "edit-page":
+            lang = str((query.get("lang") or [""])[0])
+            return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS, str((query.get("page") or [""])[0]))
+        if action == "ideas":
+            return _json(200, dict(ideas.view(ctx), ok=True, added=[s["title"] for s in read_draft(paths, ctx)["extra"]["services"]]))
         if action == "status":
             return _json(200, {"ok": True, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
         if action == "file":
@@ -164,10 +183,19 @@ def _handle(paths, method, action, headers, body, query, client):
             new_id = schema.add_from_template(draft, str(data.get("kind", "")), str(data.get("id", "")), ctx)
             save_draft(paths, draft)
             return _json(200, {"ok": True, "newId": new_id, "draft": draft})
+        if action == "idea-add":
+            data = _body_json(body)
+            draft = read_draft(paths, ctx)
+            if int(data.get("rev", -1)) != draft["rev"]:
+                raise ApiError("conflict", "Чернетку змінено в іншій вкладці. Оновіть сторінку", 409, {"rev": draft["rev"]})
+            new_id = ideas.add(draft, str(data.get("id", "")), ctx)
+            save_draft(paths, draft)
+            return _json(200, {"ok": True, "newId": new_id, "draft": draft})
         if action == "upload":
             from urllib.parse import unquote
-            name = unquote(headers.get("x-filename", "file"))
-            item = uploads.store(paths, body, name)
+            # uhttpd drops custom headers, so the page sends the name in the query (?name=); X-Filename stays for other clients
+            name = str((query.get("name") or [""])[0]) or unquote(headers.get("x-filename", "file"))
+            item = uploads.store(paths, body, name, twin_of=str((query.get("twin") or [""])[0]) or None)           # ?twin=<WebP upload id>: the JPEG twin used by the PDF only
             return _json(200, {"ok": True, "item": item, "uploads": uploads.listing(paths)})
         if action == "delete-upload":
             data = _body_json(body)
@@ -196,6 +224,10 @@ def _handle(paths, method, action, headers, body, query, client):
             state["built"] = bid
             write_json(paths.state, state)
             return _json(200, {"ok": True, "draft": clean, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
+        if action == "deploy":
+            data = _body_json(body)
+            deploy.request(paths, str(data.get("id", "")))
+            return _json(200, {"ok": True, "status": status(paths, host, ctx)})
         if action == "preview":
             data = _body_json(body)
             bid = str(data.get("id", ""))

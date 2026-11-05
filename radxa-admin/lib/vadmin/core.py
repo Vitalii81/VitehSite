@@ -28,6 +28,7 @@ class Paths:
         self.uploads_index = os.path.join(self.uploads, "index.json")
         self.builds = os.path.join(self.root, "builds")
         self.preview = os.path.join(self.root, "preview")        # fixed folder served by the preview port (see build.sync_preview)
+        self.deploy = os.path.join(self.root, "deploy.json")
         self.lock = os.path.join(self.root, ".lock")
         self.auth = os.path.join(self.secret, "auth.json")
         self.attempts = os.path.join(self.secret, "attempts.json")

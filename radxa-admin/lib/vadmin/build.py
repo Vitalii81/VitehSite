@@ -8,7 +8,7 @@ import shutil
 import tarfile
 import time
 
-from . import check, core, render, schema
+from . import assistant, check, core, portfolio_pdf, render, schema
 from .core import ApiError, LANGS, read_json, sha256_file, stamp, write_json
 from .richtext import esc
 from .schema import SECTION_IDS
@@ -17,6 +17,8 @@ BUILD_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$")
 PUBLIC_FILES = ("index.html", "impressum.html", "datenschutz.html", "robots.txt")
 GALLERY_DIRS = ("vendor", "models", "env", "posters")           # 3D gallery: library, models, lighting, posters
 GALLERY_FILES = ("gallery3d.js", "viewer-settings.js")
+ASSISTANT_FILES = ("assistant.js", "assistant.css")              # shipped only while the assistant is switched on in the draft
+PDF_NAMES = {"en": "Vitalii_Krutikov_Engineering_Portfolio_2026.pdf", "uk": "Vitalii_Krutikov_Engineering_Portfolio_2026_uk.pdf", "de": "Vitalii_Krutikov_Engineering_Portfolio_2026_de.pdf"}
 # Lists that the public JS renders from site.json; a disabled section gets empty lists (the heading texts stay).
 SECTION_LISTS = {"hero": ["hero.badges"], "trust": ["trust.items"], "services": ["services.items"], "ai": ["ai.features"], "process": ["process.steps"],
                  "stack": ["stack.groups"], "pricing": ["pricing.models"], "faq": ["faq.items"], "contact": ["contact.details"]}
@@ -87,8 +89,49 @@ def insert_nav_pages(html, pages):
     return html[:a] + nav + html[b:]
 
 
+def reorder_sections(html, order):
+    """Moves the movable <section>s of the factory markup into `order` (a full permutation of MOVABLE_IDS). Only the sections change
+    places: the whitespace between them and everything around them stays byte for byte. Runs before any section is removed."""
+    spans = []
+    for sid in schema.MOVABLE_IDS:
+        a, _ = section_span(html, sid)
+        core_end = html.index("</section>", a) + len("</section>")
+        spans.append((sid, html.rfind("\n", 0, a) + 1, core_end))      # from the start of the line, so the indentation travels along
+    spans.sort(key=lambda x: x[1])
+    for (_, _, end), (_, start, _) in zip(spans, spans[1:]):
+        if html[end:start].strip():
+            raise ApiError("src_changed", "У index.html між розділами є сторонній вміст: порядок розділів змінити не можна", 500)
+    chunk = {sid: html[a:b] for sid, a, b in spans}
+    seps = [html[end:start] for (_, _, end), (_, start, _) in zip(spans, spans[1:])]
+    out = chunk[order[0]]
+    for sep, sid in zip(seps, order[1:]):
+        out += sep + chunk[sid]
+    return html[:spans[0][1]] + out + html[spans[-1][2]:]
+
+
+def reorder_nav(html, order):
+    """The menu follows the section order (the call-to-action link stays last, pages are added after this step)."""
+    a, b = nav_span(html)
+    nav = html[a:b]
+    found = []
+    for sid in schema.MOVABLE_IDS:
+        m = re.search(r'[ \t]*<a (?![^>]*nav-cta)[^>]*href="#%s"[^>]*>.*?</a>\n?' % re.escape(sid), nav, flags=re.S)
+        if m:
+            found.append((m.start(), m.end(), sid, m.group(0)))
+    found.sort()
+    texts = {sid: txt for _, _, sid, txt in found}
+    ranked = [texts[sid] for sid in order if sid in texts]
+    out, pos = "", 0
+    for (start, end, _, _), txt in zip(found, ranked):
+        out += nav[pos:start] + txt
+        pos = end
+    return html[:a] + out + nav[pos:] + html[b:]
+
+
 def transform_home(html, draft, ctx, assets, forms):
     sections = {s: draft["sections"].get(s, True) for s in SECTION_IDS}
+    if draft.get("order"):
+        html = reorder_nav(reorder_sections(html, draft["order"]), draft["order"])
     for sid in SECTION_IDS:
         if not sections[sid]:
             html = remove_section(html, sid)
@@ -113,6 +156,9 @@ def transform_home(html, draft, ctx, assets, forms):
         html = html.replace(marker, body + "    " + marker, 1) if sections["contact"] and marker in html else html.replace("</main>", body + "  </main>", 1)
         if render.uses(extra, "form"):
             html = html.replace("</body>", '  <script src="assets/forms.js" defer></script>\n</body>', 1)
+    if draft["assistant"]["enabled"]:                       # off (the default): nothing at all is added to the HTML
+        head_add += '  <link rel="stylesheet" href="assets/assistant.css">\n'
+        html = html.replace('<script src="assets/app.js" defer></script>\n', '<script src="assets/app.js" defer></script>\n  <script src="assets/assistant.js" defer></script>\n', 1)
     if head_add:
         html = re.sub(r'(<link rel="stylesheet" href="assets/styles.css">\n)', lambda m: m.group(1) + head_add, html, count=1)
     return html
@@ -120,18 +166,20 @@ def transform_home(html, draft, ctx, assets, forms):
 
 # ---------- data files ----------
 
-def merged_site(draft, ctx, assets):
+def merged_site(draft, ctx, assets, all_portfolio_sections=False):
     site = copy.deepcopy(ctx.site)
     gallery = draft["widgets"].get("gallery3d", True)
-    for path, value in draft["texts"].items():
-        parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
-        last = path.rsplit(".", 1)[-1]
-        if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
-            parent[int(last)] = value
-        elif isinstance(parent, dict) and last in parent:
-            parent[last] = value
-    if "portfolioPage" in site:                              # sections of the web portfolio switched off in the admin are removed from the data, not hidden
-        site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["disabled"]["portfolio"]]
+    for mapping in (draft["texts"], draft["portfolio"]["texts"]):          # the home page's own texts, then the portfolio page's (kept in draft.portfolio)
+        for path, value in mapping.items():
+            parent = schema.get_path(site, path.rsplit(".", 1)[0]) if "." in path else site
+            last = path.rsplit(".", 1)[-1]
+            if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
+                parent[int(last)] = value
+            elif isinstance(parent, dict) and last in parent:
+                parent[last] = value
+    apply_plain(site, draft["plain"])
+    if "portfolioPage" in site and not all_portfolio_sections:   # sections of the web portfolio switched off in the admin are removed from the data, not hidden
+        site["portfolioPage"]["sections"] = [x for x in site["portfolioPage"]["sections"] if x.get("id") not in draft["portfolio"]["disabledSections"]]
     items = site["services"]["items"]
     kept = []
     for i, it in enumerate(items):
@@ -165,6 +213,27 @@ def merged_site(draft, ctx, assets):
     return site
 
 
+EMAIL_RE = re.compile(r"^[^\s@<>\"']+@[^\s@<>\"']+\.[^\s@<>\"']+$")
+PHONE_RE = re.compile(r"^\+?[0-9 ()-]{5,30}$")
+
+
+def apply_plain(site, plain):
+    """Untranslated strings from the draft (technology names, contact values). A changed e-mail or phone also fixes the link behind it and drops the "demo" mark."""
+    for path, value in plain.items():
+        parent = schema.get_path(site, path.rsplit(".", 1)[0])
+        last = path.rsplit(".", 1)[1]
+        if isinstance(parent, list) and last.isdigit() and int(last) < len(parent):
+            parent[int(last)] = value
+        elif isinstance(parent, dict) and last in parent:
+            parent[last] = value
+            if last == "value" and "href" in parent:
+                if parent["href"].startswith("mailto:") and EMAIL_RE.match(value):
+                    parent["href"] = "mailto:" + value
+                elif (parent["href"].startswith("tel:") or parent.get("demo")) and PHONE_RE.match(value):
+                    parent["href"] = "tel:" + re.sub(r"[^+0-9]", "", value)
+                parent["demo"] = False
+
+
 def merged_products(draft, ctx, assets):
     gallery = draft["widgets"].get("gallery3d", True)
     out = []
@@ -172,6 +241,11 @@ def merged_products(draft, ctx, assets):
         pid = p["id"]
         if pid in draft["disabled"]["projects"]:
             continue
+        p.update(copy.deepcopy(draft["products"].get(pid, {})))               # text overrides of a factory card (title, summary, status, tags, category)
+        for field in ("title", "summary", "status"):
+            if pid in draft["products"] and field in draft["products"][pid]:
+                base = next((q for q in ctx.products if q["id"] == pid), {}).get(field) or {}
+                p[field] = {lang: draft["products"][pid][field].get(lang) or base.get(lang, "") for lang in LANGS}
         img = draft["images"]["projects"].get(pid) or p.get("image", "")
         p["image"] = assets.url(img).lstrip("/") if img.startswith("u:") else img
         model = draft["images"]["models"].get(pid) or p.get("model", "")
@@ -190,21 +264,107 @@ def merged_products(draft, ctx, assets):
     return out
 
 
-def merged_portfolio_images(draft, ctx, assets):
-    """The image manifest of the project archive. A slot filled in the admin (an uploaded image) becomes "final" and points at the upload;
-    every other slot keeps its factory status. Placeholder files never exist in the package, so a placeholder slot shows nothing to visitors."""
+def merged_portfolio(draft, ctx, keep_disabled=False):
+    """The project gallery (data/portfolio.json "projects") with the draft applied: the owner's order and text overrides; projects switched off are
+    REMOVED, or only flagged "disabled" when `keep_disabled` (the on-page editor shows them dimmed; a package never gets the flag)."""
+    cfg = draft["portfolio"]
+    by_slug = dict((p["slug"], copy.deepcopy(p)) for p in ctx.portfolio_projects)
     out = []
+    for slug in cfg["order"] or [p["slug"] for p in ctx.portfolio_projects]:
+        p, ov = by_slug[slug], cfg["items"].get(slug, {})
+        for field in ("title", "summary"):
+            if field in ov:
+                p[field] = {lang: ov[field].get(lang) or (p.get(field) or {}).get(lang, "") for lang in LANGS}
+        for field in ("years", "tags"):
+            if field in ov:
+                p[field] = ov[field]
+        if slug in cfg["disabled"]:
+            if not keep_disabled:
+                continue
+            p["disabled"] = True
+        out.append(p)
+    return out
+
+
+def home_gallery(draft, ctx, include_hidden=False):
+    """Slugs of the portfolio items the HOME page shows, in order. The home page only SELECTS (draft.site.gallery: hidden, order); an item switched off in the
+    portfolio is not offered, and items that belong to the portfolio page alone (portfolioOnly) never are. Texts and pictures come from draft.portfolio."""
+    base = [p["slug"] for p in merged_portfolio(draft, ctx) if not p.get("portfolioOnly")]
+    g = draft["site"]["gallery"]
+    ordered = [x for x in g["order"] if x in base] + [x for x in base if x not in g["order"]]
+    return [x for x in ordered if include_hidden or x not in g["hidden"]]
+
+
+def home_is_explicit(draft):
+    return bool(draft["site"]["gallery"]["hidden"] or draft["site"]["gallery"]["order"])
+
+
+def merged_portfolio_images(draft, ctx, assets, keep_disabled=False):
+    """The image manifest of the project archive. A slot filled in the admin (an uploaded image) becomes "final" and points at the upload;
+    every other slot keeps its factory status. Placeholder files never exist in the package, so a placeholder slot shows nothing to visitors.
+    Slots of projects that are switched off are dropped together with the project."""
+    out = []
+    off = set() if keep_disabled else set(draft["portfolio"]["disabled"])
     for m in copy.deepcopy(ctx.portfolio_images):
+        if m.get("slug") in off:
+            continue
         key = "%s/%s" % (m.get("slug"), m.get("slot"))
-        alt = draft["images"].get("portfolioAlt", {}).get(key)
+        alt = draft["portfolio"]["alts"].get(key)
         if alt:                                              # an alt text typed in the admin replaces the factory one, language by language
             m["alt"] = {lang: alt.get(lang) or m["alt"].get(lang, "") for lang in LANGS}
-        ref = draft["images"].get("portfolio", {}).get(key)
+        ref = draft["portfolio"]["images"].get(key)
         if ref:
             m["file"] = assets.url(ref).lstrip("/")
             m["status"] = "final"
         out.append(m)
     return out
+
+
+def pdf_inputs(draft, ctx, assets):
+    """Everything the portfolio PDF shows. It comes from draft.portfolio ONLY (enabled items in the portfolio's order, enabled sections, the portfolio's texts and pictures),
+    exactly like the page /portfolio/, and does not depend on which items the home page selects or on the "portfolioLink" widget."""
+    return {"site": merged_site(draft, ctx, assets), "projects": merged_portfolio(draft, ctx), "manifest": merged_portfolio_images(draft, ctx, assets)}
+
+
+def make_portfolio_pdfs(paths, draft, ctx, assets, site_dir):
+    """The downloadable portfolio PDFs (uk, en, de). When the draft changes nothing the PDF shows, the factory (Chrome-made, designed) files stay;
+    otherwise they are generated here from the merged data, with no network and no external tools, and replace the factory ones in the package."""
+    if "portfolioPage" not in ctx.site or not ctx.portfolio_projects:
+        return
+    probe = pdf_inputs(schema.sanitize({}, ctx), ctx, render.Assets(ctx))
+    real = pdf_inputs(draft, ctx, assets)
+    pick = lambda d: {"page": d["site"]["portfolioPage"], "services": d["site"]["services"]["items"], "archive": d["site"]["work"]["archive"], "projects": d["projects"], "manifest": d["manifest"]}
+    if pick(real) == pick(probe):
+        return
+    uploads = dict((public, ctx.uploads[uid]["file"]) for uid, public in assets.used.items() if uid in ctx.uploads)
+    for uid, public in assets.used.items():            # a WebP upload may have a JPEG twin: it answers the PDF's ".jpg next to the .webp" lookup and is never a page asset
+        twin = ctx.uploads.get(ctx.uploads.get(uid, {}).get("twin") or "")
+        if twin and public.endswith(".webp"):
+            uploads[public[:-5] + ".jpg"] = twin["file"]
+    root = os.path.realpath(paths.src)
+
+    def read_asset(rel):
+        if rel in uploads:
+            path = os.path.join(paths.uploads, uploads[rel])
+        else:
+            path = os.path.realpath(os.path.join(root, rel))
+            if not path.startswith(root + os.sep):
+                return None
+        try:
+            with open(path, "rb") as fh:
+                return fh.read()
+        except OSError:
+            return None
+
+    for lang, name in PDF_NAMES.items():
+        data, _ = portfolio_pdf.build_portfolio_pdf(real["site"]["portfolioPage"], real["site"], real["projects"], real["manifest"], lang, read_asset)
+        write_bytes(os.path.join(site_dir, "assets", "portfolio", name), data)
+
+
+def write_bytes(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as fh:
+        fh.write(data)
 
 
 def forms_for_worker(draft):
@@ -231,6 +391,8 @@ def page_parts(src):
 
 def prepare_shell(parts, draft):
     header = parts["header"]
+    if draft.get("order"):
+        header = reorder_nav(header, draft["order"])
     for sid in SECTION_IDS:
         if not draft["sections"].get(sid, True) and sid not in ("hero", "trust"):
             header = drop_nav_links(header, sid)
@@ -364,6 +526,8 @@ def build(paths, ctx=None):
                 rel = os.path.relpath(os.path.join(root, f), assets_src).replace(os.sep, "/")
                 if not gallery_on and (rel.split("/")[0] in GALLERY_DIRS or rel in GALLERY_FILES):
                     continue
+                if not draft["assistant"]["enabled"] and rel in ASSISTANT_FILES:
+                    continue
                 dest = os.path.join(site_dir, "assets", rel)
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copyfile(os.path.join(root, f), dest)
@@ -376,11 +540,29 @@ def build(paths, ctx=None):
         html = transform_home(read_text(os.path.join(paths.src, "index.html")), draft, ctx, assets, forms)
         site = merged_site(draft, ctx, assets)
         products = merged_products(draft, ctx, assets)
-        write_json(os.path.join(site_dir, "data", "site.json"), site)
-        write_json(os.path.join(site_dir, "data", "products.json"), products)
+        for name, merged_data, factory_data in (("site.json", site, ctx.site), ("products.json", products, ctx.products)):
+            if merged_data == factory_data:                      # nothing changed: the factory file as it is, byte for byte
+                os.makedirs(os.path.join(site_dir, "data"), exist_ok=True)
+                shutil.copyfile(os.path.join(paths.src, "data", name), os.path.join(site_dir, "data", name))
+            else:
+                write_json(os.path.join(site_dir, "data", name), merged_data)
         if ctx.portfolio_images and os.path.isfile(os.path.join(paths.src, "data", "portfolio.json")):
-            shutil.copyfile(os.path.join(paths.src, "data", "portfolio.json"), os.path.join(site_dir, "data", "portfolio.json"))
-            write_json(os.path.join(site_dir, "data", "portfolio-images.json"), merged_portfolio_images(draft, ctx, assets))
+            merged = merged_portfolio(draft, ctx)
+            if merged == ctx.portfolio_projects and not home_is_explicit(draft):         # untouched: the factory file as it is, byte for byte
+                shutil.copyfile(os.path.join(paths.src, "data", "portfolio.json"), os.path.join(site_dir, "data", "portfolio.json"))
+            else:
+                data = {"projects": merged}
+                if home_is_explicit(draft):                       # the home page's own selection and order (ids only); /portfolio/ and the PDF ignore it
+                    data["home"] = home_gallery(draft, ctx)
+                write_json(os.path.join(site_dir, "data", "portfolio.json"), data)
+                for slug in draft["portfolio"]["disabled"]:       # the pictures of a removed project do not ship either
+                    shutil.rmtree(os.path.join(site_dir, "assets", "portfolio", slug), ignore_errors=True)
+            images = merged_portfolio_images(draft, ctx, assets)
+            if images == ctx.portfolio_images:
+                shutil.copyfile(os.path.join(paths.src, "data", "portfolio-images.json"), os.path.join(site_dir, "data", "portfolio-images.json"))
+            else:
+                write_json(os.path.join(site_dir, "data", "portfolio-images.json"), images)
+        make_portfolio_pdfs(paths, draft, ctx, assets, site_dir)
 
         shell_parts = page_parts(paths.src)
         header, footer = prepare_shell(shell_parts, draft)
@@ -394,6 +576,8 @@ def build(paths, ctx=None):
             write_text(os.path.join(site_dir, "assets", "fx.css"), fx_css(draft))
         write_text(os.path.join(site_dir, "sitemap.xml"), sitemap(draft, ctx, stamp_now))
         write_json(os.path.join(site_dir, "forms.json"), forms_for_worker(draft))
+        if draft["assistant"]["enabled"]:                       # private: under /api/, which only the Worker answers (see assistant.py)
+            write_json(os.path.join(site_dir, assistant.PRIVATE_PATH), assistant.build_kb(draft, ctx, site, products))
 
         for uid, public in assets.used.items():
             item = ctx.uploads[uid]
@@ -437,6 +621,27 @@ def set_current(paths, bid):
     sync_preview(paths, bid)
 
 
+ASSET_REF = re.compile(r'((?:href|src)=")((?:\.\./|/)?assets/[^"?#]+\.(?:js|css))(")')
+JS_IMPORT = re.compile(r'''((?:\bfrom\s*|\bimport\s*\(\s*)["'])(\.{1,2}/[^"'?#]+\.js)(["'])''')
+
+
+def stamp_preview_assets(root, bid):
+    """preview.viteh.org sits behind Cloudflare, which caches assets/*.js|css at the edge, so a new build showed old files. In the PREVIEW
+    copy every reference to such a file gets `?v=<build id>`: in HTML (href/src), and in JS modules for relative import specifiers
+    (a module imported without the query would stay cached). Only text files of the preview copy are rewritten."""
+    q = r"\1\2?v=%s\3" % bid
+    for base, _, names in os.walk(root):
+        for n in names:
+            ext = n.rsplit(".", 1)[-1].lower() if "." in n else ""
+            if ext not in ("html", "js") or "vendor" in os.path.relpath(base, root).split(os.sep):
+                continue
+            p = os.path.join(base, n)
+            text = read_text(p)
+            out = (ASSET_REF if ext == "html" else JS_IMPORT).sub(q, text)
+            if out != text:
+                write_text(p, out)
+
+
 def sync_preview(paths, bid):
     """uhttpd resolves its document root once at start, so a moving `current` link would show a stale build. The preview
     server therefore serves a fixed folder whose contents are swapped here (children are renamed in, not copied in place)."""
@@ -446,6 +651,7 @@ def sync_preview(paths, bid):
     new = paths.preview + ".new"
     shutil.rmtree(new, ignore_errors=True)
     shutil.copytree(src, new)
+    stamp_preview_assets(new, bid)                       # the PREVIEW copy only: the package in builds/<id>/site (what is published) is never touched
     os.makedirs(paths.preview, exist_ok=True)
     for name in os.listdir(paths.preview):
         full = os.path.join(paths.preview, name)
@@ -507,6 +713,7 @@ def gc_uploads(paths):
     keep = referenced_uploads(read_json(paths.draft, {}) or {})
     for b in list_builds(paths):
         keep |= referenced_uploads(read_json(os.path.join(paths.builds, b["id"], "draft.json"), {}) or {})
+    keep |= set(index.get("items", {}).get(u, {}).get("twin") for u in keep)          # a twin lives as long as its WebP
     changed = False
     for uid in list(index.get("items", {})):
         item = index["items"][uid]

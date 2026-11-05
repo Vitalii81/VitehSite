@@ -4,6 +4,7 @@
 // (LEAD_URL + secret LEAD_SECRET). The visitor gets "ok" if at least one worked.
 import { EmailMessage } from "cloudflare:email";
 import { FILE_LIMITS, LIMITS, buildMime, leadPayload, originAllowed, validate, validateFiles } from "./contact.mjs";
+import { handleAssistant } from "./assistant-api.mjs";
 import { FORM_LIMITS, findForm, validateForm } from "./forms.mjs";
 
 const json = (status, body, extra = {}) =>
@@ -81,6 +82,7 @@ async function handleForm(request, env, url) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/assistant") return handleAssistant(request, env, url);
     if (url.pathname === "/api/form") return handleForm(request, env, url);
     if (url.pathname !== "/api/contact") return json(404, { error: "not_found" });
     if (request.method !== "POST") return json(405, { error: "method" }, { allow: "POST" });
@@ -128,3 +130,5 @@ export default {
     return json(200, { ok: true });
   },
 };
+
+export { AssistantGate } from "./assistant-api.mjs";   // Durable Object class (binding ASSIST_GATE)

@@ -16,6 +16,7 @@ export const materialDefs = (accent) => ({
   plastic: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#1a1f1d"), 1], metallicFactor: 0.0, roughnessFactor: 0.52 } },
   plasticLight: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#dfe5e1"), 1], metallicFactor: 0.0, roughnessFactor: 0.6 } },
   graphite: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#2a3330"), 1], metallicFactor: 0.0, roughnessFactor: 0.62 } },
+  pcbDeep: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#0e3a34"), 1], metallicFactor: 0.0, roughnessFactor: 0.42 } },
   rubber: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#101412"), 1], metallicFactor: 0.0, roughnessFactor: 0.85 } },
   chrome: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#d7dad9"), 1], metallicFactor: 1.0, roughnessFactor: 0.22 } },
   steel: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#a9afad"), 1], metallicFactor: 1.0, roughnessFactor: 0.42 } },
@@ -38,9 +39,14 @@ export const materialDefs = (accent) => ({
   accentTex: { tex: "pcbMask", pbrMetallicRoughness: { baseColorFactor: [...rgb(accent), 1], metallicFactor: 0.0, roughnessFactor: 0.30 } },
   silk: { tex: "pcbSilk", alphaMode: "MASK", alphaCutoff: 0.5, doubleSided: false, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
   screenCronos: { tex: "screenCronos", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
+  screenIot: { tex: "screenIot", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   screenLaptop: { tex: "screenLaptop", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   screenDash: { tex: "screenDash", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   paperDoc: { tex: "paperDoc", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
+  screenToyota: { tex: "screenToyota", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.18 } },
+  wireYellow: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#e6c229"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
+  wireGreen: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#2f9e4f"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
+  wireRed: { pbrMetallicRoughness: { baseColorFactor: [...rgb("#c9382c"), 1], metallicFactor: 0, roughnessFactor: 0.55 } },
   labelCronos: { tex: "labelCronos", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.6 } },
 });
 

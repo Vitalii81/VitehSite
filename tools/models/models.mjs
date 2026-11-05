@@ -223,16 +223,18 @@ export function serviceElectronics(scene) {
   cylinder(stand.geo("copper"), { r: 0.2, h: 0.72, seg: 6, flat: true, at: [0, 0.7, 0] });
   for (const [x, z] of L.holes) scene.inst(stand, { at: [x, 0.17, z] });
   for (const [x, z] of L.holes) scene.inst(P.screw, { at: [x, 1.45 + 0.16, z], s: 0.9 });
+  // Exploded view: the lid hovers parallel to the tray, centred over it, brushed aluminium, the themable accent only in the logo.
+  const lidY = 3.7;
   const lid = scene.part("lid");
-  roundedBox(lid.geo("accent"), { size: [iw, 0.3, id], r: 0.18, n: 3, at: [0, 0, 0] });
+  roundedBox(lid.geo("alu"), { size: [iw, 0.3, id], r: 0.18, n: 3, at: [0, 0, 0] });
+  scene.inst(lid, { at: [0, lidY, 0] });
   const slot = scene.part("lid-slot");
   roundedBox(slot.geo("rubber"), { size: [1.6, 0.04, 0.12], r: 0.05, n: 1, at: [0, 0, 0] });
-  for (let i = 0; i < 7; i++) scene.inst(slot, { at: [1.6, 4.62, -1.8 + i * 0.3], rot: [-0.18, 0.1, 0] });
+  for (let i = 0; i < 7; i++) scene.inst(slot, { at: [2.4, lidY + 0.16, -1.2 + i * 0.3] });
   const logo = scene.part("lid-logo");
-  cylinder(logo.geo("chrome"), { r: 0.55, h: 0.03, bevel: 0.01, seg: 40, at: [0, 0, 0] });
+  cylinder(logo.geo("accent"), { r: 0.55, h: 0.03, bevel: 0.01, seg: 40, at: [0, 0, 0] });
   torus(logo.geo("graphite"), { R: 0.4, t: 0.03, seg: 40, tube: 8, at: [0, 0.02, 0] });
-  scene.inst(lid, { at: [0, 4.55, 0], rot: [-0.18, 0.1, 0] });
-  scene.inst(logo, { at: [-1.9, 4.75, 0.5], rot: [-0.18, 0.1, 0] });
+  scene.inst(logo, { at: [-2.4, lidY + 0.16, 0] });
 }
 
 /* ---------- 6. service: AI agents (a core with orbits, satellites and links) ---------- */
@@ -273,10 +275,21 @@ export function serviceAi(scene) {
 }
 
 /* ---------- 6. project: IoT module (a development board: carrier PCB, radio module with a PCB antenna, headers, USB-C, buttons, LEDs) ---------- */
+function iotScreen(scene) {                                                                                   // 1.3" TFT shown on the IoT module: node name, temperature, link state and a trend
+  const s = new Raster(160, 128, [10, 18, 24, 255]);
+  s.rect(0, 0, 160, 16, [18, 34, 40, 255]); s.text("IOT-NODE 07", 6, 5, 1, [190, 215, 210, 255]); s.disc(148, 8, 3, [76, 201, 173, 255]);
+  s.text("23.4", 10, 28, 4, [76, 201, 173, 255]); s.text("C", 112, 30, 2, [150, 170, 166, 255]);
+  s.text("HUM 48%", 10, 68, 1.4, [240, 166, 90, 255]);
+  const heights = [14, 20, 17, 26, 22, 30, 25, 34, 28, 31, 36, 29];
+  heights.forEach((h, i) => s.rect(10 + i * 12, 116 - h, 8, h, i === heights.length - 1 ? [76, 201, 173, 255] : [34, 70, 70, 255]));
+  scene.texture("screenIot", s, { opaque: true });
+}
+
 export function iotModule(scene) {
+  iotScreen(scene);
   const P = makeParts(scene);
   const pcb = scene.part("carrier-pcb");                                                                      // carrier board, x from -2.4 to 2.4
-  roundedBox(pcb.geo("accent"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
+  roundedBox(pcb.geo("pcbDeep"), { size: [4.8, 0.14, 2.7], r: 0.12, n: 2, at: [0, 0.07, 0] });
   for (const [x, z] of [[-2.15, -1.12], [-2.15, 1.12], [2.15, -1.12], [2.15, 1.12]]) { disc(pcb.geo("gold"), { rOut: 0.1, y: 0.146, seg: 18, at: [x, 0, z] }); }
   scene.inst(pcb);
   const hdr = scene.part("header"), pin = scene.part("header-pin");                                           // two rows of pin headers along the long edges
@@ -303,12 +316,18 @@ export function iotModule(scene) {
   const btn = scene.part("button");
   roundedBox(btn.geo("graphite"), { size: [0.34, 0.1, 0.34], r: 0.03, n: 1, at: [0, 0.05, 0] });
   cylinder(btn.geo("chrome"), { r: 0.09, h: 0.07, bevel: 0.015, seg: 20, at: [0, 0.135, 0] });
-  for (const z of [-0.55, 0.55]) scene.inst(btn, { at: [-1.5, 0.14, z] });
-  scene.inst(P.soicBody, { at: [-0.62, 0.14, 0.0], s: 0.7 });
-  scene.inst(P.led("ledGreen"), { at: [-0.85, 0.14, -0.55] });
-  scene.inst(P.led("ledAmber"), { at: [-0.85, 0.14, 0.55] });
-  for (const [x, z, r] of [[-1.05, -0.35, 0], [-1.05, 0.35, 0], [-0.3, -0.5, 1.57], [-0.3, 0.5, 1.57]]) scene.inst(P.resistor, { at: [x, 0.14, z], rot: [0, r, 0] });
-  for (const [x, z] of [[-0.3, 0.0], [0.0, -0.5]]) scene.inst(P.capacitor, { at: [x, 0.14, z] });
+  for (const z of [-0.6, 0.6]) scene.inst(btn, { at: [-2.1, 0.14, z] });
+  // built-in display: a TFT module on its own small PCB between the pin-header rows, left of the radio shield
+  const dsp = scene.part("display-module");
+  roundedBox(dsp.geo("graphite"), { size: [1.4, 0.07, 1.45], r: 0.04, n: 1, at: [0, 0.035, 0] });
+  roundedBox(dsp.geo("rubber"), { size: [1.3, 0.05, 1.35], r: 0.03, n: 1, at: [0, 0.095, 0] });
+  quadUV(dsp.geo("screenIot", true), [[-0.5, 0.123, 0.4], [0.5, 0.123, 0.4], [0.5, 0.123, -0.4], [-0.5, 0.123, -0.4]], [0, 1, 0], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  roundedBox(dsp.geo("accent"), { size: [1.0, 0.012, 0.05], r: 0.012, n: 1, at: [0, 0.12, 0.54] });                // themed accent bar under the screen
+  for (const x of [-0.6, 0.6]) cylinder(dsp.geo("gold"), { r: 0.045, h: 0.03, seg: 14, at: [x, 0.085, 0.6] });
+  scene.inst(dsp, { at: [-1.15, 0.14, 0.0] });
+  scene.inst(P.led("ledGreen"), { at: [-0.32, 0.14, -0.78] });
+  scene.inst(P.led("ledAmber"), { at: [-0.32, 0.14, 0.78] });
+  for (const z of [-0.45, 0.45]) scene.inst(P.resistor, { at: [-0.32, 0.14, z], rot: [0, 1.57, 0] });
 }
 
 /* ---------- 7. project: device monitoring panel (a display with trends, tiles and a status bar) ---------- */
@@ -376,6 +395,64 @@ export function agentAssistant(scene) {
   scene.inst(beam, { at: a, quat: quatBetween([0, 1, 0], d.map((v) => v / len)), s: [1, len, 1] });
 }
 
+/* ---------- 6. project: Toyota Prius HV-battery monitor (5-inch touch display on a foot, CAN wires at the back) ---------- */
+function toyotaTextures(scene) {
+  const W = 320, H = 460, s = new Raster(W, H, [10, 36, 60, 255]);
+  const white = [236, 244, 250, 255], dim = [150, 190, 220, 255], yellow = [232, 232, 96, 255], blue = [34, 110, 220, 255];
+  s.rect(0, 0, W, 4, [20, 60, 96, 255]);
+  s.text("PRIUS HV BATTERY", 12, 16, 2.1, white);
+  s.rect(228, 8, 80, 30, blue); s.rect(228, 8, 80, 3, [90, 160, 255, 255]); s.text("MENU", 241, 17, 2.2, white);
+  s.text("CAN WAITING, 0 FRAMES", 12, 50, 1.4, yellow);
+  s.text("I 0.0A  DV 0.000  A0/0", 12, 70, 1.4, white);
+  s.text("P 0.0KW  T 0/0/0C", 12, 88, 1.4, white);
+  s.frame(214, 56, 98, 54, 2, white); s.text("000", 226, 66, 5.6, white);
+  for (let i = 0; i < 14; i++) {
+    const col = i < 7 ? 0 : 1, row = i % 7, x = 12 + col * 154, y = 126 + row * 29;
+    s.text(`M${String(i + 1).padStart(2, "0")}/--.-/--MR/00`, x, y, 1.5, white);
+    s.rect(x, y + 13, 140, 2, [90, 130, 160, 255]);
+  }
+  s.rect(8, 330, 304, 14, [16, 50, 80, 255]); s.text("GRD -4.4  ROL -98.5  STR --DEG", 14, 333, 1.6, white);
+  s.frame(8, 348, 150, 62, 2, [230, 200, 90, 255]); s.text("AX --", 16, 354, 2.6, white); s.text("AY --", 16, 376, 2.6, white);
+  s.frame(164, 348, 148, 62, 2, [100, 190, 140, 255]); s.text("FUEL --.-L", 172, 352, 1.9, white); s.text("AVG --.-", 172, 370, 1.9, white); s.text("ODO ----", 172, 388, 1.9, white);
+  ["PREV", "NEXT", "SCAN", "REC", "PLAY"].forEach((t, i) => { const x = 8 + i * 61; s.rect(x, 418, 56, 26, blue); s.rect(x, 418, 56, 3, [110, 170, 255, 255]); s.text(t, x + 28 - t.length * 6, 426, 2, white); });
+  s.text("LOGGER: SD MOUNT FAILED", 40, 448, 1.4, yellow);
+  scene.texture("screenToyota", s, { opaque: true });
+}
+
+export function toyotaDisplay(scene) {
+  toyotaTextures(scene);
+  const bw = 7.4, bh = 10.9, bd = 1.15, y0 = 1.2;                 // body width / height / depth and the height of its centre above the foot
+  const body = scene.part("display-body");
+  roundedBox(body.geo("plastic"), { size: [bw, bh, bd], r: 0.5, n: 4, at: [0, 0, 0] });
+  roundedBox(body.geo("graphite"), { size: [bw - 0.5, bh - 0.5, 0.05], r: 0.4, n: 2, at: [0, 0, -bd / 2 - 0.004] });          // rear panel
+  roundedBox(body.geo("glass"), { size: [bw - 0.5, bh - 0.5, 0.06], r: 0.32, n: 3, at: [0, 0, bd / 2 - 0.02] });               // cover glass over the bezel
+  roundedBox(body.geo("rubber"), { size: [6.3, 9.3, 0.02], r: 0.12, n: 2, at: [0, 0.05, bd / 2 + 0.012] });                      // black edge of the panel
+  quadUV(body.geo("screenToyota", true), [[-2.95, -4.15, bd / 2 + 0.026], [2.95, -4.15, bd / 2 + 0.026], [2.95, 4.55, bd / 2 + 0.026], [-2.95, 4.55, bd / 2 + 0.026]], [0, 0, 1], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+  for (const [x, y] of [[-3.0, 4.75], [3.0, 4.75], [-3.0, -4.75], [3.0, -4.75]]) cylinder(body.geo("steel"), { r: 0.16, h: 0.06, bevel: 0.015, seg: 18, axis: "z", at: [x, y, -bd / 2 - 0.05] });
+  for (const y of [1.2, -0.1]) roundedBox(body.geo("graphite"), { size: [0.08, 0.9, 0.5], r: 0.03, n: 1, at: [bw / 2 + 0.02, y, 0.05] });   // side keys
+  scene.inst(body, { at: [0, y0 + bh / 2, 0] });
+
+  const foot = scene.part("display-foot");                            // weighted base plate, neck and an accent strip
+  roundedBox(foot.geo("alu"), { size: [bw + 1.2, 0.6, 3.6], r: 0.25, n: 3, at: [0, 0.3, 0.1] });
+  roundedBox(foot.geo("accent"), { size: [bw + 1.0, 0.05, 0.14], r: 0.02, n: 1, at: [0, 0.605, 1.65] });
+  roundedBox(foot.geo("graphite"), { size: [2.4, 0.9, 0.9], r: 0.18, n: 2, at: [0, 0.95, -0.3] });
+  roundedBox(foot.geo("rubber"), { size: [bw + 0.8, 0.05, 3.2], r: 0.06, n: 1, at: [0, 0.02, 0.1] });
+  scene.inst(foot);
+
+  const wire = (name, mat, x, bend) => {                              // three CAN / power leads from the lower rear edge
+    const w = scene.part(name);
+    const z0 = -bd / 2 - 0.08, yTop = y0 + 0.9;
+    tube(w.geo(mat), { path: bezier([x, yTop, z0], [x, yTop - 0.2, z0 - 1.6], [x + bend, 0.7, z0 - 2.4], [x + bend * 1.8, 0.3, z0 - 3.9], 22), r: 0.07, seg: 10 });
+    return w;
+  };
+  scene.inst(wire("wire-yellow", "wireYellow", -1.0, -1.6));
+  scene.inst(wire("wire-green", "wireGreen", 0.0, 0.2));
+  scene.inst(wire("wire-red", "wireRed", 1.0, 1.6));
+  const grommet = scene.part("grommet");
+  roundedBox(grommet.geo("rubber"), { size: [3.2, 0.5, 0.3], r: 0.12, n: 2, at: [0, y0 + 0.9, -bd / 2 - 0.05] });
+  scene.inst(grommet);
+}
+
 export const MODEL_BUILDERS = {
   "custom-electronics": customElectronics,
   "sensor-node": sensorNode,
@@ -385,4 +462,5 @@ export const MODEL_BUILDERS = {
   "iot-module": iotModule,
   "device-monitor": deviceMonitor,
   "agent-assistant": agentAssistant,
+  "toyota-hv-display": toyotaDisplay,
 };

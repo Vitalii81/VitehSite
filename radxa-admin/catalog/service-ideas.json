@@ -1,0 +1,335 @@
+{
+ "version": 1,
+ "note": "Admin-only catalog of service ideas. Never published: the build ignores this folder. Every card is added to the draft DISABLED.",
+ "items": [
+  {
+   "id": "idea-cra",
+   "readiness": "learning",
+   "need": 1,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [
+    {
+     "title": "McCann FitzGerald: CRA reporting from 11 Sep 2026",
+     "url": "https://www.mccannfitzgerald.com/knowledge/data-privacy-and-cyber-risk/cyber-resilience-act-reporting-obligations-apply-from-11-september-2026"
+    },
+    {
+     "title": "European Commission: CRA reporting",
+     "url": "https://digital-strategy.ec.europa.eu/en/policies/cra-reporting"
+    }
+   ],
+   "card": {
+    "icon": "shield",
+    "title": {
+     "uk": "Підготовка до Cyber Resilience Act",
+     "en": "CRA readiness for products",
+     "de": "CRA-Vorbereitung für Produkte"
+    },
+    "text": {
+     "uk": "Технічний огляд продукту перед **вимогами CRA**: SBOM, процес прийому повідомлень про вразливості, оновлення. Це не юридична консультація.",
+     "en": "A technical review of your product ahead of the **CRA**: SBOM, vulnerability intake process, update path. Not legal advice.",
+     "de": "Technische Prüfung Ihres Produkts vor dem **CRA**: SBOM, Prozess für Schwachstellenmeldungen, Update-Weg. Keine Rechtsberatung."
+    },
+    "points": [
+     {
+      "uk": "**SBOM** і перелік залежностей",
+      "en": "**SBOM** and dependency inventory",
+      "de": "**SBOM** und Abhängigkeitsliste"
+     },
+     {
+      "uk": "Політика розкриття вразливостей",
+      "en": "Vulnerability disclosure policy",
+      "de": "Richtlinie zur Offenlegung von Schwachstellen"
+     },
+     {
+      "uk": "Безпечні **оновлення** прошивки",
+      "en": "Secure firmware **updates**",
+      "de": "Sichere Firmware-**Updates**"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-gateway",
+   "readiness": "help",
+   "need": 2,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [
+    {
+     "title": "MarketsandMarkets: Industrial IoT Europe (vendor, directional)",
+     "url": "https://www.marketsandmarkets.com/Market-Reports/geography/industrial-internet-of-things-market/Europe"
+    }
+   ],
+   "card": {
+    "icon": "iot",
+    "title": {
+     "uk": "Шлюзи для старого обладнання",
+     "en": "Gateways for legacy machines",
+     "de": "Gateways für ältere Maschinen"
+    },
+    "text": {
+     "uk": "Дані зі старих машин у **MQTT** і дашборди: {{Modbus RTU/TCP}}, лічильники, ПЛК. Спочатку лише читання, без втручання в керування.",
+     "en": "Data from older machines into **MQTT** and dashboards: {{Modbus RTU/TCP}}, meters, PLCs. Read-only first, no interference with control.",
+     "de": "Daten älterer Maschinen in **MQTT** und Dashboards: {{Modbus RTU/TCP}}, Zähler, SPS. Zunächst nur lesend, ohne Eingriff in die Steuerung."
+    },
+    "points": [
+     {
+      "uk": "**Modbus** → MQTT",
+      "en": "**Modbus** → MQTT",
+      "de": "**Modbus** → MQTT"
+     },
+     {
+      "uk": "Дашборди й сповіщення",
+      "en": "Dashboards and alerts",
+      "de": "Dashboards und Alarme"
+     },
+     {
+      "uk": "~~Опція:~~ OPC UA",
+      "en": "~~Option:~~ OPC UA",
+      "de": "~~Option:~~ OPC UA"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-hmi",
+   "readiness": "help",
+   "need": 3,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [],
+   "card": {
+    "icon": "chip",
+    "title": {
+     "uk": "Панелі оператора (HMI) для обладнання",
+     "en": "Operator panels (HMI) for equipment",
+     "de": "Bedienpanels (HMI) für Geräte"
+    },
+    "text": {
+     "uk": "Екрани, меню й графіки для вашого пристрою на {{LVGL}}, {{Qt}} або {{Slint}}, трьома мовами.",
+     "en": "Screens, menus and charts for your device on {{LVGL}}, {{Qt}} or {{Slint}}, in three languages.",
+     "de": "Bildschirme, Menüs und Diagramme für Ihr Gerät mit {{LVGL}}, {{Qt}} oder {{Slint}}, dreisprachig."
+    },
+    "points": [
+     {
+      "uk": "**Сенсорні** екрани",
+      "en": "**Touch** screens",
+      "de": "**Touch**-Displays"
+     },
+     {
+      "uk": "Мови uk/en/de",
+      "en": "Languages uk/en/de",
+      "de": "Sprachen uk/en/de"
+     },
+     {
+      "uk": "Перелік екранів наперед",
+      "en": "Screen list agreed up front",
+      "de": "Bildschirmliste vorab vereinbart"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-docflow",
+   "readiness": "help",
+   "need": 4,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [
+    {
+     "title": "Grant Thornton: E-Rechnung overview",
+     "url": "https://www.grantthornton.de/themen/e-rechnung-themen-hub/"
+    },
+    {
+     "title": "Bitkom: majority of companies use AI (2026)",
+     "url": "https://www.bitkom.org/Presse/Presseinformation/Erstmals-nutzt-die-Mehrheit-der-Unternehmen-KI"
+    }
+   ],
+   "card": {
+    "icon": "mail",
+    "title": {
+     "uk": "Автоматизація документів і пошти",
+     "en": "Document and mail automation",
+     "de": "Dokumenten- und Mail-Automatisierung"
+    },
+    "text": {
+     "uk": "Вхідні **рахунки** (PDF, ZUGFeRD), сортування пошти, чернетки відповідей; людина завжди **підтверджує** результат.",
+     "en": "Incoming **invoices** (PDF, ZUGFeRD), mail sorting, draft replies; a person always **approves** the result.",
+     "de": "Eingehende **Rechnungen** (PDF, ZUGFeRD), Mail-Sortierung, Antwortentwürfe; ein Mensch **bestätigt** stets das Ergebnis."
+    },
+    "points": [
+     {
+      "uk": "**E-Rechnung** на вході",
+      "en": "**E-invoice** intake",
+      "de": "**E-Rechnung** im Eingang"
+     },
+     {
+      "uk": "Чернетки листів",
+      "en": "Draft replies",
+      "de": "Antwortentwürfe"
+     },
+     {
+      "uk": "Експорт у бухгалтерію",
+      "en": "Export to accounting",
+      "de": "Export in die Buchhaltung"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-voice",
+   "readiness": "learning",
+   "need": 5,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [
+    {
+     "title": "Home Assistant: local voice (Assist), Matter",
+     "url": "https://www.smarthomeassistent.de/home-assistant-jetzt-offiziell-matter-zertifiziert/"
+    }
+   ],
+   "card": {
+    "icon": "chat",
+    "title": {
+     "uk": "Голосовий агент без хмари",
+     "en": "Voice agent without the cloud",
+     "de": "Sprachassistent ohne Cloud"
+    },
+    "text": {
+     "uk": "**Офлайн-розпізнавання** мови й голосові команди для обладнання чи офісу на вашому сервері. Запис лише за згодою.",
+     "en": "**Offline speech recognition** and voice commands for equipment or office on your own server. Recording only with consent.",
+     "de": "**Offline-Spracherkennung** und Sprachbefehle für Geräte oder Büro auf Ihrem Server. Aufnahme nur mit Einwilligung."
+    },
+    "points": [
+     {
+      "uk": "**uk, en, de**",
+      "en": "**uk, en, de**",
+      "de": "**uk, en, de**"
+     },
+     {
+      "uk": "Транскрипція нарад",
+      "en": "Meeting transcripts",
+      "de": "Meeting-Transkripte"
+     },
+     {
+      "uk": "{{Whisper}} на місці",
+      "en": "{{Whisper}} on site",
+      "de": "{{Whisper}} vor Ort"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-selfhost",
+   "readiness": "help",
+   "need": 6,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [
+    {
+     "title": "schieb.de: European cloud alternatives (not independent data)",
+     "url": "https://www.schieb.de/europaeische-cloud-alternativen-nextcloud-co-fuer-digitale-souveraenitaet"
+    }
+   ],
+   "card": {
+    "icon": "lock",
+    "title": {
+     "uk": "Самохостинг замість SaaS",
+     "en": "Self-hosting instead of SaaS",
+     "de": "Self-Hosting statt SaaS"
+    },
+    "text": {
+     "uk": "Власні файли, паролі й git на **вашому сервері**: {{Nextcloud}}, Vaultwarden, Gitea, з **резервними копіями** і перевіркою відновлення.",
+     "en": "Your files, passwords and git on **your own server**: {{Nextcloud}}, Vaultwarden, Gitea, with **backups** and a restore test.",
+     "de": "Ihre Dateien, Passwörter und Git auf **Ihrem Server**: {{Nextcloud}}, Vaultwarden, Gitea, mit **Backups** und Restore-Test."
+    },
+    "points": [
+     {
+      "uk": "Тест **відновлення**",
+      "en": "**Restore** test",
+      "de": "**Restore**-Test"
+     },
+     {
+      "uk": "Оновлення й моніторинг",
+      "en": "Updates and monitoring",
+      "de": "Updates und Monitoring"
+     },
+     {
+      "uk": "Чітко описані межі підтримки",
+      "en": "Clearly scoped support",
+      "de": "Klar abgegrenzter Support"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-testbench",
+   "readiness": "help",
+   "need": 7,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [],
+   "card": {
+    "icon": "flask",
+    "title": {
+     "uk": "Стенди тестування плат",
+     "en": "Board test fixtures",
+     "de": "Prüfstände für Platinen"
+    },
+    "text": {
+     "uk": "Програма й оснастка, що **перевіряє плату** за хвилину й пише **протокол** у PDF. Для малих серій і ремонту.",
+     "en": "Software and fixture that **tests a board** in a minute and writes a **report** as PDF. For small series and repair.",
+     "de": "Software und Vorrichtung, die eine **Platine** in einer Minute **prüft** und ein **Protokoll** als PDF schreibt. Für Kleinserien und Reparatur."
+    },
+    "points": [
+     {
+      "uk": "**Pogo-pin** оснастка",
+      "en": "**Pogo-pin** fixture",
+      "de": "**Pogo-Pin**-Vorrichtung"
+     },
+     {
+      "uk": "Протокол у PDF",
+      "en": "PDF report",
+      "de": "PDF-Protokoll"
+     },
+     {
+      "uk": "Калібрування",
+      "en": "Calibration",
+      "de": "Kalibrierung"
+     }
+    ]
+   }
+  },
+  {
+   "id": "idea-retainer",
+   "readiness": "help",
+   "need": 8,
+   "doc": "docs/market-needs-2026.md",
+   "sources": [],
+   "card": {
+    "icon": "code",
+    "title": {
+     "uk": "Підтримка за підпискою",
+     "en": "Support subscription",
+     "de": "Support im Abo"
+    },
+    "text": {
+     "uk": "Щомісячна підтримка невеликого парку пристроїв чи серверів: **моніторинг**, оновлення, діагностика. Час реакції **погоджується** наперед.",
+     "en": "Monthly support for a small fleet of devices or servers: **monitoring**, updates, diagnostics. Response time is **agreed** up front.",
+     "de": "Monatlicher Support für eine kleine Flotte von Geräten oder Servern: **Monitoring**, Updates, Diagnose. Reaktionszeit **vorab vereinbart**."
+    },
+    "points": [
+     {
+      "uk": "**Моніторинг** і сповіщення",
+      "en": "**Monitoring** and alerts",
+      "de": "**Monitoring** und Alarme"
+     },
+     {
+      "uk": "Оновлення за графіком",
+      "en": "Scheduled updates",
+      "de": "Updates nach Plan"
+     },
+     {
+      "uk": "Без цілодобових гарантій",
+      "en": "No 24/7 guarantee",
+      "de": "Keine 24/7-Garantie"
+     }
+    ]
+   }
+  }
+ ]
+}

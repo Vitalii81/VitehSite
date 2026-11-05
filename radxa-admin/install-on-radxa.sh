@@ -21,7 +21,7 @@ ROOT_PREFIX=${INSTALL_ROOT:-}                       # tests install into a scrat
 APP=${ROOT_PREFIX}/srv/fwportal/admin               # code
 SECRET=${ROOT_PREFIX}/srv/fwportal/admin-secret     # password hash, session key (0700)
 STAGING=${ROOT_PREFIX}/srv/fwportal/staging/viteh-site
-DOCROOT=${APP}/docroot                              # what the admin uhttpd serves: web files, site-assets/, cgi-bin/vadmin-api
+DOCROOT=${APP}/docroot                              # what the admin uhttpd serves: web files, site-assets/ and assets/ (the on-page editor loads /assets/...), cgi-bin/vadmin-api
 PREVIEW=${STAGING}/preview                          # what the preview uhttpd serves (swapped by every build)
 INITD=${ROOT_PREFIX}/etc/init.d/vadmin
 UHTTPD=${UHTTPD_BIN:-/usr/sbin/uhttpd}
@@ -149,7 +149,10 @@ fi
 build_docroot() {
   rm -rf "$DOCROOT.new"; mkdir -p "$DOCROOT.new/cgi-bin" || die "cannot create $DOCROOT.new"
   cp -R "$APP/web/." "$DOCROOT.new/" || die "cannot copy the web files"
+  v=$(date +%s)                                      # new URL per install so browsers and Cloudflare never serve a stale admin.js/admin.css
+  sed -i "s/admin\.js\"/admin.js?v=$v\"/; s/admin\.css\"/admin.css?v=$v\"/; s/preview-tip\.js\"/preview-tip.js?v=$v\"/; s/preview-tip\.css\"/preview-tip.css?v=$v\"/" "$DOCROOT.new/index.html"
   cp -R "$STAGING/src/assets" "$DOCROOT.new/site-assets" || die "cannot copy the site assets for the editor"
+  cp -R "$STAGING/src/assets" "$DOCROOT.new/assets" || die "cannot copy the site assets for the on-page editor"      # edit-page loads /assets/styles.css, app.js, ...
   {
     printf '#!/bin/sh\n'
     printf "VADMIN_ROOT='%s'\n" "${STAGING#"$ROOT_PREFIX"}"
@@ -170,7 +173,7 @@ install_code() {
     SITE_SRC="$HERE/site"; [ -f "$SITE_SRC/index.html" ] || SITE_SRC="$HERE/.."
     mkdir -p "$APP.new" "$SECRET" "$STAGING/src" "$STAGING/uploads" "$STAGING/builds" || die "cannot create directories"
     chmod 700 "$SECRET"
-    cp -R "$HERE/cgi" "$HERE/lib" "$HERE/web" "$HERE/vadmin-cli.py" "$APP.new/" || die "copy failed"
+    cp -R "$HERE/cgi" "$HERE/lib" "$HERE/web" "$HERE/catalog" "$HERE/vadmin-cli.py" "$APP.new/" || die "copy failed"
     chmod +x "$APP.new/cgi/vadmin.py" "$APP.new/vadmin-cli.py"
     find "$APP.new" -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null
     [ -f "$STATE_FILE" ] && cp "$STATE_FILE" "$APP.new/.install-state"
@@ -293,8 +296,8 @@ if [ "$DRY" = 0 ]; then
   [ "$code" = 401 ] || [ "$code" = 503 ] || die "admin API: HTTP $code (expected 401 without a login, or 503 before the password is set)"
   ok "admin API answers $code without a login (the CGI runs)"
   code=$(fetch_status "http://$first:$PREVIEW_PORT/")
-  [ "$code" = 404 ] || [ "$code" = 200 ] || die "preview port: HTTP $code"
-  ok "preview port http://$first:$PREVIEW_PORT/ (404 until the first build is normal)"
+  [ "$code" = 404 ] || [ "$code" = 403 ] || [ "$code" = 200 ] || die "preview port: HTTP $code"
+  ok "preview port http://$first:$PREVIEW_PORT/ answers $code (404 or 403 until the first build is normal: empty folder, no directory listing)"
 fi
 CHANGED=0
 

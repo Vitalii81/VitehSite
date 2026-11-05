@@ -95,8 +95,10 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["portfolio", "Портфоліо (сторінка)"], ["archive-images", "Зображення проєктів 2022–2025"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["ideas", "Каталог ідей"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Портфоліо", [["portfolio", "Елементи портфоліо"], ["portfolio-page", "Сторінка й PDF: розділи, тексти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
+  ["Помічник", [["assistant", "Бот-помічник: база знань і фільтр"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
 ];
 
@@ -122,6 +124,8 @@ function shell() {
     h("header", { class: "top" }, h("h1", {}, "ViTeh · адмінка"), h("div", { class: "chips", id: "chips" }),
       h("div", { class: "actions" },
         h("a", { class: "btn", id: "btn-preview", target: "_blank", rel: "noopener", href: "#", onclick: (e) => { if (!S.status.built) { e.preventDefault(); toast("Спершу зберіть пакет", "warn"); } } }, "Перегляд"),
+        h("a", { class: "btn", id: "btn-edit", target: "_blank", rel: "noopener", href: `${API}?action=edit-page`, title: "Та сама головна сторінка з елементами керування: тексти, розділи, картки, зображення, порядок",
+          onclick: async (e) => { if (S.save === "saved") return; e.preventDefault(); await save(); window.open(e.currentTarget.href, "_blank", "noopener"); } }, "Редагувати на сторінці"),
         h("button", { class: "btn primary", id: "btn-build", type: "button", onclick: buildNow }, "Зібрати пакет"),
         h("button", { class: "btn", type: "button", onclick: () => go("builds") }, "Відкотити…"),
         h("button", { class: "btn", type: "button", onclick: async () => { await save(); try { await api("logout", { method: "POST", body: {} }); } catch { /* ignore */ } showLogin(); } }, "Вийти"))),
@@ -141,6 +145,10 @@ const rerender = () => go(S.view.name, S.view.arg);
 
 /* ---------- reusable editors ---------- */
 const head = (title, lead) => [h("h2", {}, title), lead ? h("p", { class: "lead" }, lead) : null].filter(Boolean);
+/** Hover / focus / long-press preview (preview-tip.js) on `node`, plus an eye button for touch and keyboard users. Returns the button to place in the row. */
+const preview = (node, key, fallback) => { VPreview.attach(node, key, fallback); return VPreview.eyeButton(node, key, fallback); };
+/** The top row of a card: the given controls and the eye button; the whole row is the hover/focus target (not the card, whose fields would pop it up while typing). */
+const cardHead = (key, fallback, ...controls) => { const row = h("div", { class: "row between" }); row.append(...controls.flat(), preview(row, key, fallback)); return row; };
 const toggle = (label, checked, onchange, extra) => h("label", { class: "switch" }, h("input", { type: "checkbox", checked, onchange: (e) => { onchange(e.target.checked); touch(); } }), label, extra);
 
 function i18nField(obj, key, { multiline = false, max = 400, label } = {}) {
@@ -220,8 +228,9 @@ function pickFile(kind, current) {
 }
 
 async function uploadFile(file) {
-  const r = await api("upload", { method: "POST", raw: file, headers: { "X-Filename": encodeURIComponent(file.name), "Content-Type": "application/octet-stream" } });
+  const r = await api("upload", { method: "POST", raw: file, query: `&name=${encodeURIComponent(file.name)}`, headers: { "Content-Type": "application/octet-stream" } });
   S.uploads = r.uploads;
+  await VTwin.attach(file, r.item, (query, blob) => api("upload", { method: "POST", raw: blob, query, headers: { "Content-Type": "application/octet-stream" } }));      // JPEG twin of a WebP (PDF only)
   return r;
 }
 
@@ -292,13 +301,16 @@ function blockEditor(blocks, { onChange } = {}) {
       card.addEventListener("dragend", () => { dragged = null; });
       const move = (d) => () => { const j = i + d; [blocks[i], blocks[j]] = [blocks[j], blocks[i]]; touch(); paint(); };
       const isOpen = open.has(b.id);
-      card.append(h("div", { class: "block-head" },
+      const headRow = h("div", { class: "block-head" });
+      headRow.append(
         h("span", { class: "title", onclick: () => { isOpen ? open.delete(b.id) : open.add(b.id); paint(); } }, `${isOpen ? "▾" : "▸"} ${uk(spec.label)}`, h("span", { class: "muted" }, ` — ${blockSummary(b, spec)}`)),
         toggle("Увімкнено", b.enabled, (v) => { b.enabled = v; paint(); }),
         h("button", { class: "btn small", type: "button", disabled: i === 0, "aria-label": "Блок вгору", onclick: move(-1) }, "↑"),
         h("button", { class: "btn small", type: "button", disabled: i === blocks.length - 1, "aria-label": "Блок вниз", onclick: move(1) }, "↓"),
         h("button", { class: "btn small", type: "button", onclick: () => { const c = clone(b); c.id = uid("b-"); blocks.splice(i + 1, 0, c); touch(); paint(); } }, "Дублювати"),
-        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити блок?")) { blocks.splice(i, 1); touch(); paint(); } } }, "Видалити")));
+        h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити блок?")) { blocks.splice(i, 1); touch(); paint(); } } }, "Видалити"),
+        preview(headRow, `block:${b.type}`, { title: uk(spec.label) }));
+      card.append(headRow);
       if (isOpen) {
         card.append(h("div", { class: "block-body" }, spec.fields.map((f) => fieldEditor(f, b.fields)),
           textField(b, "anchor", "Якір (необов'язково, a-z, 0-9, «-»): на нього можна вести посилання як #якір", 40)));
@@ -319,9 +331,14 @@ function blockSummary(b, spec) {
 
 function addBlockControl(blocks, paint, open) {
   const select = h("select", { "aria-label": "Тип блока" }, Object.entries(S.catalog.blocks).map(([type, spec]) => h("option", { value: type }, uk(spec.label))));
-  return h("div", { class: "row" }, select, h("button", { class: "btn", type: "button", onclick: () => {
+  const row = h("div", { class: "row" });
+  const key = () => `block:${select.value}`;
+  VPreview.attach(select, key, {});         // the pop-up follows the selected type; the eye button shows it on touch screens and from the keyboard
+  select.addEventListener("change", () => { if (VPreview.isOpen()) VPreview.hide(); });
+  row.append(select, VPreview.eyeButton(select, key, {}, "тип блока"), h("button", { class: "btn", type: "button", onclick: () => {
     const b = newBlock(select.value); blocks.push(b); open.add(b.id); touch(); paint();
   } }, "+ Додати блок"));
+  return row;
 }
 
 /* ---------- views ---------- */
@@ -330,8 +347,8 @@ const VIEWS = {
     main.append(...head("Розділи головної сторінки", "Вимкнений розділ не потрапляє в HTML публічного сайту."));
     for (const s of S.catalog.sections) {
       const on = S.draft.sections[s.id] !== false;
-      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
-        toggle(s.label, on, (v) => { S.draft.sections[s.id] = v; card.classList.toggle("off", !v); })));
+      const card = h("div", { class: `card${on ? "" : " off"}` });
+      card.append(cardHead(`section:${s.id}`, { title: s.label }, toggle(s.label, on, (v) => { S.draft.sections[s.id] = v; card.classList.toggle("off", !v); })));
       if (s.id === "hero") card.append(h("div", { style: "margin-top:10px" }, imageField(S.draft.images, "hero", "Картинка першого екрана (замість ілюстрації)")));
       main.append(card);
     }
@@ -342,42 +359,113 @@ const VIEWS = {
     for (const s of S.catalog.factory.services) {
       S.draft.images.serviceModels ||= {};
       S.draft.images.serviceModels[s.id] ??= "";
-      main.append(h("div", { class: "card" }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
-        h("div", { style: "margin-top:10px" }, imageField(S.draft.images.serviceModels, s.id, s.model ? "Замінити 3D-модель послуги (.glb)" : "Додати 3D-модель послуги (.glb)", "model"))));
+      const card = h("div", { class: "card" });
+      card.append(cardHead(`service:${s.id}`, { title: uk(s.title), text: uk(s.text) }, toggle(`${uk(s.title)}`, !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v))),
+        h("div", { style: "margin-top:10px" }, imageField(S.draft.images.serviceModels, s.id, s.model ? "Замінити 3D-модель послуги (.glb)" : "Додати 3D-модель послуги (.glb)", "model")));
+      main.append(card);
     }
     S.draft.extra.services.forEach((s, i) => {
-      main.append(h("div", { class: "card" }, h("div", { class: "row between" },
+      const card = h("div", { class: "card" });
+      main.append(card);
+      card.append(cardHead("service:custom", { title: uk(s.title) || "Нова послуга" },
         toggle(uk(s.title) || "Нова послуга", !S.draft.disabled.services.includes(s.id), (v) => setDisabled("services", s.id, !v)),
         h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити послугу?")) { S.draft.extra.services.splice(i, 1); touch(); rerender(); } } }, "Видалити")),
       h("div", { class: "block-body", style: "margin-top:12px" },
         h("div", { class: "field" }, h("label", {}, "Іконка"), h("select", { onchange: (e) => { s.icon = e.target.value; touch(); } }, S.catalog.icons.map((x) => h("option", { value: x, selected: s.icon === x }, x)))),
         i18nField(s, "title", { max: 80, label: "Назва" }), i18nField(s, "text", { multiline: true, max: 300, label: "Опис" }),
         imageField(s, "model", "3D-модель послуги (.glb)", "model"),
-        h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` }))))));
+        h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` })))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));
   },
 
-  portfolio(main) {
-    main.append(...head("Портфоліо", "Розділи сторінки /portfolio/ (і PDF після перезбирання): вмикайте й вимикайте. Тексти кожного розділу трьома мовами редагуються в «Тексти» (групи «portfolioPage:назва»). Саме посилання на сторінку вмикається у «Віджетах й ефектах»."));
-    S.draft.disabled.portfolio ||= [];
-    for (const s of S.catalog.factory.portfolio) {
-      const on = !S.draft.disabled.portfolio.includes(s.id);
-      const card = h("div", { class: `card${on ? "" : " off"}` }, toggle(`${uk(s.title)} (${s.id})`, on, (v) => { setDisabled("portfolio", s.id, !v); card.classList.toggle("off", !v); }));
+  async ideas(main) {
+    main.append(...head("Каталог ідей послуг", "Готові картки на основі аналізу ринку (docs/market-needs-2026.md). Кнопка додає картку в чернетку ВИМКНЕНОЮ: вона не потрапить на сайт, доки ви самі її не ввімкнете в розділі «Послуги». Каталог ніколи не публікується."));
+    let data;
+    try { await save(); data = await api("ideas"); } catch (e) { fail(e); return; }
+    const marks = (v) => String(v || "").replace(/\*\*|~~|\{\{|\}\}/g, "");
+    const have = new Set(data.added.map((t) => uk(t)));
+    for (const it of data.items) {
+      const c = it.card, added = have.has(c.title.uk);
+      const card = h("div", { class: "card", "data-idea": it.id });
+      card.append(
+        h("div", { class: "row between" }, h("strong", {}, `${it.need}. ${uk(c.title)}`), h("span", { class: "chip" }, `Готовність: ${data.readiness[it.readiness]}`)),
+        h("p", {}, marks(c.text.uk)),
+        h("ul", {}, c.points.map((p) => h("li", {}, marks(uk(p))))),
+        h("p", { class: "lead" }, `EN: ${marks(c.title.en)} · DE: ${marks(c.title.de)} · іконка: ${c.icon}`),
+        it.sources.length ? h("p", { class: "lead" }, "Джерела: ", it.sources.map((s, i) => [i ? " · " : "", h("a", { href: s.url, target: "_blank", rel: "noopener noreferrer" }, s.title)])) : h("p", { class: "lead" }, "Джерел немає: це оцінка (див. документ аналізу)."),
+        h("button", { class: "btn small", type: "button", disabled: added, onclick: async () => {
+          await save();
+          try {
+            const r = await api("idea-add", { method: "POST", body: { id: it.id, rev: S.draft.rev } });
+            S.draft = r.draft; S.save = "saved"; updateChips();
+            toast("Додано в чернетку вимкненою. Увімкніть у розділі «Послуги»");
+            rerender();
+          } catch (e) { fail(e); }
+        } }, added ? "Вже в чернетці" : "Додати в чернетку"));
       main.append(card);
     }
+    if (!data.items.length) main.append(h("p", { class: "lead" }, "Каталог порожній або файл не знайдено."));
   },
 
-  "archive-images"(main) {
-    main.append(...head("Зображення проєктів 2022–2025", "Для кожного слоту оберіть зображення з файлів (воно стає «фінальним» і з'являється на сайті) та за потреби змініть alt-текст трьома мовами. Порожній слот відвідувачі не бачать. Пропорція слоту вказана поруч: обріжте фото по пристрою заздалегідь, без імен, адрес, IP/MAC, паролів і договорів."));
-    S.draft.images.portfolio ||= {}; S.draft.images.portfolioAlt ||= {};
-    for (const s of S.catalog.factory.portfolioSlots) {
-      const filled = !!S.draft.images.portfolio[s.key];
-      main.append(h("div", { class: "card" }, h("div", { class: "row between" }, h("strong", {}, s.key), h("span", { class: "muted" }, `${s.ratio} · ${filled ? "заповнено в адмінці" : (s.status === "final" ? "фінальне" : "очікує зображення")}`)),
-        h("p", { class: "muted mono" }, s.hint || ""),
-        imageField(S.draft.images.portfolio, s.key, "Зображення слоту", "image"),
-        i18nField(S.draft.images.portfolioAlt, s.key, { max: 200, label: "Alt-текст" })));
+  portfolio(main) {
+    main.append(...head("Елементи портфоліо", "Єдине місце, де редагуються картки портфоліо: тексти трьома мовами, роки, теги, фото, порядок і вмикання. З цих даних збираються сторінка /portfolio/ і PDF. Головна лише вибирає, які з цих карток показати (розділ «Картки проєктів»). Вимкнена тут картка зникає звідусіль. Фото обирайте з завантажених файлів (JPEG, PNG або WebP)."));
+    const g = gallerySettings();
+    const all = S.catalog.factory.gallery;
+    const bySlug = Object.fromEntries(all.map((x) => [x.slug, x]));
+    const order = (g.order.length === all.length ? g.order : all.map((x) => x.slug)).filter((slug) => bySlug[slug]);
+    const move = (slug, dir) => {
+      const at = order.indexOf(slug), to = at + dir;
+      if (to < 0 || to >= order.length) return;
+      [order[at], order[to]] = [order[to], order[at]];
+      g.order = order.slice(); touch(); rerender();
+    };
+    order.forEach((slug, at) => {
+      const f = bySlug[slug];
+      const on = !g.disabled.includes(slug);
+      const ov = (g.items[slug] ||= {});
+      ov.title ||= { ...f.title }; ov.summary ||= { ...f.summary };
+      ov.years ??= f.years || ""; ov.tags ||= [...(f.tags || [])];
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("portfolio:item", { title: uk(ov.title), text: uk(ov.summary) },
+        toggle(`${uk(ov.title)}${f.portfolioOnly ? " (лише портфоліо й PDF)" : ""}`, on, (v) => { g.disabled = g.disabled.filter((x) => x !== slug); if (!v) g.disabled.push(slug); card.classList.toggle("off", !v); }),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вгору: ${uk(ov.title)}`, title: "Вгору", disabled: at === 0 || null, onclick: () => move(slug, -1) }, "▲"),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вниз: ${uk(ov.title)}`, title: "Вниз", disabled: at === order.length - 1 || null, onclick: () => move(slug, 1) }, "▼")));
+      card.append(h("div", { class: "block-body", style: "margin-top:12px" },
+        i18nField(ov, "title", { max: 80, label: "Назва" }), i18nField(ov, "summary", { multiline: true, max: 600, label: "Опис" }),
+        h("div", { class: "field" }, h("label", {}, "Роки"), h("input", { type: "text", maxlength: 20, value: ov.years, oninput: (e) => { ov.years = e.target.value; touch(); } })),
+        h("div", { class: "field" }, h("label", {}, "Теги через кому (до 8)"), h("input", { type: "text", value: ov.tags.join(", "), oninput: (e) => { ov.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })),
+        ...f.slots.map((sl, i) => h("div", { class: "block-body" },
+          imageField(g.images, sl.key, `Фото ${i + 1} (${sl.key}${g.images[sl.key] ? "" : sl.status === "final" ? ", заводське фото" : ", ще немає фото"})`, "image"),
+          i18nField(g.alts, sl.key, { max: 200, label: "Alt-текст фото" })))));
+      main.append(card);
+    });
+  },
+
+  "portfolio-page"(main) {
+    main.append(...head("Сторінка й PDF: розділи й тексти", "Розділи сторінки /portfolio/ і PDF: вмикайте й вимикайте. Тексти кожного розділу трьома мовами редагуються нижче. Усе це зберігається в портфоліо й не залежить від головної."));
+    const g = gallerySettings();
+    for (const s of S.catalog.factory.portfolio) {
+      const on = !g.disabledSections.includes(s.id);
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("portfolio:section", { title: uk(s.title) },
+        toggle(`${uk(s.title)} (${s.id})`, on, (v) => { g.disabledSections = g.disabledSections.filter((x) => x !== s.id); if (!v) g.disabledSections.push(s.id); card.classList.toggle("off", !v); })));
+      main.append(card);
     }
+    main.append(h("h2", { style: "margin-top:22px" }, "Тексти сторінки"));
+    const groups = Object.keys(S.catalog.portfolioTexts);
+    const sel = h("select", { "aria-label": "Група текстів портфоліо" }, groups.map((k) => h("option", { value: k }, k)));
+    const list = h("div", { class: "stack" });
+    const paint = () => list.replaceChildren(...Object.entries(S.catalog.portfolioTexts[sel.value]).slice(0, 80).map(([path, factory]) => {
+      const holder = { v: g.texts[path] ? { ...g.texts[path] } : { ...factory } };
+      const card = h("div", { class: "card" }, h("div", { class: "row between" }, h("span", { class: "mono muted" }, path),
+        h("button", { class: "btn small", type: "button", onclick: () => { delete g.texts[path]; touch(); paint(); } }, "До заводського")));
+      const field = i18nField(holder, "v", { multiline: (factory.en || factory.uk || "").length > 70, max: 2000 });
+      field.addEventListener("input", () => { g.texts[path] = { ...holder.v }; touch(); });
+      card.append(field);
+      return card;
+    }));
+    sel.addEventListener("change", paint);
+    main.append(h("div", { class: "row" }, h("div", { class: "grow" }, sel)), list);
+    paint();
   },
 
   projects(main) {
@@ -385,7 +473,7 @@ const VIEWS = {
     const rows = [...S.catalog.factory.projects.map((p) => ({ ...p, extra: false })), ...S.draft.extra.projects.map((p) => ({ id: p.id, title: p.title, extra: true, ref: p }))];
     for (const p of rows) {
       const on = !S.draft.disabled.projects.includes(p.id);
-      const card = h("div", { class: `card${on ? "" : " off"}` }, h("div", { class: "row between" },
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead(p.extra ? "project:custom" : `project:${p.id}`, { title: uk(p.title) || "Новий проєкт", text: p.extra ? "" : uk(p.summary) },
         toggle(uk(p.title) || "Новий проєкт", on, (v) => { setDisabled("projects", p.id, !v); card.classList.toggle("off", !v); }),
         p.extra ? h("button", { class: "btn small danger", type: "button", onclick: () => { if (confirm("Видалити картку?")) { S.draft.extra.projects.splice(S.draft.extra.projects.indexOf(p.ref), 1); touch(); rerender(); } } }, "Видалити") : null));
       const body = h("div", { class: "block-body", style: "margin-top:12px" });
@@ -397,12 +485,41 @@ const VIEWS = {
           imageField(p.ref, "image", "Фото / ілюстрація"), imageField(p.ref, "model", "3D-модель (.glb)", "model"));
       } else {
         S.draft.images.projects[p.id] ??= ""; S.draft.images.models[p.id] ??= "";
+        S.draft.products ||= {};
+        const ov = (S.draft.products[p.id] ||= {});            // text overrides of the factory card, seeded with the factory values (equal values are dropped by the server)
+        ov.title ||= { ...p.title }; ov.summary ||= { ...p.summary }; ov.status ||= { ...p.status }; ov.tags ||= [...(p.tags || [])]; ov.category ||= p.category;
+        body.append(
+          h("div", { class: "field" }, h("label", {}, "Категорія"), h("select", { onchange: (e) => { ov.category = e.target.value; touch(); } }, S.catalog.factory.categories.map((c) => h("option", { value: c.id, selected: ov.category === c.id }, uk(c.label))))),
+          i18nField(ov, "title", { max: 80, label: "Назва" }), i18nField(ov, "summary", { multiline: true, max: 300, label: "Опис" }), i18nField(ov, "status", { max: 40, label: "Статус" }),
+          h("div", { class: "field" }, h("label", {}, "Теги через кому"), h("input", { type: "text", value: ov.tags.join(", "), oninput: (e) => { ov.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 8); touch(); } })));
         body.append(imageField(S.draft.images.projects, p.id, "Замінити фото / ілюстрацію"), imageField(S.draft.images.models, p.id, "Замінити 3D-модель (.glb)", "model"));
       }
       card.append(body);
       main.append(card);
     }
     main.append(templateButton("project", "Додати картку проєкту з шаблону"));
+    // the home page's gallery "Замовні розробки": only a SELECTION of portfolio items (draft.site.gallery); their content is edited in «Елементи портфоліо»
+    const sg = ((S.draft.site ||= {}).gallery ||= { hidden: [], order: [] });
+    sg.hidden ||= []; sg.order ||= [];
+    const pg = gallerySettings();
+    const eligible = S.catalog.factory.gallery.filter((x) => !x.portfolioOnly && !pg.disabled.includes(x.slug));
+    const base = (pg.order.length ? pg.order : S.catalog.factory.gallery.map((x) => x.slug)).filter((slug) => eligible.some((x) => x.slug === slug));
+    const list = (sg.order.length ? [...sg.order.filter((slug) => base.includes(slug)), ...base.filter((slug) => !sg.order.includes(slug))] : base);
+    main.append(h("h2", { style: "margin-top:22px" }, "Галерея «Замовні розробки» на головній"),
+      h("p", { class: "lead" }, "Тут лише вибір карток портфоліо для головної: показати чи сховати й порядок. Тексти й фото беруться з портфоліо, сторінка /portfolio/ і PDF від цього вибору не залежать."));
+    list.forEach((slug, at) => {
+      const f = eligible.find((x) => x.slug === slug);
+      const ov = pg.items[slug] || {};
+      const title = uk(ov.title) || uk(f.title);
+      const on = !sg.hidden.includes(slug);
+      const move = (dir) => { const to = at + dir; if (to < 0 || to >= list.length) return; const next = list.slice(); [next[at], next[to]] = [next[to], next[at]]; sg.order = next; touch(); rerender(); };
+      const card = h("div", { class: `card${on ? "" : " off"}` }, cardHead("site:gallery", { title, text: uk(ov.summary) || uk(f.summary) },
+        toggle(title, on, (v) => { sg.hidden = sg.hidden.filter((x) => x !== slug); if (!v) sg.hidden.push(slug); card.classList.toggle("off", !v); }),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вгору: ${title}`, disabled: at === 0 || null, onclick: () => move(-1) }, "▲"),
+        h("button", { class: "btn small", type: "button", "aria-label": `Вниз: ${title}`, disabled: at === list.length - 1 || null, onclick: () => move(1) }, "▼"),
+        h("button", { class: "btn small", type: "button", onclick: () => go("portfolio") }, "Змінити в портфоліо")));
+      main.append(card);
+    });
   },
 
   "home-blocks"(main) {
@@ -411,11 +528,38 @@ const VIEWS = {
     main.append(h("div", { class: "row" }, ...Object.entries(S.catalog.templates.sections).map(([id, label]) => templateButton("section", `Розділ із шаблону: ${uk(label)}`, id))));
   },
 
+  assistant(main) {
+    const A = (S.draft.assistant ||= { enabled: false, hidden: [], facts: {}, extra: [] });
+    main.append(...head("Бот-помічник для клієнтів", "Окрема від редагування сайту вкладка. Бот відповідає лише з бази знань: тексти сайту (що зараз ввімкнено в чернетці) + факти нижче. Запис без позначки «публічний» у відповіді не потрапляє."));
+    main.append(h("div", { class: "card" }, toggle("Показувати чат на сайті (за замовчуванням вимкнено)", A.enabled === true, (v) => { A.enabled = v; }),
+      h("p", { class: "muted" }, "Вимкнено: у HTML нічого не додається і файли бота не потрапляють у пакет. Увімкнено: потрібні секрет ASSISTANT_BACKENDS у Worker і запущений llama-server (див. docs/assistant-llama-server.md). Без бекендів бот чесно скаже, що недоступний, і запропонує форму контакту.")));
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Заводські факти (data/assistant-kb.json)"));
+    for (const f of S.catalog.assistantFacts || []) {
+      A.facts[f.id] ||= { public: f.public === true, topic: clone(f.topic), text: clone(f.text) };
+      const item = A.facts[f.id];
+      const reset = h("button", { class: "btn small", type: "button", onclick: () => { delete A.facts[f.id]; touch(); rerender(); } }, "Скинути до заводського");
+      main.append(h("div", { class: "card" }, h("div", { class: "row between" }, toggle("Публічний (може потрапити у відповідь)", item.public === true, (v) => { item.public = v; }), reset),
+        i18nField(item, "topic", { max: 120, label: "Тема" }), i18nField(item, "text", { multiline: true, max: 1200, label: "Текст" })));
+    }
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Ваші факти"));
+    A.extra.forEach((item, i) => main.append(h("div", { class: "card" },
+      h("div", { class: "row between" }, toggle("Публічний (може потрапити у відповідь)", item.public === true, (v) => { item.public = v; }),
+        h("button", { class: "btn small", type: "button", onclick: () => { A.extra.splice(i, 1); touch(); rerender(); } }, "Видалити")),
+      i18nField(item, "topic", { max: 120, label: "Тема" }), i18nField(item, "text", { multiline: true, max: 1200, label: "Текст" }))));
+    main.append(h("button", { class: "btn", type: "button", onclick: () => { A.extra.push({ id: uid("x-"), public: false, topic: { uk: "", en: "", de: "" }, text: { uk: "", en: "", de: "" } }); touch(); rerender(); } }, "Додати факт"));
+
+    main.append(h("h2", { style: "margin-top:22px" }, "Приховані слова"));
+    main.append(h("div", { class: "card" },
+      h("p", { class: "muted" }, "Одне слово чи фраза на рядок (до 60 символів, до 60 рядків). Фільтр прибирає ці слова з кожної відповіді бота, навіть якщо модель їх напише. Ключі, токени, IP-адреси, внутрішні хости, шляхи й адреси приватних репозиторіїв фільтр прибирає завжди."),
+      h("textarea", { rows: "6", "aria-label": "Приховані слова", value: (A.hidden || []).join("\n"), oninput: (e) => { A.hidden = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 60); touch(); } })));
+  },
   widgets(main) {
     main.append(...head("Віджети й візуальні ефекти"));
-    for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; })));
+    for (const w of S.catalog.widgets) main.append(h("div", { class: "card" }, cardHead(`widget:${w.id}`, { title: w.label }, toggle(w.label, S.draft.widgets[w.id] !== false, (v) => { S.draft.widgets[w.id] = v; }))));
     main.append(h("h2", { style: "margin-top:22px" }, "Ефекти"));
-    for (const e of S.catalog.effects) main.append(h("div", { class: "card" }, toggle(e.label, S.draft.effects[e.id] !== false, (v) => { S.draft.effects[e.id] = v; })));
+    for (const e of S.catalog.effects) main.append(h("div", { class: "card" }, cardHead(`effect:${e.id}`, { title: e.label }, toggle(e.label, S.draft.effects[e.id] !== false, (v) => { S.draft.effects[e.id] = v; }))));
   },
 
   texts(main) {
@@ -440,6 +584,11 @@ const VIEWS = {
     sel.addEventListener("change", paint); search.addEventListener("input", paint);
     main.append(h("div", { class: "row" }, h("div", { class: "grow" }, sel), h("div", { class: "grow" }, search)), list);
     paint();
+    // values without translation: e-mail, phone, technology names (draft.plain)
+    S.draft.plain ||= {};
+    main.append(h("h2", { style: "margin-top:22px" }, "Значення без перекладу"), h("p", { class: "lead" }, "Пошта, телефон і назви технологій. Змінена пошта чи телефон оновлює й посилання за ними; справжній номер прибирає позначку «демо»."),
+      ...Object.entries(S.catalog.plain || {}).map(([path, factory]) => h("div", { class: "field" }, h("label", {}, path),
+        h("input", { type: "text", maxlength: 120, value: S.draft.plain[path] ?? factory, "aria-label": path, oninput: (e) => { const v = e.target.value.trim(); if (v && v !== factory) S.draft.plain[path] = v; else delete S.draft.plain[path]; touch(); } }))));
   },
 
   pages(main) {
@@ -493,7 +642,7 @@ const VIEWS = {
   },
 
   builds(main) {
-    main.append(...head("Версії й публікація", "Зберігаються 20 останніх збірок. «Відкотити чернетку» повертає редактор до стану цієї збірки; публікація виконується з основного ПК."));
+    main.append(...head("Версії й публікація", "Зберігаються 20 останніх збірок. «Відкотити чернетку» повертає редактор до стану цієї збірки; публікацію виконує агент на основному ПК."));
     const st = S.status;
     if (st.built) main.append(publishBox(st.built));
     const table = h("table", {}, h("thead", {}, h("tr", {}, ["Версія", "Файлів", "Розмір", "Стан", ""].map((t) => h("th", {}, t)))));
@@ -503,11 +652,18 @@ const VIEWS = {
       h("td", { class: "row" },
         h("button", { class: "btn small", type: "button", onclick: async () => { try { const r = await api("preview", { method: "POST", body: { id: b.id } }); S.status = r.status; window.open(r.status.previewUrl, "_blank", "noopener"); await refreshStatus(); rerender(); } catch (e) { fail(e); } } }, "Перегляд"),
         h("button", { class: "btn small", type: "button", onclick: () => rollback(b.id) }, "Відкотити чернетку"),
-        h("button", { class: "btn small", type: "button", onclick: () => main.prepend(publishBox(b.id)) }, "Команда публікації"))));
+        h("button", { class: "btn small", type: "button", onclick: () => publish(b.id) }, "Опублікувати"))));
     table.append(tb);
     main.append(S.builds.length ? h("div", { class: "card", style: "overflow-x:auto" }, table) : h("p", { class: "muted" }, "Збірок ще немає. Натисніть «Зібрати пакет»."));
   },
 };
+
+/** draft.portfolio with every list present (the sanitiser re-checks everything on save). */
+function gallerySettings() {
+  const g = (S.draft.portfolio ||= {});
+  g.disabled ||= []; g.order ||= []; g.items ||= {}; g.images ||= {}; g.alts ||= {}; g.disabledSections ||= []; g.texts ||= {};
+  return g;
+}
 
 function setDisabled(kind, id, off) {
   const list = S.draft.disabled[kind];
@@ -568,12 +724,65 @@ function problemsDialog(problems) {
   document.body.append(dlg); dlg.showModal();
 }
 
+/** The publish log, one coloured line each: OK green, warnings yellow, errors red, steps blue, the rest muted (an all-OK log needs no reading). */
+const LOG_RULES = [
+  ["dim", /post-quantum|store now, decrypt later|openssh\.com\/pq|may need to be upgraded/i],        // the known ssh notice, repeated on every connection: not worth a colour
+  ["ok", /^\s*(ok|published|deployed|uploaded|✔|✓)\b|^reserve on the radxa updated/i],
+  ["err", /^\s*(error|fail(ed)?|check|npm err|✖|✘)\b|\b(failed|cannot|refused|not found|enospc|denied|unsupported)\b|непідтримана|помилка/i],
+  ["warn", /^\*\* |^\s*(warning|warn)\b|\bwarning\b|not updated/i],
+  ["step", /^\s*(downloading|verifying|deploying|staged|building|starting|current version)\b/i],
+];
+function logView(text) {
+  const lines = String(text).split("\n");
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  return h("pre", { class: "mono log" }, lines.map((line) => {
+    const hit = LOG_RULES.find(([, re]) => re.test(line));
+    return h("span", { class: `ln ${hit ? hit[0] : "dim"}` }, line || " ");
+  }));
+}
+
 function publishBox(id) {
-  const cmd = `./deploy-from-radxa.sh ${id}`;
-  const input = h("input", { type: "text", readonly: true, value: cmd, "aria-label": "Команда публікації", onfocus: (e) => e.target.select() });
-  return h("div", { class: "card" }, h("strong", {}, "Опублікувати цю версію"),
-    h("p", { class: "muted" }, "Адмінка сама не публікує: на основному ПК виконайте команду нижче (ключі Cloudflare лишаються там)."),
-    h("div", { class: "copybox" }, input, h("button", { class: "btn", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(cmd); toast("Скопійовано"); } catch { input.select(); toast("Виділіть і скопіюйте вручну", "warn"); } } }, "Копіювати")));
+  const d = S.status?.deploy || { state: "idle" };
+  const mine = d.id === id;
+  const busy = mine && (d.state === "queued" || d.state === "running");
+  const label = { queued: "У черзі…", running: "Публікується…", ok: "Опубліковано", failed: "Помилка публікації" }[mine ? d.state : ""] || "";
+  const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: () => publish(id) }, busy ? "Публікується…" : "Опублікувати цю версію");
+  const stale = id === S.status?.built && S.status?.changedSinceBuild;
+  const staleNote = stale && !busy ? h("p", { class: "chip warn" }, "У чернетці є зміни після цієї збірки: кнопка спершу збере свіжий пакет, а потім опублікує його.") : null;
+  const note = !d.agentOnline && !busy ? h("p", { class: "muted" }, "Агент публікації на основному ПК зараз не на зв'язку: запит дочекається, поки його запустять (deploy-agent.sh).") : null;
+  return h("div", { class: "card" }, h("strong", {}, `Опублікувати ${id}`),
+    h("p", { class: "muted" }, "Кнопка ставить публікацію в чергу; ключі Cloudflare лишаються на основному ПК, де її виконує агент."),
+    h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), staleNote, note,
+    mine && d.log ? logView(d.log) : null);
+}
+
+async function publish(id) {
+  try {
+    if (id === S.status?.built && S.status?.changedSinceBuild) {          // the draft moved on after this package was built: publishing it would ship the old site
+      await save();
+      toast("Є зміни після збірки: збираю свіжий пакет перед публікацією");
+      const b = await api("build", { method: "POST", body: {} });
+      S.status = b.status; S.builds = b.builds; updateChips();
+      id = b.result.id;
+    }
+    const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender();
+  } catch (e) {
+    if (e.data?.problems) problemsDialog(e.data.problems); else fail(e);
+  }
+}
+
+let deployTimer = null;
+function watchDeploy() {
+  clearInterval(deployTimer);
+  deployTimer = setInterval(async () => {
+    try { await refreshStatus(); } catch { return; }
+    const st = S.status?.deploy?.state;
+    if (st !== "queued" && st !== "running") {
+      clearInterval(deployTimer);
+      toast(st === "ok" ? "Опубліковано" : "Публікація не вдалася, дивіться журнал", st === "ok" ? undefined : "err", 8000);
+      rerender();
+    }
+  }, 4000);
 }
 
 async function buildNow() {
@@ -582,7 +791,7 @@ async function buildNow() {
   try {
     const r = await api("build", { method: "POST", body: {} });
     S.status = r.status; S.builds = r.builds; updateChips();
-    toast(`Збірку ${r.result.id} готово (${r.result.files} файлів). Перегляньте й опублікуйте з основного ПК.`);
+    toast(`Збірку ${r.result.id} готово (${r.result.files} файлів). Перегляньте й натисніть «Опублікувати».`);
     go("builds");
   } catch (e) {
     if (e.data?.problems) problemsDialog(e.data.problems); else fail(e);

@@ -1,0 +1,227 @@
+{
+ "section:hero": {
+  "title": "Перший екран (hero)",
+  "text": "Те, що відвідувач бачить першим: заголовок, короткий опис, дві кнопки й велика ілюстрація, яка плавно погойдується.",
+  "image": "previews/section-hero.webp"
+ },
+ "section:trust": {
+  "title": "Смуга можливостей",
+  "text": "Вузька смуга під першим екраном із чотирма короткими перевагами. Допомагає за секунду зрозуміти, що ви робите.",
+  "image": "previews/section-trust.webp"
+ },
+ "section:services": {
+  "title": "Послуги",
+  "text": "Сітка карток послуг: іконка, назва, опис і пункти. До картки можна додати інтерактивну 3D-модель.",
+  "image": "previews/section-services.webp"
+ },
+ "section:ai": {
+  "title": "AI-агенти",
+  "text": "Розділ про AI-агентів: текст із переліком можливостей і схема роботи поруч.",
+  "image": "previews/section-ai.webp"
+ },
+ "section:process": {
+  "title": "Процес",
+  "text": "Нумеровані кроки від заявки до результату. Блоки з'являються по черзі під час прокрутки.",
+  "image": "previews/section-process.webp"
+ },
+ "section:work": {
+  "title": "Проєкти",
+  "text": "Фільтр за категоріями й сітка карток проєктів з фото або 3D-моделлю, статусом і тегами; нижче посилання на портфоліо.",
+  "image": "previews/section-work.webp"
+ },
+ "section:stack": {
+  "title": "Технології",
+  "text": "Групи технологій у вигляді тегів: що саме ви використовуєте в роботі.",
+  "image": "previews/section-stack.webp"
+ },
+ "section:pricing": {
+  "title": "Формати співпраці",
+  "text": "Картки форматів співпраці з ціною або описом; одна картка може бути виділена стрічкою.",
+  "image": "previews/section-pricing.webp"
+ },
+ "section:faq": {
+  "title": "Запитання й відповіді",
+  "text": "Список запитань, що розкриваються по кліку. Знімає типові сумніви ще до розмови.",
+  "image": "previews/section-faq.webp"
+ },
+ "section:contact": {
+  "title": "Контакти й форма",
+  "text": "Контактні дані та форма заявки. Це основна дія сторінки, тому розділ краще не вимикати.",
+  "image": "previews/section-contact.webp"
+ },
+ "service:s0": {
+  "image": "previews/service-s0.webp"
+ },
+ "service:s1": {
+  "image": "previews/service-s1.webp"
+ },
+ "service:s2": {
+  "image": "previews/service-s2.webp"
+ },
+ "service:s3": {
+  "image": "previews/service-s3.webp"
+ },
+ "service:s4": {
+  "image": "previews/service-s4.webp"
+ },
+ "service:s5": {
+  "image": "previews/service-s5.webp"
+ },
+ "service:s6": {
+  "image": "previews/service-s6.webp"
+ },
+ "service:s7": {
+  "image": "previews/service-s7.webp"
+ },
+ "service:s8": {
+  "image": "previews/service-s8.webp"
+ },
+ "service:s9": {
+  "image": "previews/service-s9.webp"
+ },
+ "service:s10": {
+  "image": "previews/service-s10.webp"
+ },
+ "service:s11": {
+  "image": "previews/service-s11.webp"
+ },
+ "service:custom": {
+  "title": "Власна послуга",
+  "text": "Картка послуги з вашою іконкою, назвою, описом і пунктами; може мати свою 3D-модель. Вигляд такий самий, як у заводських карток.",
+  "image": "previews/service-s0.webp"
+ },
+ "project:cronos-controller": {
+  "image": "previews/project-cronos-controller.webp"
+ },
+ "project:cronos-controller-v1": {
+  "image": "previews/project-cronos-controller-v1.webp"
+ },
+ "project:iot-module": {
+  "image": "previews/project-iot-module.webp"
+ },
+ "project:custom-electronics": {
+  "image": "previews/project-custom-electronics.webp"
+ },
+ "project:agent-assistant": {
+  "image": "previews/project-agent-assistant.webp"
+ },
+ "project:device-monitor": {
+  "image": "previews/project-device-monitor.webp"
+ },
+ "project:sensor-node": {
+  "image": "previews/project-sensor-node.webp"
+ },
+ "project:custom": {
+  "title": "Власна картка проєкту",
+  "text": "Картка з фото або 3D-моделлю, назвою, описом, статусом і тегами. Потрапляє у фільтр за обраною категорією.",
+  "image": "previews/project-cronos-controller.webp"
+ },
+ "block:hero": {
+  "title": "Hero (перший екран)",
+  "text": "Великий вступний блок: заголовок, опис, дві кнопки й картинка. Звичайно один на сторінку.",
+  "image": "previews/block-hero.webp"
+ },
+ "block:services": {
+  "title": "Перелік послуг",
+  "text": "Сітка карток з іконкою, назвою, описом і пунктами. Підходить для переліку напрямів чи пакетів.",
+  "image": "previews/block-services.webp"
+ },
+ "block:projects": {
+  "title": "Картки проєктів",
+  "text": "Показує картки проєктів із заводського каталогу з фільтром за категоріями; можна лише ті, що мають 3D-модель.",
+  "image": "previews/block-projects.webp"
+ },
+ "block:gallery3d": {
+  "title": "3D-галерея",
+  "text": "Інтерактивна сцена з 3D-моделями проєктів: модель можна крутити мишею чи пальцем. Потрібен ввімкнений віджет 3D-галереї.",
+  "image": "previews/block-gallery3d.webp"
+ },
+ "block:agents": {
+  "title": "AI-агенти",
+  "text": "Текст із переліком можливостей ліворуч і зображенням чи схемою праворуч.",
+  "image": "previews/block-agents.webp"
+ },
+ "block:steps": {
+  "title": "Кроки процесу",
+  "text": "Нумерований перелік кроків; блоки з'являються по черзі під час прокрутки.",
+  "image": "previews/block-steps.webp"
+ },
+ "block:stack": {
+  "title": "Технології",
+  "text": "Групи тегів: заголовок групи й перелік технологій у ній.",
+  "image": "previews/block-stack.webp"
+ },
+ "block:pricing": {
+  "title": "Формати співпраці / ціни",
+  "text": "Картки з назвою, ціною та описом; одну можна виділити як рекомендовану.",
+  "image": "previews/block-pricing.webp"
+ },
+ "block:faq": {
+  "title": "Запитання й відповіді",
+  "text": "Список запитань, відповідь розкривається по кліку.",
+  "image": "previews/block-faq.webp"
+ },
+ "block:form": {
+  "title": "Форма",
+  "text": "Форма заявки з розділу «Форми»: поля, кнопка надсилання й повідомлення про результат.",
+  "image": "previews/block-form.webp"
+ },
+ "block:text_image": {
+  "title": "Текст із зображенням",
+  "text": "Абзац тексту поруч із зображенням; зображення можна поставити праворуч або ліворуч.",
+  "image": "previews/block-text_image.webp"
+ },
+ "block:gallery": {
+  "title": "Галерея фото",
+  "text": "Сітка фотографій із підписами. Фото беруться з «Файлів».",
+  "image": "previews/block-gallery.webp"
+ },
+ "block:cta": {
+  "title": "Заклик до дії",
+  "text": "Яскравий блок із коротким закликом і однією кнопкою. Добре ставити перед контактами.",
+  "image": "previews/block-cta.webp"
+ },
+ "block:divider": {
+  "title": "Роздільник",
+  "text": "Тонка лінія, відступ або крапки між розділами. Нічого не містить, лише відокремлює.",
+  "image": "previews/block-divider.webp"
+ },
+ "effect:floating": {
+  "title": "Плавне погойдування",
+  "text": "Ілюстрація першого екрана ледь помітно ширяє вгору-вниз. Вимкніть, якщо потрібен суворо статичний вигляд. Нижче жива демонстрація.",
+  "demo": "float"
+ },
+ "effect:reveal": {
+  "title": "Поява під час прокрутки",
+  "text": "Картки й заголовки м'яко з'являються знизу, коли відвідувач докручує до них. Нижче жива демонстрація.",
+  "demo": "reveal"
+ },
+ "widget:gallery3d": {
+  "title": "3D-галерея проєктів",
+  "text": "Картки проєктів із моделями, які можна крутити. Вимкнення прибирає скрипт галереї й моделі зі збірки, лишаються звичайні фото.",
+  "image": "previews/widget-gallery3d.webp"
+ },
+ "widget:portfolioLink": {
+  "title": "Портфоліо",
+  "text": "Сторінка /portfolio/ та кнопка-посилання на неї в «Проєктах» і «Контактах».",
+  "image": "previews/widget-portfolioLink.webp"
+ },
+ "project:toyota-hv-monitor": {
+  "image": "previews/project-toyota-hv-monitor.webp"
+ },
+ "portfolio:item": {
+  "title": "Елемент портфоліо",
+  "text": "Картка проєкту: назва, опис, роки, теги й до трьох фото. З неї збираються сторінка /portfolio/ і PDF; головна лише вибирає, які картки показати. Вимкнена картка зникає звідусіль.",
+  "image": "previews/portfolio-item.webp"
+ },
+ "site:gallery": {
+  "title": "Галерея на головній",
+  "text": "Підрозділ «Замовні розробки» на головній: тут лише вибір карток портфоліо (показати чи сховати) і їхній порядок. Тексти й фото беруться з портфоліо.",
+  "image": "previews/site-gallery.webp"
+ },
+ "portfolio:section": {
+  "title": "Розділ портфоліо",
+  "text": "Розділ сторінки /portfolio/ і PDF-портфоліо. Вимкнений розділ зникає зі сторінки й з PDF; тексти розділу редагуються в портфоліо.",
+  "image": "previews/portfolio-section.webp"
+ }
+}

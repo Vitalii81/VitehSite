@@ -12,12 +12,12 @@ REMOTE_DIR=${REMOTE_DIR:-/srv/fwportal/admin-incoming}
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 SSH="ssh"; [ -f "$KEY" ] && SSH="ssh -i $KEY -o IdentitiesOnly=yes"
 cd "$REPO"
-for f in index.html impressum.html datenschutz.html robots.txt assets data portfolio radxa-admin/cgi radxa-admin/lib radxa-admin/web radxa-admin/vadmin-cli.py radxa-admin/install-on-radxa.sh; do
+for f in index.html impressum.html datenschutz.html robots.txt assets data portfolio radxa-admin/cgi radxa-admin/lib radxa-admin/web radxa-admin/catalog radxa-admin/vadmin-cli.py radxa-admin/install-on-radxa.sh; do
   [ -e "$f" ] || { echo "missing $f (run from a full checkout)" >&2; exit 1; }
 done
 echo "Copying to $HOST:$REMOTE_DIR ..."
 tar -cf - --exclude='__pycache__' --exclude='*.pyc' --exclude='.dev-data' \
   index.html impressum.html datenschutz.html robots.txt assets data portfolio \
-  radxa-admin/cgi radxa-admin/lib radxa-admin/web radxa-admin/vadmin-cli.py radxa-admin/install-on-radxa.sh \
+  radxa-admin/cgi radxa-admin/lib radxa-admin/web radxa-admin/catalog radxa-admin/vadmin-cli.py radxa-admin/install-on-radxa.sh \
   | $SSH "$HOST" "mkdir -p '$REMOTE_DIR' && cd '$REMOTE_DIR' && tar -xf -"
 echo "Done. On the Radxa run:  sh $REMOTE_DIR/radxa-admin/install-on-radxa.sh   (or --update-code)"

@@ -21,7 +21,9 @@ export function projectSlots(project, manifest, opts = {}) {
 
 export const ratioOf = (entry) => { const m = RATIO_RE.exec(entry?.ratio || ""); return m ? `${m[1]} / ${m[2]}` : "4 / 3"; };
 /** Projects shown on the home page: those marked "portfolioOnly" (work for another company) appear only in the portfolio page and the PDFs. */
-export const onSite = (projects) => (projects || []).filter((p) => !p.portfolioOnly);
+export const onSite = (projects, home) => (Array.isArray(home)                        // "home": the ids (in order) the home page selected in the admin; absent = every project except the portfolio-only ones
+  ? home.map((slug) => (projects || []).find((p) => p.slug === slug)).filter((p) => p && !p.portfolioOnly)
+  : (projects || []).filter((p) => !p.portfolioOnly));
 export const filterProjects = (projects, category) => (category === "all" ? projects : projects.filter((p) => p.category === category));
 
 const tr = (v, lang) => (v && typeof v === "object" ? v[lang] ?? v.en ?? Object.values(v)[0] ?? "" : v ?? "");
@@ -65,7 +67,7 @@ async function boot() {
   const get = async (p) => { const r = await fetch(p, { cache: "no-cache" }); if (!r.ok) throw new Error(p); return r.json(); };
   try {
     const [data, manifest] = await Promise.all([get("/data/portfolio.json"), get("/data/portfolio-images.json")]);
-    ui.projects = onSite(data.projects); ui.manifest = manifest;
+    ui.projects = onSite(data.projects, data.home); ui.manifest = manifest;
   } catch { return; }                                   // no archive data: the subsection stays hidden
   if (window.vitehRender) { ui.detail = window.vitehRender; paint(); }
 }

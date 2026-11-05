@@ -7,6 +7,7 @@
 #
 # Environment: RADXA_SSH=user@radxa (required)  RADXA_KEY (default ~/.ssh/viteh_ai_radxa_ed25519)
 #              DEPLOY_SCRIPT (default ./deploy-worker.sh)  REMOTE_CLI (default "python3 /srv/fwportal/admin/vadmin-cli.py")
+#              WORKER_SRC (a checkout containing worker/, copied into the package for deploy-worker.sh)
 #              REMOTE_ENV (default "VADMIN_ROOT=/srv/fwportal/staging/viteh-site VADMIN_SECRET=/srv/fwportal/admin-secret")
 set -eu
 ID=""; DRY=0
@@ -61,6 +62,12 @@ if problems:
     sys.exit("Verification FAILED:\n  " + "\n  ".join(problems[:20]))
 print("OK: %d files match the manifest" % len(listed))
 PY
+
+# deploy-worker.sh also bundles the contact-form Worker; the admin package has only public files, so the agent hands over a checkout.
+if [ -n "${WORKER_SRC:-}" ]; then
+  [ -f "$WORKER_SRC/worker/index.mjs" ] || { echo "WORKER_SRC has no worker/index.mjs" >&2; exit 1; }
+  cp -R "$WORKER_SRC/worker" "$WORK/site/worker"
+fi
 
 if [ "$DRY" = 1 ]; then echo "dry-run: would run $DEPLOY_SCRIPT --source $WORK/site"; exit 0; fi
 echo "Deploying with $DEPLOY_SCRIPT ..."

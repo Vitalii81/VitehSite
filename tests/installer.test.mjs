@@ -46,7 +46,7 @@ function world(opts = {}) {
   // the "copied radxa-admin/ folder": code + site files (as push-to-radxa.sh lays them out)
   const pkg = join(dir, "pkg");
   mkdirSync(join(pkg, "radxa-admin"), { recursive: true });
-  for (const part of ["cgi", "lib", "web"]) cpSync(join(repo, "radxa-admin", part), join(pkg, "radxa-admin", part), { recursive: true, filter: (src) => !src.includes("__pycache__") });
+  for (const part of ["cgi", "lib", "web", "catalog"]) cpSync(join(repo, "radxa-admin", part), join(pkg, "radxa-admin", part), { recursive: true, filter: (src) => !src.includes("__pycache__") });
   for (const f of ["vadmin-cli.py", "install-on-radxa.sh"]) cpSync(join(repo, "radxa-admin", f), join(pkg, "radxa-admin", f));
   for (const part of ["assets", "data"]) cpSync(join(repo, part), join(pkg, "radxa-admin", "site", part), { recursive: true });
   for (const f of ["index.html", "impressum.html", "datenschutz.html", "robots.txt"]) cpSync(join(repo, f), join(pkg, "radxa-admin", "site", f));
@@ -79,6 +79,7 @@ t("installer: installs the code, a docroot with the CGI wrapper and a procd serv
   assert.equal(init.split("-x /cgi-bin").length - 1, 1, "only the admin instance runs CGI");
   assert.ok(existsSync(ADMIN(w, "cgi/vadmin.py")) && existsSync(STAGE(w, "src/index.html")));
   assert.ok(existsSync(ADMIN(w, "docroot/index.html")) && existsSync(ADMIN(w, "docroot/site-assets")), "static files and editor assets in the docroot");
+  for (const f of ["assets/app.js", "assets/styles.css", "edit-core.js", "edit-overlay.js", "edit-overlay.css"]) assert.ok(existsSync(ADMIN(w, `docroot/${f}`)), `${f} is served for the on-page editor`);
   assert.equal(statMode(ADMIN(w, "docroot/cgi-bin/vadmin-api")), "755");
   assert.equal(statMode(join(w.root, "srv/fwportal/admin-secret")), "700");
   assert.ok(readFileSync(join(w.fake, "service.log"), "utf8").includes("restart"));
@@ -94,7 +95,7 @@ t("installer: the CGI wrapper runs the admin API (401/503 without a login) with 
   const r = spawnSync(local, [], {
     env: { PATH: process.env.PATH, REQUEST_METHOD: "GET", QUERY_STRING: "action=status", HTTP_HOST: "radxa:18082" }, encoding: "utf8", timeout: 20000,
   });
-  assert.match(r.stdout, /^Status: (401|503)\r\n/, r.stdout + r.stderr);
+  assert.match(r.stdout, /^Status: (401 Unauthorized|503 Service Unavailable)\r\n/, r.stdout + r.stderr);
   const wrapper = readFileSync(ADMIN(w, "docroot/cgi-bin/vadmin-api"), "utf8");
   assert.ok(wrapper.includes("VADMIN_ROOT='/srv/fwportal/staging/viteh-site'") && wrapper.includes("VADMIN_PREVIEW_PORT='18083'"));
   done(w);

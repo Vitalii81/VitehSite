@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Command line for the owner and for deploy-from-radxa.sh (over ssh).
-  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | set-password | build"""
+  vadmin-cli.py list | export <id> | verify <id> | mark-published <id> | deploy-next | deploy-report <id> ok|fail (log on stdin) | set-password | build"""
 import getpass
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
 
-from vadmin import auth, build, core                    # noqa: E402
+from vadmin import auth, build, core, deploy                    # noqa: E402
 from vadmin.core import ApiError                        # noqa: E402
 
 
@@ -36,6 +36,14 @@ def main(argv):
                 state["published"] = args[0]
                 core.write_json(paths.state, state)
             print("published =", args[0])
+            return 0
+        if cmd == "deploy-next":
+            with core.locked(paths):
+                print(deploy.next_request(paths))
+            return 0
+        if cmd == "deploy-report":
+            with core.locked(paths):
+                deploy.report(paths, args[0], args[1] == "ok", sys.stdin.read())
             return 0
         if cmd == "build":
             result = build.build(paths)
