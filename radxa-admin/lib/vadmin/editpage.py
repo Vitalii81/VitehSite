@@ -22,6 +22,10 @@ HTML_HEADERS = [("Content-Type", "text/html; charset=utf-8"), ("Cache-Control", 
                 ("X-Frame-Options", "DENY"), ("Referrer-Policy", "no-referrer"), ("Content-Security-Policy", "frame-ancestors 'none'")]
 
 
+PAGES = ("home", "portfolio", "impressum", "datenschutz")
+LEGAL_FILES = {"impressum": ("impressum.html", "imprint"), "datenschutz": ("datenschutz.html", "privacy")}
+
+
 class EditAssets(render.Assets):
     """Uploads are shown through the authenticated `file` action instead of being copied into a package."""
 
@@ -52,7 +56,7 @@ def json_script(script_id, value):
 def overlay_version():
     """Cache-buster for the overlay files (the installer copies web/ next to lib/, so the layout is the same in the repository and on the Radxa)."""
     web = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "web")
-    stamps = [int(os.path.getmtime(os.path.join(web, n))) for n in ("edit-core.js", "edit-overlay.js", "edit-overlay.css", "preview-tip.js", "preview-tip.css") if os.path.isfile(os.path.join(web, n))]
+    stamps = [int(os.path.getmtime(os.path.join(web, n))) for n in ("edit-core.js", "edit-overlay.js", "edit-overlay.css", "preview-tip.js", "preview-tip.css", "jpeg-twin.js") if os.path.isfile(os.path.join(web, n))]
     return str(max(stamps)) if stamps else "0"
 
 
@@ -68,9 +72,10 @@ def login_page():
 def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels, page="home"):
     """Returns (status, headers, body) of an editable page. `draft` is the REAL draft (embedded for the overlay to patch and save).
     page="home": the home page as the build renders it; the overlay edits the site's own texts and only SELECTS portfolio items (show/hide, order on the home page).
-    page="portfolio": /portfolio/; the overlay edits the portfolio's own content (items, pictures, order, on/off, the page's texts)."""
+    page="portfolio": /portfolio/; the overlay edits the portfolio's own content (items, pictures, order, on/off, the page's texts).
+    page="impressum" / "datenschutz": impressum.html / datenschutz.html; the overlay edits the legal texts (site.json `legal`, kept in draft.texts)."""
     lang = lang if lang in LANGS else "uk"
-    page = "portfolio" if page == "portfolio" else "home"
+    page = page if page in PAGES else "home"
     view = view_draft(draft)
     assets = EditAssets(ctx)
     if page == "home":
@@ -78,6 +83,11 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
         site = build.merged_site(view, ctx, assets)
         products = build.merged_products(view, ctx, assets)
         gallery = {"projects": build.merged_portfolio(draft, ctx), "home": build.home_gallery(draft, ctx, include_hidden=True)}      # items hidden on the home page stay, dimmed by the overlay
+    elif page in LEGAL_FILES:
+        html = build.read_text(os.path.join(paths.src, LEGAL_FILES[page][0]))
+        site = build.merged_site(view, ctx, assets)
+        products = []
+        gallery = {"projects": build.merged_portfolio(draft, ctx)}
     else:
         html = build.read_text(os.path.join(paths.src, "portfolio", "index.html"))
         site = build.merged_site(view, ctx, assets, all_portfolio_sections=True)                  # every section is shown (switched-off ones are dimmed by the overlay)
@@ -102,7 +112,7 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
         "homeBase": [p["slug"] for p in build.merged_portfolio(draft, ctx) if not p.get("portfolioOnly")],        # what the home page can pick from, in the portfolio's order
         "portfolioSections": [{"id": x.get("id"), "title": x.get("title")} for x in ctx.site.get("portfolioPage", {}).get("sections", [])],
     }
-    marker = '<html lang="en" data-page="home">' if page == "home" else '<html lang="en" data-page="portfolio">'
+    marker = {"home": '<html lang="en" data-page="home">', "portfolio": '<html lang="en" data-page="portfolio">'}.get(page) or '<html lang="en" data-page="legal" data-legal="%s">' % LEGAL_FILES[page][1]
     if marker not in html:
         raise core.ApiError("src_changed", "У файлах сайту на Radxa не знайдено очікуваної розмітки сторінки", 500)
     html = html.replace(marker, marker.replace('lang="en"', 'lang="%s"' % esc(lang)).replace(">", ' data-ve="1">' if page == "portfolio" else ">", 1), 1)
@@ -112,5 +122,5 @@ def render_page(paths, ctx, draft, lang, uploads, factory_images, section_labels
     v = overlay_version()
     html = html.replace("</head>", '  <link rel="stylesheet" href="edit-overlay.css?v=%s">\n  <link rel="stylesheet" href="preview-tip.css?v=%s">\n</head>' % (v, v), 1)
     html = html.replace("<body>", '<body class="ve-edit">', 1)
-    html = html.replace("</body>", '  <script src="edit-core.js?v=%s"></script>\n  <script src="preview-tip.js?v=%s"></script>\n  <script src="edit-overlay.js?v=%s" defer></script>\n</body>' % (v, v, v), 1)
+    html = html.replace("</body>", '  <script src="edit-core.js?v=%s"></script>\n  <script src="preview-tip.js?v=%s"></script>\n  <script src="jpeg-twin.js?v=%s"></script>\n  <script src="edit-overlay.js?v=%s" defer></script>\n</body>' % (v, v, v, v), 1)
     return 200, HTML_HEADERS, html.encode("utf-8")

@@ -194,7 +194,7 @@ def _handle(paths, method, action, headers, body, query, client):
             from urllib.parse import unquote
             # uhttpd drops custom headers, so the page sends the name in the query (?name=); X-Filename stays for other clients
             name = str((query.get("name") or [""])[0]) or unquote(headers.get("x-filename", "file"))
-            item = uploads.store(paths, body, name)
+            item = uploads.store(paths, body, name, twin_of=str((query.get("twin") or [""])[0]) or None)           # ?twin=<WebP upload id>: the JPEG twin used by the PDF only
             return _json(200, {"ok": True, "item": item, "uploads": uploads.listing(paths)})
         if action == "delete-upload":
             data = _body_json(body)

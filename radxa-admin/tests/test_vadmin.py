@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 
-from vadmin import api, auth, build, check, core, ideas, pdf, portfolio_pdf, render, richtext, schema, uploads   # noqa: E402
+from vadmin import api, auth, build, check, core, ideas, imgconv, pdf, portfolio_pdf, render, richtext, schema, uploads   # noqa: E402
 from vadmin.core import ApiError   # noqa: E402
 
 
@@ -484,7 +484,7 @@ class BuildTests(unittest.TestCase):
         first = build.build(self.w.paths)
         self.assertTrue(first["ok"], first)
         preview = self.w.paths.preview
-        self.assertEqual(read_file(os.path.join(preview, "index.html")), self.w.read(first["id"], "index.html"))
+        self.assertEqual(re.sub(r"\?v=%s" % first["id"], "", read_file(os.path.join(preview, "index.html"))), self.w.read(first["id"], "index.html"), "the preview differs from the package only by the cache-busting ?v=<build id>")
         marker = os.path.join(preview, "old-only.txt")
         with open(marker, "w") as fh:
             fh.write("stale")                                  # anything not in the next build must disappear
@@ -1840,6 +1840,279 @@ class IdeasCatalogTests(ApiTests):
             self.assertEqual(ideas.load(), [])
         finally:
             os.environ.pop("VADMIN_CATALOG") if old is None else os.environ.__setitem__("VADMIN_CATALOG", old)
+
+
+class LegalEditPageTests(EditPageTests):
+    """Impressum / Datenschutz on the page: same pattern as page=portfolio. (Inherits the login helpers; the inherited tests are skipped here.)"""
+    def legal(self, page, cookie=True, lang="uk"):
+        h = dict(self.h, cookie="vadmin=" + self.cookie) if cookie else dict(self.h)
+        return api.handle(self.w.paths, "GET", "edit-page", h, b"", {"lang": [lang], "page": [page]}, "10.0.0.5")
+
+    def test_without_a_session_there_is_only_the_login_page(self):
+        for page in ("impressum", "datenschutz"):
+            st, hd, body = self.legal(page, cookie=False)
+            self.assertEqual(st, 401, page)
+            self.assertNotIn(b"ve-site", body)
+            self.assertNotIn(b"Impressum", body)
+
+    def test_both_pages_are_served_with_the_overlay_and_the_embedded_site(self):
+        for page, kind in (("impressum", "imprint"), ("datenschutz", "privacy")):
+            st, hd, body = self.legal(page)
+            html = body.decode()
+            self.assertEqual(st, 200, page)
+            self.assertIn('data-legal="%s"' % kind, html)
+            self.assertIn("edit-overlay.js", html)
+            self.assertIn("jpeg-twin.js", html)
+            self.assertIn('id="legalBody"', html)
+            boot = self.embedded(html, "ve-boot")
+            self.assertEqual(boot["page"], page)
+            self.assertIn("legal.%s.title" % kind, boot["editable"])
+            self.assertIn("legal.%s.sections.0.p" % kind, boot["editable"])
+            site = self.embedded(html, "ve-site")
+            self.assertIn(kind, site["legal"])
+            self.assertEqual(dict(hd)["Cache-Control"], "no-store")
+
+    def test_unknown_page_names_fall_back_to_home(self):
+        st, hd, body = self.legal("../etc/passwd")
+        self.assertEqual(self.embedded(body.decode(), "ve-boot")["page"], "home")
+
+    def test_the_draft_text_is_shown_and_the_overlay_never_reaches_a_package(self):
+        d = self.w.draft()
+        d["texts"] = {"legal.imprint.sections.0.p": {"uk": "Рядок 1\nРядок 2", "en": "Line 1\nLine 2", "de": "Zeile 1\nZeile 2"}}
+        self.save(d)
+        html = self.legal("impressum")[2].decode()
+        self.assertEqual(self.embedded(html, "ve-site")["legal"]["imprint"]["sections"][0]["p"]["en"], "Line 1\nLine 2", "line breaks of a legal paragraph survive")
+        w = World(copy_src=True)
+        self.addCleanup(w.close)
+        w.save(d)
+        r = build.build(w.paths)
+        self.assertTrue(r["ok"], r)
+        for name in ("impressum.html", "datenschutz.html"):
+            self.assertEqual(w.read(r["id"], name), read_file(os.path.join(REPO, name)), "the legal pages ship exactly as in the repository")
+        for root, _, names in os.walk(w.site(r["id"])):
+            for name in names:
+                self.assertFalse(name.startswith(("edit-", "preview-tip", "jpeg-twin")), name)
+        self.assertEqual(json.loads(w.read(r["id"], "data/site.json"))["legal"]["imprint"]["sections"][0]["p"]["en"], "Line 1\nLine 2")
+
+    def test_texts_go_only_into_the_draft_not_into_the_factory_files(self):
+        before = read_file(os.path.join(REPO, "data/site.json"))
+        d = self.w.draft()
+        d["texts"] = {"legal.privacy.title": {"uk": "Приватність", "en": "Privacy!", "de": "Datenschutz!"}}
+        self.save(d)
+        self.legal("datenschutz")
+        self.assertEqual(read_file(os.path.join(REPO, "data/site.json")), before)
+        self.assertEqual(core.read_json(self.w.paths.draft)["texts"]["legal.privacy.title"]["en"], "Privacy!")
+
+    def test_the_overlay_links_the_four_editable_pages(self):
+        js = read_file(os.path.join(HERE, "..", "web", "edit-overlay.js"))
+        for page in ("home", "portfolio", "impressum", "datenschutz"):
+            self.assertRegex(js, r"\b%s:" % page)
+        self.assertIn("bindLegal", js)
+
+    # the inherited EditPageTests are covered by their own class
+    for _name in [n for n in dir(EditPageTests) if n.startswith("test_")]:
+        locals()[_name] = None
+    del _name
+
+
+class PreviewCacheTests(Base):
+    def setUp(self):
+        Base.setUp(self)
+        self.w2 = World(copy_src=True)
+        self.addCleanup(self.w2.close)
+
+    def test_preview_references_carry_the_build_id_and_the_publish_package_is_untouched(self):
+        r = build.build(self.w2.paths)
+        bid = r["id"]
+        site = self.w2.site(bid)
+        prev = self.w2.paths.preview
+        home = read_file(os.path.join(prev, "index.html"))
+        self.assertIn('href="assets/styles.css?v=%s"' % bid, home)
+        self.assertIn('src="assets/app.js?v=%s"' % bid, home)
+        self.assertIn('src="../assets/portfolio-page.js?v=%s"' % bid, read_file(os.path.join(prev, "portfolio", "index.html")))
+        self.assertIn('from "./portfolio-render.js?v=%s"' % bid, read_file(os.path.join(prev, "assets", "portfolio-page.js")), "ES module imports are stamped too, or they stay cached")
+        self.assertNotIn("?v=", read_file(os.path.join(prev, "assets", "styles.css")))
+        # the package that is published is what it was: no query strings, and its manifest still verifies
+        for name in ("index.html", "impressum.html", "datenschutz.html", "portfolio/index.html", "assets/portfolio-page.js", "assets/gallery3d.js"):
+            self.assertNotIn("?v=", read_file(os.path.join(site, name)), name)
+            self.assertEqual(read_file(os.path.join(site, name)), read_file(os.path.join(self.w2.src, name)), name + " is byte-identical to the source")
+        self.assertTrue(build.verify_build(self.w2.paths, bid)["ok"])
+
+    def test_every_html_asset_reference_is_stamped_and_nothing_else_changes(self):
+        r = build.build(self.w2.paths)
+        for root, _, names in os.walk(self.w2.paths.preview):
+            for name in names:
+                if not name.endswith(".html"):
+                    continue
+                text = read_file(os.path.join(root, name))
+                for ref in re.findall(r'(?:href|src)="((?:\.\./|/)?assets/[^"]+\.(?:js|css)[^"]*)"', text):
+                    self.assertTrue(ref.endswith("?v=" + r["id"]), "%s: %s" % (name, ref))
+        # same files in the same places as in the package
+        pkg = sorted(os.path.relpath(os.path.join(a, n), self.w2.site(r["id"])) for a, _, ns in os.walk(self.w2.site(r["id"])) for n in ns)
+        prv = sorted(os.path.relpath(os.path.join(a, n), self.w2.paths.preview) for a, _, ns in os.walk(self.w2.paths.preview) for n in ns)
+        self.assertEqual(pkg, prv)
+
+    def test_a_rollback_to_an_older_build_restamps_the_preview(self):
+        a = build.build(self.w2.paths)["id"]
+        d = self.w2.draft()
+        d["texts"] = {"hero.lead": {"uk": "Інше", "en": "Other", "de": "Anders"}}
+        self.w2.save(d)
+        b = build.build(self.w2.paths)["id"]
+        self.assertIn("?v=" + b, read_file(os.path.join(self.w2.paths.preview, "index.html")))
+        build.set_current(self.w2.paths, a)
+        home = read_file(os.path.join(self.w2.paths.preview, "index.html"))
+        self.assertIn("?v=" + a, home)
+        self.assertNotIn("?v=" + b, home)
+
+
+class WebpTwinTests(Base):
+    WEBP = b"RIFF\x20\x00\x00\x00WEBPVP8 " + b"0" * 30
+
+    def jpeg(self):
+        return imgconv.encode_jpeg(16, 16, bytes([200, 50, 120]) * 256)
+
+    def setUp(self):
+        Base.setUp(self)
+        self.w2 = World(copy_src=True)
+        self.addCleanup(self.w2.close)
+        self.p = self.w2.paths
+
+    def upload_webp(self):
+        return uploads.store(self.p, self.WEBP, "photo.webp")
+
+    def draft_with(self, item):
+        d = self.w2.draft()
+        d["portfolio"]["images"] = {"can-helper/window": item["ref"]}
+        return d
+
+    def pdf_images(self, bid):
+        return read_bytes(os.path.join(self.w2.site(bid), PDF_EN)).count(b"/Subtype /Image")
+
+    def test_a_twin_is_stored_for_a_webp_only_and_is_not_listed(self):
+        main = self.upload_webp()
+        twin = uploads.store(self.p, self.jpeg(), "photo.jpg", twin_of=main["id"])
+        self.assertEqual(twin["twinOf"], main["id"])
+        self.assertEqual([i["id"] for i in uploads.listing(self.p)], [main["id"]], "the twin follows its WebP and has no row of its own")
+        self.assertEqual(core.read_json(self.p.uploads_index)["items"][main["id"]]["twin"], twin["id"])
+        again = uploads.store(self.p, self.jpeg(), "photo.jpg", twin_of=main["id"])
+        self.assertFalse(os.path.exists(os.path.join(self.p.uploads, twin["file"])), "a second twin replaces the first")
+        self.assertTrue(os.path.exists(os.path.join(self.p.uploads, again["file"])))
+
+    def test_bad_twins_are_refused(self):
+        main = self.upload_webp()
+        for data in (self.WEBP, png(), b"\xff\xd8\xff" + b"0" * 40):
+            with self.assertRaises(ApiError):
+                uploads.store(self.p, data, "x.jpg", twin_of=main["id"])
+        jpg = uploads.store(self.p, self.jpeg(), "plain.jpg")
+        with self.assertRaises(ApiError):
+            uploads.store(self.p, self.jpeg(), "x.jpg", twin_of=jpg["id"])
+        with self.assertRaises(ApiError):
+            uploads.store(self.p, self.jpeg(), "x.jpg", twin_of="0123456789abcdef")
+
+    def test_the_pdf_uses_the_twin_the_page_does_not_and_no_twin_means_no_picture(self):
+        main = self.upload_webp()
+        without = build.build(self.p) if False else None
+        self.w2.save(self.draft_with(main))
+        base = build.build(self.p)
+        self.assertTrue(base["ok"], base)
+        n0 = self.pdf_images(base["id"])
+        self.assertIn("assets/u/%s.webp" % main["id"], json.dumps(json.loads(self.w2.read(base["id"], "data/portfolio-images.json"))))
+        twin = uploads.store(self.p, self.jpeg(), "photo.jpg", twin_of=main["id"])
+        r = build.build(self.p)
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(self.pdf_images(r["id"]), n0 + 1, "the WebP picture is in the PDF now")
+        site = self.w2.site(r["id"])
+        self.assertTrue(os.path.isfile(os.path.join(site, "assets/u/%s.webp" % main["id"])))
+        shipped = [n for _, _, ns in os.walk(site) for n in ns]
+        self.assertNotIn(twin["file"], shipped, "the twin is never a page asset")
+        self.assertFalse(any(twin["id"] in f for f in json.dumps(read_json_file(os.path.join(site, "manifest.json")) if os.path.isfile(os.path.join(site, "manifest.json")) else {}).split()))
+        self.assertNotIn(twin["id"], self.w2.read(r["id"], "data/portfolio-images.json"))
+
+    def test_deleting_the_webp_removes_the_twin_and_gc_keeps_the_twin_of_a_used_webp(self):
+        main = self.upload_webp()
+        twin = uploads.store(self.p, self.jpeg(), "photo.jpg", twin_of=main["id"])
+        self.w2.save(self.draft_with(main))
+        index = core.read_json(self.p.uploads_index)
+        for item in index["items"].values():
+            item["created"] = "20000101-000000"
+        core.write_json(self.p.uploads_index, index)
+        build.gc_uploads(self.p)
+        self.assertTrue(os.path.exists(os.path.join(self.p.uploads, twin["file"])), "the twin lives as long as its WebP is in use")
+        uploads.delete(self.p, main["id"], set())
+        self.assertFalse(os.path.exists(os.path.join(self.p.uploads, twin["file"])))
+        self.assertEqual(core.read_json(self.p.uploads_index)["items"], {})
+
+    def test_the_api_takes_the_twin_in_the_query(self):
+        auth.set_passphrase(self.p, "correct horse battery staple 42")
+        h = {"host": "admin.viteh.org", "origin": "https://admin.viteh.org", "x-vadmin": "1"}
+        st, hd, _ = api.handle(self.p, "POST", "login", h, json.dumps({"passphrase": "correct horse battery staple 42"}).encode(), {}, "10.0.0.5")
+        h["cookie"] = "vadmin=" + dict(hd)["Set-Cookie"].split(";")[0].split("=", 1)[1]
+        st, hd, body = api.handle(self.p, "POST", "upload", h, self.WEBP, {"name": ["a.webp"]}, "10.0.0.5")
+        main = json.loads(body)["item"]
+        st, hd, body = api.handle(self.p, "POST", "upload", h, self.jpeg(), {"name": ["a.jpg"], "twin": [main["id"]]}, "10.0.0.5")
+        out = json.loads(body)
+        self.assertEqual(st, 200)
+        self.assertEqual([i["id"] for i in out["uploads"]], [main["id"]])
+
+    def test_the_browser_side_makes_a_white_1600px_jpeg_and_never_throws(self):
+        js = read_file(os.path.join(HERE, "..", "web", "jpeg-twin.js"))
+        for needle in ("1600", '"#fff"', "image/jpeg", "twin="):
+            self.assertIn(needle, js)
+        self.assertIn("jpeg-twin.js", read_file(os.path.join(HERE, "..", "web", "index.html")))
+        self.assertIn("VTwin.attach", read_file(os.path.join(HERE, "..", "web", "admin.js")))
+        self.assertIn("VTwin?.attach", read_file(os.path.join(HERE, "..", "web", "edit-overlay.js")))
+
+
+class EditableEverythingGuardPages(unittest.TestCase):
+    """The guard of the three newer pages: the static markup of /portfolio/, impressum.html and datenschutz.html shows no text that is neither bound to data
+    (data-i18n / data-p / generated from site.json by app.js) nor listed here WITH the reason."""
+    EXEMPT = {
+        "Skip to content": None,
+        "ViTeh": "the wordmark (see EditableEverythingGuard.EXEMPT_PLAIN brand.name)",
+        "JavaScript is required": "the <noscript> fallback must work without scripts, so it cannot come from site.json",
+        "PDF": "the file-type label of the <noscript> download link (a constant, like a file extension); shown only when scripts are off",
+    }
+    LITERAL_EXEMPT = {
+        "The portfolio could not be loaded.": "the error fallback shown only when data/site.json itself failed to load, so no editable text can exist then",
+    }
+
+    def static_texts(self, rel):
+        html = read_file(os.path.join(REPO, rel))
+        body = html[html.index("<body"):]
+        body = re.sub(r"<(script|style|svg)\b.*?</\1>", "", body, flags=re.S)
+        found = []
+        for m in re.finditer(r"<(\w+)([^>]*)>([^<>]*[A-Za-zЀ-ӿ]{2,}[^<>]*)</\1>", body):
+            if not re.search(r"data-(?:i18n|p)\b", m.group(2)) and not re.search(r'\bid="(?:legalTitle|legalBody|year)"', m.group(2)):
+                found.append(m.group(3).strip())
+        return found
+
+    def test_no_unexplained_static_text_on_the_new_pages(self):
+        for rel in ("impressum.html", "datenschutz.html", "portfolio/index.html"):
+            for text in self.static_texts(rel):
+                self.assertTrue(any(text.startswith(k) for k in self.EXEMPT), "%s: static text without data binding and without an exemption: %r" % (rel, text))
+
+    def test_every_exemption_has_a_reason(self):
+        for key, reason in list(self.EXEMPT.items()) + list(self.LITERAL_EXEMPT.items()):
+            if reason is not None:
+                self.assertGreater(len(reason), 20, key)
+
+    def test_the_legal_and_portfolio_scripts_write_no_literal_text(self):
+        for rel in ("assets/app.js", "assets/portfolio-page.js", "assets/portfolio-render.js"):
+            for lit in re.findall(r"textContent\s*=\s*[\"'`]([^\"'`]*[A-Za-z]{3}[^\"'`]*)[\"'`]", read_file(os.path.join(REPO, rel))):
+                self.assertTrue(any(lit.startswith(k) for k in self.LITERAL_EXEMPT), "%s writes a literal text: %r" % (rel, lit))
+
+    def test_every_legal_text_has_an_overlay_binding(self):
+        site = read_json_file(os.path.join(REPO, "data/site.json"))
+        w = World()
+        self.addCleanup(w.close)
+        texts = schema.editable_texts(w.ctx().site)
+        for kind in ("imprint", "privacy"):
+            self.assertIn("legal.%s.title" % kind, texts)
+            for i, block in enumerate(site["legal"][kind]["sections"]):
+                self.assertIn("legal.%s.sections.%d.h" % (kind, i), texts)
+                self.assertIn("legal.%s.sections.%d.p" % (kind, i), texts)
+        for k in ("back", "demo"):
+            self.assertIn("legal." + k, texts)
 
 
 if __name__ == "__main__":

@@ -1,12 +1,13 @@
 """Owner uploads: images (JPEG/PNG/WebP/AVIF, 5 MB) and binary glTF models (.glb, 8 MB).
 The type comes from the file's first bytes, never from the name or the Content-Type; names are random; SVG is refused."""
+import contextlib
 import json
 import os
 import re
 import secrets
 import struct
 
-from . import core
+from . import core, pdf
 from .core import ApiError, read_json, write_json, stamp
 
 IMAGE_MAX = 5 * 1024 * 1024
@@ -62,7 +63,36 @@ def label_of(name):
     return re.sub(r"[^\w .()-]+", "", name, flags=re.U)[:60] or "file"
 
 
-def store(paths, data, filename):
+TWIN_MAX = 2 * 1024 * 1024
+
+
+def check_twin(index, main_id, data):
+    """A JPEG twin belongs to a WebP upload and exists for the PDF only (the standard library cannot decode WebP). It must be a JPEG the PDF writer can embed."""
+    main = index.get("items", {}).get(main_id)
+    if not main or main.get("kind") != "image" or not main.get("file", "").endswith(".webp"):
+        raise ApiError("bad_twin", "JPEG-копія можлива лише для завантаженого WebP", 400)
+    if data[:3] != b"\xff\xd8\xff" or len(data) > TWIN_MAX or pdf.read_image(data) is None:
+        raise ApiError("bad_twin", "JPEG-копія для PDF має бути звичайним (baseline) JPEG до 2 МБ", 400)
+    return main
+
+
+def store(paths, data, filename, twin_of=None):
+    """twin_of=<id of a WebP upload>: stores `data` as that upload's JPEG twin (replacing an older one); the twin has no listing entry of its own."""
+    if twin_of:
+        index = read_json(paths.uploads_index, {"items": {}}) or {"items": {}}
+        main = check_twin(index, str(twin_of), data)
+        old = index["items"].pop(main.get("twin") or "", None)
+        if old:
+            with contextlib.suppress(OSError):
+                os.unlink(os.path.join(paths.uploads, old["file"]))
+        uid = secrets.token_hex(8)
+        os.makedirs(paths.uploads, exist_ok=True)
+        with open(os.path.join(paths.uploads, uid + ".jpg"), "wb") as fh:
+            fh.write(data)
+        index["items"][uid] = {"file": uid + ".jpg", "kind": "image", "size": len(data), "name": label_of(filename), "created": stamp(), "twinOf": str(twin_of)}
+        main["twin"] = uid
+        write_json(paths.uploads_index, index)
+        return dict(index["items"][uid], id=uid, ref="u:" + uid)
     kind, ext = sniff(data)
     limit = MODEL_MAX if kind == "model" else IMAGE_MAX
     if len(data) > limit:
@@ -87,7 +117,7 @@ def store(paths, data, filename):
 
 def listing(paths):
     items = (read_json(paths.uploads_index, {"items": {}}) or {}).get("items", {})
-    return [dict(v, id=k, ref="u:" + k) for k, v in sorted(items.items(), key=lambda kv: kv[1].get("created", ""), reverse=True)]
+    return [dict(v, id=k, ref="u:" + k) for k, v in sorted(items.items(), key=lambda kv: kv[1].get("created", ""), reverse=True) if not v.get("twinOf")]      # twins are hidden: they follow their WebP
 
 
 def delete(paths, uid, referenced):
@@ -97,10 +127,10 @@ def delete(paths, uid, referenced):
         raise ApiError("in_use", "Файл використовується в чернетці або в збірці (останні 20 версій)", 409)
     index = read_json(paths.uploads_index, {"items": {}}) or {"items": {}}
     item = index.get("items", {}).pop(uid, None)
-    if not item:
+    if not item or item.get("twinOf"):
         raise ApiError("no_file", "Файл не знайдено", 404)
-    try:
-        os.unlink(os.path.join(paths.uploads, item["file"]))
-    except OSError:
-        pass
+    for gone in (item, index["items"].pop(item.get("twin") or "", None)):          # the JPEG twin goes with its WebP
+        if gone:
+            with contextlib.suppress(OSError):
+                os.unlink(os.path.join(paths.uploads, gone["file"]))
     write_json(paths.uploads_index, index)

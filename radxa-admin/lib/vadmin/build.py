@@ -333,6 +333,10 @@ def make_portfolio_pdfs(paths, draft, ctx, assets, site_dir):
     if pick(real) == pick(probe):
         return
     uploads = dict((public, ctx.uploads[uid]["file"]) for uid, public in assets.used.items() if uid in ctx.uploads)
+    for uid, public in assets.used.items():            # a WebP upload may have a JPEG twin: it answers the PDF's ".jpg next to the .webp" lookup and is never a page asset
+        twin = ctx.uploads.get(ctx.uploads.get(uid, {}).get("twin") or "")
+        if twin and public.endswith(".webp"):
+            uploads[public[:-5] + ".jpg"] = twin["file"]
     root = os.path.realpath(paths.src)
 
     def read_asset(rel):
@@ -609,6 +613,27 @@ def set_current(paths, bid):
     sync_preview(paths, bid)
 
 
+ASSET_REF = re.compile(r'((?:href|src)=")((?:\.\./|/)?assets/[^"?#]+\.(?:js|css))(")')
+JS_IMPORT = re.compile(r'''((?:\bfrom\s*|\bimport\s*\(\s*)["'])(\.{1,2}/[^"'?#]+\.js)(["'])''')
+
+
+def stamp_preview_assets(root, bid):
+    """preview.viteh.org sits behind Cloudflare, which caches assets/*.js|css at the edge, so a new build showed old files. In the PREVIEW
+    copy every reference to such a file gets `?v=<build id>`: in HTML (href/src), and in JS modules for relative import specifiers
+    (a module imported without the query would stay cached). Only text files of the preview copy are rewritten."""
+    q = r"\1\2?v=%s\3" % bid
+    for base, _, names in os.walk(root):
+        for n in names:
+            ext = n.rsplit(".", 1)[-1].lower() if "." in n else ""
+            if ext not in ("html", "js") or "vendor" in os.path.relpath(base, root).split(os.sep):
+                continue
+            p = os.path.join(base, n)
+            text = read_text(p)
+            out = (ASSET_REF if ext == "html" else JS_IMPORT).sub(q, text)
+            if out != text:
+                write_text(p, out)
+
+
 def sync_preview(paths, bid):
     """uhttpd resolves its document root once at start, so a moving `current` link would show a stale build. The preview
     server therefore serves a fixed folder whose contents are swapped here (children are renamed in, not copied in place)."""
@@ -618,6 +643,7 @@ def sync_preview(paths, bid):
     new = paths.preview + ".new"
     shutil.rmtree(new, ignore_errors=True)
     shutil.copytree(src, new)
+    stamp_preview_assets(new, bid)                       # the PREVIEW copy only: the package in builds/<id>/site (what is published) is never touched
     os.makedirs(paths.preview, exist_ok=True)
     for name in os.listdir(paths.preview):
         full = os.path.join(paths.preview, name)
@@ -679,6 +705,7 @@ def gc_uploads(paths):
     keep = referenced_uploads(read_json(paths.draft, {}) or {})
     for b in list_builds(paths):
         keep |= referenced_uploads(read_json(os.path.join(paths.builds, b["id"], "draft.json"), {}) or {})
+    keep |= set(index.get("items", {}).get(u, {}).get("twin") for u in keep)          # a twin lives as long as its WebP
     changed = False
     for uid in list(index.get("items", {})):
         item = index["items"][uid]
