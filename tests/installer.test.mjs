@@ -46,7 +46,7 @@ function world(opts = {}) {
   // the "copied radxa-admin/ folder": code + site files (as push-to-radxa.sh lays them out)
   const pkg = join(dir, "pkg");
   mkdirSync(join(pkg, "radxa-admin"), { recursive: true });
-  for (const part of ["cgi", "lib", "web"]) cpSync(join(repo, "radxa-admin", part), join(pkg, "radxa-admin", part), { recursive: true, filter: (src) => !src.includes("__pycache__") });
+  for (const part of ["cgi", "lib", "web", "catalog"]) cpSync(join(repo, "radxa-admin", part), join(pkg, "radxa-admin", part), { recursive: true, filter: (src) => !src.includes("__pycache__") });
   for (const f of ["vadmin-cli.py", "install-on-radxa.sh"]) cpSync(join(repo, "radxa-admin", f), join(pkg, "radxa-admin", f));
   for (const part of ["assets", "data"]) cpSync(join(repo, part), join(pkg, "radxa-admin", "site", part), { recursive: true });
   for (const f of ["index.html", "impressum.html", "datenschutz.html", "robots.txt"]) cpSync(join(repo, f), join(pkg, "radxa-admin", "site", f));

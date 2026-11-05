@@ -95,7 +95,7 @@ function showLogin(message) {
 
 /* ---------- shell ---------- */
 const NAV = [
-  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
+  ["Головна сторінка", [["sections", "Розділи"], ["services", "Послуги"], ["ideas", "Каталог ідей"], ["projects", "Картки проєктів"], ["home-blocks", "Додаткові розділи"], ["widgets", "Віджети й ефекти"]]],
   ["Портфоліо", [["portfolio", "Елементи портфоліо"], ["portfolio-page", "Сторінка й PDF: розділи, тексти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Випуск", [["builds", "Версії й публікація"]]],
@@ -375,6 +375,35 @@ const VIEWS = {
         h("div", { class: "field" }, h("label", {}, "Пункти (до 6)"), ...[0, 1, 2, 3, 4, 5].map((n) => i18nField(s.points, n, { max: 80, label: `Пункт ${n + 1}` })))));
     });
     main.append(templateButton("service", "Додати послугу з шаблону"));
+  },
+
+  async ideas(main) {
+    main.append(...head("Каталог ідей послуг", "Готові картки на основі аналізу ринку (docs/market-needs-2026.md). Кнопка додає картку в чернетку ВИМКНЕНОЮ: вона не потрапить на сайт, доки ви самі її не ввімкнете в розділі «Послуги». Каталог ніколи не публікується."));
+    let data;
+    try { await save(); data = await api("ideas"); } catch (e) { fail(e); return; }
+    const marks = (v) => String(v || "").replace(/\*\*|~~|\{\{|\}\}/g, "");
+    const have = new Set(data.added.map((t) => uk(t)));
+    for (const it of data.items) {
+      const c = it.card, added = have.has(c.title.uk);
+      const card = h("div", { class: "card", "data-idea": it.id });
+      card.append(
+        h("div", { class: "row between" }, h("strong", {}, `${it.need}. ${uk(c.title)}`), h("span", { class: "chip" }, `Готовність: ${data.readiness[it.readiness]}`)),
+        h("p", {}, marks(c.text.uk)),
+        h("ul", {}, c.points.map((p) => h("li", {}, marks(uk(p))))),
+        h("p", { class: "lead" }, `EN: ${marks(c.title.en)} · DE: ${marks(c.title.de)} · іконка: ${c.icon}`),
+        it.sources.length ? h("p", { class: "lead" }, "Джерела: ", it.sources.map((s, i) => [i ? " · " : "", h("a", { href: s.url, target: "_blank", rel: "noopener noreferrer" }, s.title)])) : h("p", { class: "lead" }, "Джерел немає: це оцінка (див. документ аналізу)."),
+        h("button", { class: "btn small", type: "button", disabled: added, onclick: async () => {
+          await save();
+          try {
+            const r = await api("idea-add", { method: "POST", body: { id: it.id, rev: S.draft.rev } });
+            S.draft = r.draft; S.save = "saved"; updateChips();
+            toast("Додано в чернетку вимкненою. Увімкніть у розділі «Послуги»");
+            rerender();
+          } catch (e) { fail(e); }
+        } }, added ? "Вже в чернетці" : "Додати в чернетку"));
+      main.append(card);
+    }
+    if (!data.items.length) main.append(h("p", { class: "lead" }, "Каталог порожній або файл не знайдено."));
   },
 
   portfolio(main) {

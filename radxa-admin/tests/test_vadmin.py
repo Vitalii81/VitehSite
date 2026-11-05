@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 
-from vadmin import api, auth, build, check, core, pdf, portfolio_pdf, render, richtext, schema, uploads   # noqa: E402
+from vadmin import api, auth, build, check, core, ideas, pdf, portfolio_pdf, render, richtext, schema, uploads   # noqa: E402
 from vadmin.core import ApiError   # noqa: E402
 
 
@@ -1761,6 +1761,85 @@ class CompatTests(unittest.TestCase):
                         mods = [a.name.split(".")[0] for a in node.names] if isinstance(node, ast.Import) else [node.module.split(".")[0]] if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module else []
                         for m in mods:
                             self.assertTrue(m in stdlib or m == "vadmin", "%s imports %s" % (name, m))
+
+
+class IdeasCatalogTests(ApiTests):
+    """The admin-only service-ideas catalog: sanitised like any custom service, added DISABLED, never part of a package."""
+
+    def add(self, cookie, idea, rev):
+        return self.call("POST", "idea-add", {"id": idea, "rev": rev}, cookie=cookie)
+
+    def test_every_catalog_card_survives_the_sanitiser_unchanged(self):
+        ctx = self.w.ctx()
+        items = ideas.load()
+        self.assertGreaterEqual(len(items), 5)
+        self.assertEqual(len({i["id"] for i in items}), len(items))
+        for it in items:
+            card = it["card"]
+            self.assertIn(card["icon"], ctx.icons, it["id"])
+            clean = schema.clean_service(dict(card, id=""), ctx)
+            for key in ("title", "text", "points"):
+                self.assertEqual(clean[key], card[key], "%s.%s was truncated or altered" % (it["id"], key))
+            for lang in core.LANGS:
+                self.assertTrue(card["title"][lang] and card["text"][lang] and all(p[lang] for p in card["points"]), "%s %s incomplete" % (it["id"], lang))
+            self.assertTrue(all(s["url"].startswith("https://") for s in it["sources"]))
+            self.assertIn(it["readiness"], ideas.READINESS)
+
+    def test_the_view_needs_a_session(self):
+        self.assertEqual(self.call("GET", "ideas")[0], 401)
+        self.assertEqual(self.call("POST", "idea-add", {"id": "idea-cra", "rev": 0})[0], 401)
+        cookie = self.login()
+        st, _, r = self.call("GET", "ideas", cookie=cookie)
+        self.assertEqual(st, 200)
+        self.assertTrue(r["items"] and r["readiness"]["help"])
+
+    def test_adding_creates_a_disabled_custom_service_once(self):
+        cookie = self.login()
+        st, _, r = self.add(cookie, "idea-gateway", 0)
+        self.assertEqual(st, 200, r)
+        d = r["draft"]
+        svc = d["extra"]["services"][0]
+        self.assertEqual(d["disabled"]["services"], [svc["id"]], "added disabled")
+        self.assertTrue(svc["id"].startswith("x-"))
+        self.assertIn("MQTT", svc["title"]["en"] + svc["text"]["en"])
+        self.assertEqual(self.add(cookie, "idea-gateway", d["rev"])[0], 409, "no duplicate")
+        self.assertEqual(self.add(cookie, "nope", d["rev"])[0], 404)
+        self.assertEqual(self.add(cookie, "idea-hmi", d["rev"] - 1)[0], 409, "stale revision")
+        st, _, r = self.call("GET", "ideas", cookie=cookie)
+        self.assertIn(svc["title"]["uk"], [t["uk"] for t in r["added"]])
+
+    def test_a_disabled_idea_is_not_on_the_site_and_the_catalog_is_not_in_the_package(self):
+        w = World(copy_src=True)
+        self.addCleanup(w.close)
+        draft = schema.empty_draft()
+        ideas.add(draft, "idea-cra", w.ctx())
+        w.save(draft)
+        base = World(copy_src=True)
+        self.addCleanup(base.close)
+        r = build.build(w.paths)
+        self.assertTrue(r["ok"], r)
+        site = w.site(r["id"])
+        self.assertNotIn("CRA", w.read(r["id"], "data/site.json"))
+        for root, dirs, files in os.walk(site):
+            for name in files + dirs:
+                self.assertNotIn("service-ideas", name)
+                self.assertNotEqual(name, "catalog")
+        draft["disabled"]["services"] = []
+        w.save(draft)
+        r2 = build.build(w.paths)
+        self.assertIn("Cyber Resilience Act", w.read(r2["id"], "data/site.json"), "once the owner enables it, the service is published like any custom one")
+        self.assertNotIn("sources", w.read(r2["id"], "data/site.json"))
+
+    def test_a_broken_catalog_file_gives_an_empty_list(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        open(os.path.join(d, "service-ideas.json"), "w").write("{not json")
+        old = os.environ.get("VADMIN_CATALOG")
+        os.environ["VADMIN_CATALOG"] = d
+        try:
+            self.assertEqual(ideas.load(), [])
+        finally:
+            os.environ.pop("VADMIN_CATALOG") if old is None else os.environ.__setitem__("VADMIN_CATALOG", old)
 
 
 if __name__ == "__main__":

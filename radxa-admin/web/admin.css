@@ -101,3 +101,4 @@ dialog::backdrop { background: rgba(0, 0, 0, .55); }
 .log .ln.err { color: var(--log-err); font-weight: 700; }
 .log .ln.step { color: var(--log-step); }
 .log .ln.dim { color: var(--muted); opacity: .85; }
+.main .card a { color: var(--accent); }

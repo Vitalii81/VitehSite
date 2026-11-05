@@ -173,7 +173,7 @@ install_code() {
     SITE_SRC="$HERE/site"; [ -f "$SITE_SRC/index.html" ] || SITE_SRC="$HERE/.."
     mkdir -p "$APP.new" "$SECRET" "$STAGING/src" "$STAGING/uploads" "$STAGING/builds" || die "cannot create directories"
     chmod 700 "$SECRET"
-    cp -R "$HERE/cgi" "$HERE/lib" "$HERE/web" "$HERE/vadmin-cli.py" "$APP.new/" || die "copy failed"
+    cp -R "$HERE/cgi" "$HERE/lib" "$HERE/web" "$HERE/catalog" "$HERE/vadmin-cli.py" "$APP.new/" || die "copy failed"
     chmod +x "$APP.new/cgi/vadmin.py" "$APP.new/vadmin-cli.py"
     find "$APP.new" -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null
     [ -f "$STATE_FILE" ] && cp "$STATE_FILE" "$APP.new/.install-state"
