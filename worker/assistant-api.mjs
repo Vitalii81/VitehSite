@@ -14,7 +14,7 @@ export class AssistantGate {
   async fetch(request) {
     const body = await request.json();
     const path = new URL(request.url).pathname;
-    this.gate.setBackends(Array.isArray(body.ids) ? body.ids : []);
+    this.gate.setBackends(Array.isArray(body.ids) ? body.ids : [], body.slots && typeof body.slots === "object" ? body.slots : {});
     if (path === "/acquire") return jsonResponse(200, await this.gate.acquire(String(body.ip || "unknown"), Array.isArray(body.avoid) ? body.avoid : []));
     if (path === "/release") { this.gate.release(String(body.lease)); return jsonResponse(200, { ok: true }); }
     if (path === "/down") { this.gate.markDown(String(body.id)); return jsonResponse(200, { ok: true }); }
@@ -42,10 +42,14 @@ async function connect(gate, ip, backends, system, messages, mode) {
     const timer = setTimeout(() => controller.abort(), LIMITS.connectMs);
     try {
       const { url, init } = upstreamRequest(backend, system, messages, mode);
-      const response = await fetch(url, { ...init, signal: controller.signal });
+      let response;
+      for (let attempt = 0; attempt < 2; attempt++) {          // one quick retry: a busy shared server often answers the second time
+        try { response = await fetch(url, { ...init, signal: controller.signal }); if (response.ok && response.body) break; } catch (e) { if (attempt) throw e; }
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+      }
       clearTimeout(timer);
-      if (response.ok && response.body) return { response, lease: got.lease, controller };
-      throw new Error(`HTTP ${response.status}`);
+      if (response && response.ok && response.body) return { response, lease: got.lease, controller };
+      throw new Error(`HTTP ${response ? response.status : "none"}`);
     } catch (e) {
       clearTimeout(timer);
       console.error(`assistant backend "${backend.id}" failed:`, e && e.message);
@@ -82,7 +86,7 @@ export async function handleAssistant(request, env, url, deps = {}) {
   }
 
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  const gate = gateClient(env, backends.map((b) => b.id), deps.gate || localGate);
+  const gate = gateClient(env, backends.map((b) => b.id), deps.gate || localGate, Object.fromEntries(backends.map((b) => [b.id, b.slots])));
   const system = req.mode === "brief" ? buildBriefPrompt(req) : buildSystemPrompt({ kb, lang: req.lang, messages: req.messages });
   const connected = await connect(gate, ip, backends, system, req.mode === "brief" ? briefMessages(req.messages) : req.messages, req.mode);
   if (connected.error === "rate") return jsonResponse(429, { error: "rate" }, { "retry-after": "600" });

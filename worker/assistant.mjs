@@ -236,16 +236,17 @@ export function parseBackends(raw) {
   return list
     .filter((b) => b && typeof b.url === "string" && /^https?:\/\//.test(b.url))
     .map((b, i) => ({ id: String(b.name || `b${i}`).slice(0, 40), url: b.url.replace(/\/+$/, ""), token: typeof b.token === "string" ? b.token : "", model: typeof b.model === "string" ? b.model : "",
-      headers: b.headers && typeof b.headers === "object" ? b.headers : {}, priority: Number.isFinite(b.priority) ? b.priority : i + 1 }))
+      headers: b.headers && typeof b.headers === "object" ? b.headers : {}, slots: Number.isInteger(b.slots) ? Math.min(4, Math.max(1, b.slots)) : 1, priority: Number.isFinite(b.priority) ? b.priority : i + 1 }))
     .sort((a, b) => a.priority - b.priority);
 }
 
 /** One request at a time per backend, a short queue, a rate limit per IP, and a "down" mark after a failure so the next backend is used.
  *  Lives in a Durable Object when the binding ASSIST_GATE exists (shared by all Worker instances); otherwise per isolate (best effort). */
 export class Gate {
-  constructor({ now = () => Date.now(), rateMax = 12, rateWindowMs = 10 * 60 * 1000, queueMax = 4, waitMs = 12000, leaseMs = 100000, downMs = 30000 } = {}) {
+  constructor({ now = () => Date.now(), rateMax = 12, rateWindowMs = 10 * 60 * 1000, queueMax = 4, waitMs = 20000, leaseMs = 100000, downMs = 30000 } = {}) {
     Object.assign(this, { now, rateMax, rateWindowMs, queueMax, waitMs, leaseMs, downMs });
     this.ids = [];
+    this.slots = new Map();         // backend id -> parallel requests it may take (default 1)
     this.leases = new Map();        // lease -> {id, ip, expires}
     this.down = new Map();          // backend id -> until
     this.hits = new Map();          // ip -> [timestamps]
@@ -253,7 +254,7 @@ export class Gate {
     this.seq = 0;
   }
 
-  setBackends(ids) { this.ids = ids.slice(); }
+  setBackends(ids, slots = {}) { this.ids = ids.slice(); this.slots = new Map(Object.entries(slots)); }
 
   purge() {
     const t = this.now();
@@ -271,10 +272,11 @@ export class Gate {
   }
 
   pick(avoid) {
-    const busy = new Set([...this.leases.values()].map((v) => v.id));
+    const used = new Map();
+    for (const v of this.leases.values()) used.set(v.id, (used.get(v.id) || 0) + 1);
     const live = this.ids.filter((id) => !this.down.has(id) && !avoid.includes(id));
     if (!live.length) return { none: true };
-    const free = live.find((id) => !busy.has(id));
+    const free = live.find((id) => (used.get(id) || 0) < (this.slots.get(id) || 1));
     return free ? { id: free } : { wait: true };
   }
 
@@ -312,13 +314,13 @@ export class Gate {
 }
 
 /** Speaks to the Gate either directly (same isolate) or through the Durable Object binding. */
-export function gateClient(env, ids, local) {
+export function gateClient(env, ids, local, slots = {}) {
   if (env && env.ASSIST_GATE) {
     const stub = env.ASSIST_GATE.get(env.ASSIST_GATE.idFromName("assistant-gate"));
-    const call = async (path, body) => (await stub.fetch(`https://gate/${path}`, { method: "POST", body: JSON.stringify({ ids, ...body }) })).json();
+    const call = async (path, body) => (await stub.fetch(`https://gate/${path}`, { method: "POST", body: JSON.stringify({ ids, slots, ...body }) })).json();
     return { acquire: (ip, avoid) => call("acquire", { ip, avoid }), release: (lease) => call("release", { lease }), down: (id) => call("down", { id }) };
   }
-  local.setBackends(ids);
+  local.setBackends(ids, slots);
   return { acquire: (ip, avoid) => local.acquire(ip, avoid), release: async (lease) => local.release(lease), down: async (id) => local.markDown(id) };
 }
 
