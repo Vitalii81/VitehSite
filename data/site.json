@@ -114,6 +114,118 @@
         "en": "3D view is not available in this browser.",
         "de": "Die 3D-Ansicht ist in diesem Browser nicht verfügbar."
       }
+    },
+    "assistant": {
+      "open": {
+        "uk": "Помічник",
+        "en": "Assistant",
+        "de": "Assistent"
+      },
+      "title": {
+        "uk": "Помічник ViTeh",
+        "en": "ViTeh assistant",
+        "de": "ViTeh-Assistent"
+      },
+      "close": {
+        "uk": "Закрити чат",
+        "en": "Close chat",
+        "de": "Chat schließen"
+      },
+      "greeting": {
+        "uk": "Привіт! Я допоможу підібрати послугу й підготувати короткий опис задачі для форми контакту. Що ви хочете зробити?",
+        "en": "Hi! I can help you pick a service and prepare a short brief for the contact form. What would you like to build?",
+        "de": "Hallo! Ich helfe Ihnen, die passende Leistung zu finden und eine kurze Beschreibung für das Kontaktformular vorzubereiten. Was möchten Sie umsetzen?"
+      },
+      "placeholder": {
+        "uk": "Опишіть вашу задачу…",
+        "en": "Describe your task…",
+        "de": "Beschreiben Sie Ihre Aufgabe…"
+      },
+      "send": {
+        "uk": "Надіслати",
+        "en": "Send",
+        "de": "Senden"
+      },
+      "thinking": {
+        "uk": "Думаю…",
+        "en": "Thinking…",
+        "de": "Einen Moment…"
+      },
+      "busy": {
+        "uk": "Зайнято, спробуйте за хвилину.",
+        "en": "Busy right now, please try again in a minute.",
+        "de": "Gerade ausgelastet, bitte versuchen Sie es in einer Minute erneut."
+      },
+      "unavailable": {
+        "uk": "Помічник зараз недоступний. Напишіть нам через форму контакту — ми відповімо.",
+        "en": "The assistant is unavailable right now. Please use the contact form and we will reply.",
+        "de": "Der Assistent ist gerade nicht erreichbar. Bitte nutzen Sie das Kontaktformular, wir antworten."
+      },
+      "rate": {
+        "uk": "Забагато запитів. Спробуйте трохи пізніше.",
+        "en": "Too many requests. Please try again a little later.",
+        "de": "Zu viele Anfragen. Bitte versuchen Sie es später erneut."
+      },
+      "tooLong": {
+        "uk": "Повідомлення задовге. Скоротіть його, будь ласка.",
+        "en": "That message is too long. Please shorten it.",
+        "de": "Die Nachricht ist zu lang. Bitte kürzen Sie sie."
+      },
+      "error": {
+        "uk": "Не вдалося отримати відповідь. Спробуйте ще раз або скористайтеся формою контакту.",
+        "en": "Could not get an answer. Try again or use the contact form.",
+        "de": "Keine Antwort erhalten. Versuchen Sie es erneut oder nutzen Sie das Kontaktformular."
+      },
+      "handoff": {
+        "uk": "Передати у форму контакту",
+        "en": "Pass to the contact form",
+        "de": "An das Kontaktformular übergeben"
+      },
+      "handoffDone": {
+        "uk": "Опис додано у форму контакту. Перевірте його й надішліть.",
+        "en": "The brief was added to the contact form. Please check it and send.",
+        "de": "Die Beschreibung steht im Kontaktformular. Bitte prüfen und absenden."
+      },
+      "askShow": {
+        "uk": "Хочете, я покажу цю картку: «%s»?",
+        "en": "Shall I show you this card: “%s”?",
+        "de": "Soll ich Ihnen diese Karte zeigen: „%s“?"
+      },
+      "showYes": {
+        "uk": "Так, покажи",
+        "en": "Yes, show me",
+        "de": "Ja, zeigen"
+      },
+      "showNo": {
+        "uk": "Ні",
+        "en": "No",
+        "de": "Nein"
+      },
+      "shown": {
+        "uk": "Показано. Можемо продовжити.",
+        "en": "Shown. We can continue.",
+        "de": "Gezeigt. Wir können weitermachen."
+      },
+      "declined": {
+        "uk": "Добре, не показую.",
+        "en": "OK, I will not show it.",
+        "de": "In Ordnung, ich zeige sie nicht."
+      },
+      "backToChat": {
+        "uk": "Повернутися до чату",
+        "en": "Back to chat",
+        "de": "Zurück zum Chat"
+      },
+      "note": {
+        "uk": "Відповіді генерує локальна модель і можуть бути неточними. Остаточні умови — після розмови з нами.",
+        "en": "Answers come from a local model and may be inaccurate. Final terms follow a conversation with us.",
+        "de": "Antworten stammen von einem lokalen Modell und können ungenau sein. Verbindliche Konditionen nach einem Gespräch."
+      },
+      "portfolioCard": {
+        "uk": "Інженерне портфоліо",
+        "en": "Engineering portfolio",
+        "de": "Engineering-Portfolio"
+      }
     }
   },
   "nav": {
