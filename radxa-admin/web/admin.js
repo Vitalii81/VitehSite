@@ -343,10 +343,12 @@ function addBlockControl(blocks, paint, open) {
 
 /* ---------- views ---------- */
 /* The assistant's avatar choices: previews use the site's own files (/site-assets/assistant-avatars.js and assistant.css), so they are exactly what visitors see. */
+const ASSET_V = (() => { try { return new URL(document.currentScript.src).searchParams.get("v") || ""; } catch { return ""; } })();          // the install stamp of admin.js: a new URL per install, so Cloudflare and the browser never serve stale site files
+const siteAsset = (name) => `/site-assets/${name}${ASSET_V ? `?v=${encodeURIComponent(ASSET_V)}` : ""}`;
 let avatarAssets = null;
 const loadAvatarAssets = () => avatarAssets ||= new Promise((resolve) => {
-  const css = h("link", { rel: "stylesheet", href: "/site-assets/assistant.css" });
-  const js = h("script", { src: "/site-assets/assistant-avatars.js" });
+  const css = h("link", { rel: "stylesheet", href: siteAsset("assistant.css") });
+  const js = h("script", { src: siteAsset("assistant-avatars.js") });
   js.addEventListener("load", () => resolve(true)); js.addEventListener("error", () => resolve(false));
   document.head.append(css, js);
 });
