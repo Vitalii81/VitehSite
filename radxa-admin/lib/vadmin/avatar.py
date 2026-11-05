@@ -11,7 +11,6 @@ from .core import ApiError
 
 from .schema import CUSTOM_MOODS as MOODS
 
-SYNONYMS = {"talking": "talk", "thinking": "think", "presenting": "present"}      # names of the nine-state set that are the basic mood under another name
 MAX_ENTRIES = 40
 MAX_PICKED = len(MOODS)
 MAX_TOTAL = 20 * 1024 * 1024
@@ -21,9 +20,6 @@ IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp", ".avif")
 def mood_of(name):
     """idle.png, Talk.webp, avatar-wave.jpg -> the mood named by the file; None when the name says nothing."""
     stem = os.path.splitext(os.path.basename(name))[0].lower()
-    for word, mood in SYNONYMS.items():
-        if stem == word or re.search(r"(^|[^a-z])%s($|[^a-z])" % word, stem):
-            return mood
     for mood in MOODS:
         if stem == mood or re.search(r"(^|[^a-z])%s($|[^a-z])" % mood, stem):
             return mood

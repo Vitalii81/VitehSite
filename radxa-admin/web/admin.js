@@ -354,7 +354,7 @@ const loadAvatarAssets = () => avatarAssets ||= new Promise((resolve) => {
 });
 /* The nine states of the full set: [name, own file name, the basic pose it falls back to]. */
 const NINE_STATES = [["idle", "idle", null], ["greeting", "greeting", "wave"], ["talking", "talking", "talk"], ["listening", "listening", "nod"], ["thinking", "thinking", "think"],
-  ["happy", "happy", "wave"], ["respect", "respect", "nod"], ["presenting", "presenting", "present"], ["goodbye", "goodbye", "wave"]];
+  ["happy", "happy", "wave"], ["respect", "respect", "nod"], ["presenting", "presenting", "present"], ["goodbye", "goodbye", "wave"]];   // a pack may also use the six basic file names (wave, nod, think, talk, present)
 const avatarPicker = (A) => {
   const box = h("div", { class: "avatar-grid" });
   const fill = () => {
@@ -399,7 +399,7 @@ const avatarPicker = (A) => {
         return h("figure", { style: "margin:0;text-align:center" + (frames[own] || (base && frames[base]) ? "" : ";opacity:.55") },
           h("img", { src: frameUrl(ref), alt: state, style: "width:64px;height:64px;object-fit:cover;border-radius:50%" }),
           h("figcaption", { class: "muted" }, state, frames[own] ? "" : h("br"), frames[own] ? "" : "= " + (frames[base] ? base : "idle")));
-      }), frames.mouth_open ? h("figure", { style: "margin:0;text-align:center" }, h("img", { src: frameUrl(frames.mouth_open), alt: "mouth_open", style: "width:64px;height:40px;object-fit:contain" }), h("figcaption", { class: "muted" }, "mouth_open")) : null));
+      }), Object.keys(frames).some((k) => k.startsWith("viseme_")) ? h("p", { class: "muted", style: "flex-basis:100%;margin:4px 0 0" }, "Форми рота (під час мовлення): " + Object.keys(frames).filter((k) => k.startsWith("viseme_")).map((k) => k.slice(7)).join(", ")) : null, frames.mouth_open ? h("figure", { style: "margin:0;text-align:center" }, h("img", { src: frameUrl(frames.mouth_open), alt: "mouth_open", style: "width:64px;height:40px;object-fit:contain" }), h("figcaption", { class: "muted" }, "mouth_open")) : null));
   };
   paintMine();
   return h("div", { class: "card" }, h("p", { class: "muted" }, "Вигляд помічника на сайті: кнопка в кутку і шапка чату. Усі варіанти рухаються однаково (привітання, кивок, думає, говорить). Наведіть курсор, щоб побачити привітання. Зміна потрапить на сайт після збірки й публікації (вибір готового вигляду можна застосувати кнопкою нижче без публікації)."), box, mine);

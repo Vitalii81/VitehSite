@@ -72,15 +72,19 @@
   /** A custom avatar is a picture: the frame of the current mood (idle when the owner gave none for it). */
   /** The nine states of the full set map to the six basic moods the animations know; a custom pack may carry its own picture for any of them. */
   const MOOD_BASE = { greeting: "wave", goodbye: "wave", happy: "wave", respect: "nod", listening: "nod", thinking: "think", talking: "talk", presenting: "present" };
+  /** The nine-state names and the six basic ones are two spellings of the same poses: a pack may use either (own picture first, then the other spelling, then idle). */
+  const MOOD_ALT = { talk: "talking", think: "thinking", present: "presenting", wave: "greeting", nod: "respect" };
+  const frameOf = (frames, name) => frames[name] || frames[MOOD_BASE[name]] || frames[MOOD_ALT[name]] || frames.idle;
   const showFrame = (node, name) => {
     const frames = customFrames();
     const img = node.querySelector && node.querySelector("img.asst-pose, img");
-    if (frames && img) img.src = frames[name] || frames[MOOD_BASE[name]] || frames.idle;
+    if (frames && img) img.src = frameOf(frames, name);
   };
   const avatarNode = (uid) => {
     if (avatarId() === "custom") {
       const box = el("span", { class: "asst-av asst-custom", "aria-hidden": "true" });
       box.append(el("img", { class: "asst-pose", src: customFrames().idle, alt: "", decoding: "async" }));
+      for (const [name, url] of Object.entries(customFrames())) if (/^viseme_/.test(name)) new Image().src = url;       // no flicker the first time the mouth moves
       const mouth = customFrames().mouth_open;
       if (mouth) {                                          // a pack with an open-mouth picture: it is laid over the face and driven by the voice
         box.dataset.mouth = voiceGender();
@@ -171,7 +175,14 @@
     mouthLevel(0);
     if (on) {
       const frames = customFrames();
-      if (frames && frames.mouth_open) { mood("talking"); for (const av of avatars) showFrame(av, "idle"); if (!reduceMotion()) lipTimer = setInterval(() => mouthLevel(Math.random() < 0.2 ? 0.15 : 0.45 + Math.random() * 0.55), 120); else mouthLevel(0.6); }
+      if (frames && frames.viseme_closed && !reduceMotion()) {                         // whole pictures, one mouth shape each: shown in a speech-like order
+        mood("talking");
+        const shapes = ["open", "narrow", "wide", "round", "open", "closed", "narrow", "open"].filter((n) => frames["viseme_" + n]);
+        let i = 0;
+        const show = (n) => { const src = frames["viseme_" + n] || frames.viseme_closed; for (const a of avatars) { const img = a.querySelector("img.asst-pose, img"); if (img) img.src = src; } };
+        lipTimer = setInterval(() => show(shapes[(i += 1 + (Math.random() < 0.3 ? 1 : 0)) % shapes.length]), 115);
+        show("open");
+      } else if (frames && frames.mouth_open) { mood("talking"); for (const av of avatars) showFrame(av, "idle"); if (!reduceMotion()) lipTimer = setInterval(() => mouthLevel(Math.random() < 0.2 ? 0.15 : 0.45 + Math.random() * 0.55), 120); else mouthLevel(0.6); }
       else if (frames && !reduceMotion()) { mood("talking"); let open = false; lipTimer = setInterval(() => { open = !open; for (const a of avatars) showFrame(a, open ? "idle" : "talk"); }, 190); }
       else mood("talk");
     } else mood("idle");
