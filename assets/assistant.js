@@ -1,5 +1,6 @@
 // Site assistant widget. Shipped only while the assistant is switched on in the admin draft (it is not part of the factory package).
 // One network target: POST /api/assistant on this origin. No third-party requests, no cookies, nothing stored in the browser.
+// Voice is opt-in (the visitor presses the speaker): the browser's own speech synthesis reads the answer, nothing is sent to us.
 // Text from the model is inserted with textContent only. The model never sends markup or free-form actions: the only action is
 // {type:"offer_card", id}, and the id is checked against a strict pattern and against the cards that really exist on the page.
 (() => {
@@ -22,7 +23,7 @@
     return node;
   };
 
-  const S = { ui: null, lang: FALLBACK, messages: [], busy: false, offered: new Set(), highlighted: null, timer: null, controller: null, built: false, handoffReady: false };
+  const S = { voice: false, ui: null, lang: FALLBACK, messages: [], busy: false, offered: new Set(), highlighted: null, timer: null, controller: null, built: false, handoffReady: false };
   const t = (key) => {
     const v = S.ui && S.ui[key];
     return (v && (v[S.lang] || v[FALLBACK] || Object.values(v)[0])) || "";
@@ -69,10 +70,12 @@
   };
   const avatars = [];
   /** A custom avatar is a picture: the frame of the current mood (idle when the owner gave none for it). */
+  /** The nine states of the full set map to the six basic moods the animations know; a custom pack may carry its own picture for any of them. */
+  const MOOD_BASE = { greeting: "wave", goodbye: "wave", happy: "wave", respect: "nod", listening: "nod", thinking: "think", talking: "talk", presenting: "present" };
   const showFrame = (node, name) => {
     const frames = customFrames();
     const img = node.querySelector && node.querySelector("img");
-    if (frames && img) img.src = frames[name] || frames.idle;
+    if (frames && img) img.src = frames[name] || frames[MOOD_BASE[name]] || frames.idle;
   };
   const avatarNode = (uid) => {
     if (avatarId() === "custom") {
@@ -104,15 +107,94 @@
     } catch { /* offline or no Worker: keep the built-in look */ }
   };
   let moodTimer = 0;
-  /** mood: idle | wave | nod | think | talk | present. A timed mood falls back to idle (or to the sticky one). */
+  /** mood: idle | wave | nod | think | talk | present (or a name of the nine-state set, see MOOD_BASE). A timed mood falls back to idle (or to the sticky one). */
   function mood(name, ms = 0, sticky = "idle") {
     clearTimeout(moodTimer);
-    for (const a of avatars) { a.setAttribute("data-mood", name); showFrame(a, name); }
-    if (ms) moodTimer = setTimeout(() => { for (const a of avatars) { a.setAttribute("data-mood", sticky); showFrame(a, sticky); } }, ms);
+    const paint = (m) => { for (const a of avatars) { a.setAttribute("data-mood", MOOD_BASE[m] || m); showFrame(a, m); } };
+    paint(name);
+    if (ms) moodTimer = setTimeout(() => paint(sticky), ms);
+  }
+
+
+  /* ---------- voice: opt-in, the browser's own speech synthesis (nothing leaves the page) ---------- */
+  const LANGS = { uk: "uk", en: "en", de: "de" };
+  const GENDER = { "consultant-f": "female", "expert-f": "female", engineer: "female", core: "female", "consultant-m": "male", expert: "male", senior: "male" };
+  const MALE_NAMES = /\b(male|man|ostap|guy|davis|christopher|eric|roger|steffan|conrad|killian|stefan|hans|markus|jonas|florian|david|mark|daniel|alex|george|ryan|thomas|jorge)\b/i;
+  const FEMALE_NAMES = /\b(female|woman|polina|aria|jenny|zira|sonia|michelle|libby|katja|amala|hedda|vicki|petra|anna|marlene|helena|samantha|emma|hazel|susan|yuna|svetlana)\b/i;
+  const canSpeak = () => "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+  /** The persona's voice: a custom pack says so in data-assistant-voice, the built-in looks have a fixed one. */
+  const voiceGender = () => {
+    const id = avatarId();
+    if (id === "custom") return document.documentElement.dataset.assistantVoice === "male" ? "male" : "female";
+    return GENDER[id] || "female";
+  };
+  /** The best installed voice for the page language and the persona: matching gender first, then "natural/online" neural voices, then a local one. */
+  function pickVoice() {
+    const want = LANGS[S.lang] || "en", gender = voiceGender();
+    const score = (v) => {
+      const name = v.name || "";
+      let n = 0;
+      if (gender === "male" ? MALE_NAMES.test(name) : FEMALE_NAMES.test(name)) n += 4;
+      else if (gender === "male" ? FEMALE_NAMES.test(name) : MALE_NAMES.test(name)) n -= 4;
+      if (/natural|neural|online/i.test(name)) n += 3;
+      if (v.localService) n += 1;
+      if (v.default) n += 0.5;
+      return n;
+    };
+    const list = window.speechSynthesis.getVoices().filter((v) => (v.lang || "").toLowerCase().startsWith(want));
+    return list.sort((a, b) => score(b) - score(a))[0] || null;
+  }
+  /** Sentences of at most ~180 characters: long utterances are cut off by some browsers. */
+  function speechChunks(text) {
+    const clean = String(text).replace(/https?:\/\/\S+/g, " ").replace(/[*_`#>]+/g, " ").replace(/\s+/g, " ").trim();
+    const parts = clean.match(/[^.!?…]+[.!?…]*\s*/g) || [clean];
+    const out = [];
+    for (const part of parts) {
+      let rest = part.trim();
+      while (rest.length > 180) { let cut = rest.lastIndexOf(" ", 180); if (cut < 60) cut = 180; out.push(rest.slice(0, cut)); rest = rest.slice(cut).trim(); }
+      if (rest) out.push(rest);
+    }
+    return out;
+  }
+  let lipTimer = 0;
+  /** While the voice runs the mouth moves: the "talk" picture alternates with the calm one (the drawn avatars animate their mouth with CSS). */
+  function lips(on) {
+    clearInterval(lipTimer);
+    lipTimer = 0;
+    if (on) {
+      mood("talk");
+      if (customFrames() && !reduceMotion()) { let open = false; lipTimer = setInterval(() => { open = !open; for (const a of avatars) showFrame(a, open ? "idle" : "talk"); }, 190); }
+    } else mood("idle");
+  }
+  const speaking = { node: null };
+  function stopSpeech() {
+    if (canSpeak()) window.speechSynthesis.cancel();
+    if (speaking.node) { speaking.node.classList.remove("asst-listening"); speaking.node.setAttribute("aria-pressed", "false"); speaking.node = null; lips(false); }
+  }
+  function speak(text, trigger) {
+    if (!canSpeak()) return;
+    stopSpeech();
+    const chunks = speechChunks(text);
+    if (!chunks.length) return;
+    const voice = pickVoice();
+    const gender = voiceGender();
+    speaking.node = trigger || null;
+    if (trigger) { trigger.classList.add("asst-listening"); trigger.setAttribute("aria-pressed", "true"); }
+    chunks.forEach((chunk, i) => {
+      const u = new SpeechSynthesisUtterance(chunk);
+      u.lang = voice ? voice.lang : (LANGS[S.lang] || "en");
+      if (voice) u.voice = voice;
+      if (!voice || (gender === "male" ? !MALE_NAMES.test(voice.name) : !FEMALE_NAMES.test(voice.name))) u.pitch = gender === "male" ? 0.8 : 1.1;   // no voice of that sex installed: nudge the pitch
+      if (i === 0) u.onstart = () => lips(true);
+      const last = i === chunks.length - 1;
+      u.onend = () => { if (last) stopSpeech(); };
+      u.onerror = () => { if (last) stopSpeech(); };
+      window.speechSynthesis.speak(u);
+    });
   }
 
   /* ---------- DOM ---------- */
-  let fab, fabLabel, panel, log, form, input, sendBtn, note, titleEl, closeBtn, handoffBtn;
+  let fab, fabLabel, panel, log, form, input, sendBtn, note, titleEl, closeBtn, handoffBtn, voiceBtn;
 
   function build() {
     if (S.built) return;
@@ -121,6 +203,7 @@
     fab = el("button", { class: "asst-fab", type: "button", "aria-expanded": "false", "aria-controls": "asst-panel", onclick: () => setOpen(panel.hidden) }, makeAvatar(), fabLabel);
     titleEl = el("h2", { class: "asst-title", id: "asst-title" });
     closeBtn = el("button", { class: "asst-close", type: "button", onclick: () => setOpen(false) }, "×");
+    voiceBtn = canSpeak() ? el("button", { class: "asst-voice", type: "button", "aria-pressed": "false", onclick: toggleVoice }, "🔊") : null;
     log = el("div", { class: "asst-log", role: "log", "aria-live": "polite", "aria-relevant": "additions text", tabindex: "0" });
     input = el("textarea", { class: "asst-input", rows: "1", maxlength: String(MAX_INPUT), autocomplete: "off", enterkeyhint: "send" });
     sendBtn = el("button", { class: "asst-send", type: "submit" });
@@ -128,16 +211,17 @@
     note = el("p", { class: "asst-note" });
     form = el("form", { class: "asst-form", onsubmit: (e) => { e.preventDefault(); send(); } }, input, sendBtn);
     panel = el("section", { class: "asst-panel", id: "asst-panel", role: "dialog", "aria-modal": "false", "aria-labelledby": "asst-title", hidden: true },
-      el("header", { class: "asst-head" }, makeAvatar(), titleEl, closeBtn), log, handoffBtn, form, note);
+      el("header", { class: "asst-head" }, makeAvatar(), titleEl, voiceBtn, closeBtn), log, handoffBtn, form, note);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
-    input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 120) + "px"; });
+    input.addEventListener("input", () => { if (!S.busy && !speaking.node) mood(input.value ? "listening" : "idle"); input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 120) + "px"; });
     panel.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } });
+    window.addEventListener("pagehide", stopSpeech);
     document.body.append(fab, panel);
     mood("idle");
     let nudges = 0;
     const nudge = setInterval(() => { if (!panel.hidden || ++nudges > 3) { if (nudges > 3) clearInterval(nudge); return; } mood("wave", 2200); }, 28000);
     texts();
-    addMessage("assistant", t("greeting"), { greeting: true });
+    addListen(addMessage("assistant", t("greeting"), { greeting: true }));
   }
 
   function texts() {
@@ -149,10 +233,26 @@
     input.setAttribute("aria-label", t("placeholder"));
     sendBtn.textContent = t("send");
     handoffBtn.textContent = t("handoff");
+    paintVoice();
+    for (const b of log.querySelectorAll(".asst-listen")) b.textContent = t("listen");
     note.textContent = t("note");
     panel.setAttribute("lang", S.lang);
     const first = log.querySelector("[data-greeting]");
     if (first && S.messages.length === 0) first.textContent = t("greeting");
+  }
+
+  function paintVoice() {
+    if (!voiceBtn) return;
+    voiceBtn.setAttribute("aria-pressed", String(S.voice));
+    voiceBtn.setAttribute("aria-label", t(S.voice ? "voiceOff" : "voiceOn"));
+    voiceBtn.setAttribute("title", t(S.voice ? "voiceOff" : "voiceOn"));
+    voiceBtn.textContent = S.voice ? "🔊" : "🔈";
+  }
+  /** On/off for reading every new answer aloud; it lives only until the page is closed. */
+  function toggleVoice() {
+    S.voice = !S.voice;
+    if (!S.voice) stopSpeech();
+    paintVoice();
   }
 
   function setOpen(open, { focus = true } = {}) {
@@ -160,12 +260,13 @@
     fab.setAttribute("aria-expanded", String(open));
     fab.classList.toggle("asst-fab-hidden", open);
     if (open) {
-      mood("wave", 2600);
+      mood("greeting", 2600);
       clearHighlight();
       if (focus) input.focus();
       log.scrollTop = log.scrollHeight;
-    } else if (focus) {
-      fab.focus();
+    } else {
+      stopSpeech();
+      if (focus) fab.focus();
     }
   }
 
@@ -176,6 +277,14 @@
     log.append(node);
     log.scrollTop = log.scrollHeight;
     return node;
+  }
+  /** "Listen again" under a finished assistant message: reads what the bubble says now (the greeting follows the language). */
+  function addListen(bubble) {
+    if (!canSpeak()) return null;
+    const btn = el("button", { class: "asst-listen", type: "button", "aria-pressed": "false" }, t("listen"));
+    btn.addEventListener("click", () => { if (speaking.node === btn) stopSpeech(); else speak(bubble.textContent, btn); });
+    bubble.after(btn);
+    return btn;
   }
 
   /* ---------- talking to the backend ---------- */
@@ -255,7 +364,10 @@
         bubble.classList.remove("asst-pending");
         S.handoffReady = true;
         handoffBtn.hidden = false;
-        if (action) { offerCard(action); mood("present", 2600); } else mood("nod", 1100);
+        const listen = addListen(bubble);
+        if (S.voice && listen) speak(answer, listen);
+        else if (action) { offerCard(action); mood("presenting", 2600); } else mood("respect", 1100);
+        if (action && S.voice) offerCard(action);
       }
     } catch (e) {
       mood("idle");

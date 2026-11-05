@@ -164,7 +164,7 @@ def transform_home(html, draft, ctx, assets, forms):
         if draft["assistant"]["avatar"] == schema.CUSTOM_AVATAR:        # the owner's pictures: the widget swaps them by mood
             urls = {m: assets.url(ref).lstrip("/") for m, ref in draft["assistant"]["customAvatar"].items()}
             frames = " data-assistant-frames='%s'" % json.dumps({m: u for m, u in urls.items() if u}, separators=(",", ":"))
-        html = html.replace('<html ', '<html data-assistant-avatar="%s"%s ' % (draft["assistant"]["avatar"], frames), 1)
+        html = html.replace('<html ', '<html data-assistant-avatar="%s" data-assistant-voice="%s"%s ' % (draft["assistant"]["avatar"], draft["assistant"]["voice"], frames), 1)
     if head_add:
         html = re.sub(r'(<link rel="stylesheet" href="assets/styles.css">\n)', lambda m: m.group(1) + head_add, html, count=1)
     return html

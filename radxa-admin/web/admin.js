@@ -384,11 +384,13 @@ const avatarPicker = (A) => {
     });
     mine.replaceChildren(
       h("h3", { style: "margin:14px 0 6px" }, "Свій аватар"),
-      h("p", { class: "muted" }, "Одна картинка (PNG, JPEG, WebP, AVIF; SVG не приймається) або ZIP з картинками на кожен стан: idle, wave, nod, think, talk, present (за назвою файлу). Достатньо idle: решта стане нею ж. Картинка в кружку; рух дає сторінка (дихання, кивок, привітання, «говорить»)."),
+      h("p", { class: "muted" }, "Одна картинка (PNG, JPEG, WebP, AVIF; SVG не приймається) або ZIP з картинками на кожен стан: idle, wave, nod, think, talk, present (за назвою файлу; можна й greeting, listening, happy, respect, goodbye, а також talking, thinking, presenting). Достатньо idle: решта стане нею ж, а додаткові стани, яких немає, беруть найближчий основний. Картинка в кружку; рух дає сторінка (дихання, кивок, привітання, «говорить»)."),
       h("div", { class: "row" },
         h("button", { class: "btn", type: "button", onclick: () => input.click() }, frames.idle ? "Замінити файл або ZIP" : "Завантажити файл або ZIP"),
         frames.idle ? h("button", { class: `btn${A.avatar === "custom" ? " primary" : ""}`, type: "button", onclick: () => { A.avatar = "custom"; touch(); fill(); paintMine(); } }, A.avatar === "custom" ? "Обрано" : "Обрати свій") : null,
         input),
+      h("label", { class: "row", style: "margin-top:8px;align-items:center;gap:8px" }, "Голос озвучення (якщо відвідувач вмикає звук):",
+        h("select", { onchange: (e) => { A.voice = e.target.value; touch(); } }, ...[["female", "жіночий"], ["male", "чоловічий"]].map(([v, l]) => h("option", { value: v, selected: (A.voice || "female") === v }, l)))),
       h("div", { class: "row", style: "margin-top:8px" }, ...Object.entries(frames).map(([mood, ref]) => h("figure", { style: "margin:0;text-align:center" },
         h("img", { src: frameUrl(ref), alt: mood, style: "width:64px;height:64px;object-fit:cover;border-radius:50%" }), h("figcaption", { class: "muted" }, mood)))));
   };

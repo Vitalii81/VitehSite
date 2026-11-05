@@ -176,6 +176,21 @@
         "en": "Could not get an answer. Try again or use the contact form.",
         "de": "Keine Antwort erhalten. Versuchen Sie es erneut oder nutzen Sie das Kontaktformular."
       },
+      "voiceOn": {
+        "uk": "Озвучувати відповіді",
+        "en": "Read answers aloud",
+        "de": "Antworten vorlesen"
+      },
+      "voiceOff": {
+        "uk": "Вимкнути озвучення",
+        "en": "Turn off voice",
+        "de": "Vorlesen ausschalten"
+      },
+      "listen": {
+        "uk": "Прослухати ще раз",
+        "en": "Listen again",
+        "de": "Noch einmal anhören"
+      },
       "handoff": {
         "uk": "Передати у форму контакту",
         "en": "Pass to the contact form",

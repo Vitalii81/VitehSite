@@ -1809,6 +1809,17 @@ class CustomAvatarTests(ApiTests):
         draft["assistant"]["customAvatar"] = {"idle": "u:0123456789abcdef"}                 # an upload that does not exist
         self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["avatar"], "consultant-f")
 
+    def test_nine_state_names_and_the_voice_of_a_custom_avatar(self):
+        from vadmin import avatar, schema
+        picked = avatar.pick([("Greeting.png", b"g"), ("talking.png", b"t"), ("thinking.png", b"k"), ("goodbye.png", b"b"), ("idle.png", b"i")])
+        self.assertEqual(picked, {"greeting": b"g", "talk": b"t", "think": b"k", "goodbye": b"b", "idle": b"i"})
+        draft = self.w.draft()
+        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "female", "default")
+        draft["assistant"]["voice"] = "male"
+        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "male")
+        draft["assistant"]["voice"] = "robot"
+        self.assertEqual(schema.sanitize(draft, schema.Context(self.w.paths))["assistant"]["voice"], "female")
+
     def test_a_publication_clears_the_live_overrides(self):
         from vadmin import settings
         seen = []
