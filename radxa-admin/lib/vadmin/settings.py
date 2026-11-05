@@ -3,7 +3,6 @@ Today only the assistant's avatar. The Worker accepts a write only with the bear
 Worker secret SETTINGS_TOKEN, which deploy-worker.sh stores on each publication)."""
 import json
 import os
-import urllib.request
 
 from .core import ApiError
 
@@ -19,7 +18,17 @@ def values(draft):
     return {"assistantAvatar": draft["assistant"]["avatar"]}
 
 
-def apply(paths, draft, opener=urllib.request.urlopen):
+def _curl(url, token, body):
+    """The Radxa's Python has no TLS module (OpenWrt), so the request goes through curl; the key is passed on stdin, not on the command line."""
+    import subprocess
+    cmd = ["curl", "-sS", "-m", "15", "-X", "POST", url, "-H", "@-", "-H", "content-type: application/json", "-H", "user-agent: viteh-admin/1", "--data-binary", body]
+    r = subprocess.run(cmd, input=("authorization: Bearer %s\n" % token).encode(), capture_output=True, timeout=20)
+    if r.returncode:
+        raise OSError(r.stderr.decode(errors="replace").strip() or "curl %d" % r.returncode)
+    return r.stdout.decode()
+
+
+def apply(paths, draft, run=_curl):
     try:
         with open(token_path(paths), encoding="utf-8") as f:
             token = f.read().strip()
@@ -27,12 +36,10 @@ def apply(paths, draft, opener=urllib.request.urlopen):
         token = ""
     if not token:
         raise ApiError("no_token", "Немає ключа живих параметрів (файл settings-token). Він з'являється після першої публікації з новим Worker", 409)
-    body = json.dumps(values(draft)).encode()
-    request = urllib.request.Request(SITE_URL + "/api/settings", data=body, method="POST",
-                                     headers={"authorization": "Bearer " + token, "content-type": "application/json", "user-agent": "viteh-admin/1"})
     try:
-        with opener(request, timeout=15) as r:
-            answer = json.loads(r.read().decode() or "{}")
+        answer = json.loads(run(SITE_URL + "/api/settings", token, json.dumps(values(draft))) or "{}")
     except Exception as e:
         raise ApiError("apply_failed", "Не вдалося застосувати на сайті: %s. Якщо Worker ще без цієї можливості, зробіть звичайну публікацію" % e, 502)
+    if not answer.get("ok"):
+        raise ApiError("apply_failed", "Сайт не прийняв параметри: %s" % answer.get("error", "?"), 502)
     return {"ok": True, "settings": answer.get("settings", {})}

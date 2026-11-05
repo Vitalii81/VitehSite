@@ -1773,17 +1773,12 @@ class LiveSettingsTests(ApiTests):
             f.write("k-123\n")
         sent = {}
 
-        class Answer:
-            def __enter__(self): return self
-            def __exit__(self, *a): return False
-            def read(self): return b'{"ok": true, "settings": {"assistantAvatar": "consultant-f"}}'
-
-        def opener(request, timeout=0):
-            sent.update(url=request.full_url, auth=request.get_header("Authorization"), body=json.loads(request.data))
-            return Answer()
+        def run(url, token, body):
+            sent.update(url=url, auth=token, body=json.loads(body))
+            return '{"ok": true, "settings": {"assistantAvatar": "consultant-f"}}'
         draft = self.w.draft()
-        self.assertEqual(settings.apply(self.w.paths, draft, opener)["ok"], True)
-        self.assertEqual(sent, {"url": "https://viteh.org/api/settings", "auth": "Bearer k-123", "body": {"assistantAvatar": "consultant-f"}})
+        self.assertEqual(settings.apply(self.w.paths, draft, run)["ok"], True)
+        self.assertEqual(sent, {"url": "https://viteh.org/api/settings", "auth": "k-123", "body": {"assistantAvatar": "consultant-f"}})
         self.assertEqual(self.call("POST", "apply-settings", {})[0], 401, "needs a session")
 
 
