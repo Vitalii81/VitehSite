@@ -4,7 +4,7 @@ import os
 import re
 from http.cookies import SimpleCookie
 
-from . import auth, build, core, deploy, editpage, schema, uploads
+from . import auth, build, core, deploy, editpage, ideas, schema, uploads
 from .core import ApiError, LANGS, locked, read_json, write_json
 
 COOKIE = "vadmin"
@@ -153,6 +153,8 @@ def _handle(paths, method, action, headers, body, query, client):
         if action == "edit-page":
             lang = str((query.get("lang") or [""])[0])
             return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS, str((query.get("page") or [""])[0]))
+        if action == "ideas":
+            return _json(200, dict(ideas.view(ctx), ok=True, added=[s["title"] for s in read_draft(paths, ctx)["extra"]["services"]]))
         if action == "status":
             return _json(200, {"ok": True, "status": status(paths, host, ctx), "builds": build.list_builds(paths)})
         if action == "file":
@@ -178,6 +180,14 @@ def _handle(paths, method, action, headers, body, query, client):
             if int(data.get("rev", -1)) != draft["rev"]:
                 raise ApiError("conflict", "Чернетку змінено в іншій вкладці. Оновіть сторінку", 409, {"rev": draft["rev"]})
             new_id = schema.add_from_template(draft, str(data.get("kind", "")), str(data.get("id", "")), ctx)
+            save_draft(paths, draft)
+            return _json(200, {"ok": True, "newId": new_id, "draft": draft})
+        if action == "idea-add":
+            data = _body_json(body)
+            draft = read_draft(paths, ctx)
+            if int(data.get("rev", -1)) != draft["rev"]:
+                raise ApiError("conflict", "Чернетку змінено в іншій вкладці. Оновіть сторінку", 409, {"rev": draft["rev"]})
+            new_id = ideas.add(draft, str(data.get("id", "")), ctx)
             save_draft(paths, draft)
             return _json(200, {"ok": True, "newId": new_id, "draft": draft})
         if action == "upload":
