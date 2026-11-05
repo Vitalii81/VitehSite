@@ -131,6 +131,11 @@
 
 /* the owner's own picture as avatar: one image per mood, moved by CSS only */
 .asst-custom { display: inline-block; overflow: hidden; border-radius: 50%; position: relative; --m-open: 0; }
+/* a picture of a person reads better in a larger rounded square than in a small circle (the drawn avatars stay round) */
+.asst-fab .asst-custom, .asst-head .asst-custom { box-sizing: border-box; padding: 0; border-radius: 20px; background: linear-gradient(150deg, #eaf9f4, #b9e1d8); }   /* a light tile in both themes: the portraits wear dark jackets */
+.asst-fab .asst-custom { width: 80px; height: 80px; margin: -18px 0 -8px -2px; box-shadow: 0 0 0 3px var(--accent-ink), var(--shadow-lg); }
+.asst-head .asst-custom { width: 72px; height: 72px; margin: -8px 0; border-radius: 18px; box-shadow: 0 0 0 2px var(--accent); }
+.asst-custom img.asst-pose, .asst-custom > img:first-child { object-position: 50% 12%; }
 .asst-custom img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (prefers-reduced-motion: no-preference) {
   .asst-custom { animation: av-breathe 4s ease-in-out infinite; }
