@@ -40,6 +40,7 @@ export const materialDefs = (accent) => ({
   silk: { tex: "pcbSilk", alphaMode: "MASK", alphaCutoff: 0.5, doubleSided: false, pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
   screenCronos: { tex: "screenCronos", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   screenIot: { tex: "screenIot", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
+  solarPanel: { tex: "solarPanel", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0.25, roughnessFactor: 0.32 } },
   screenLaptop: { tex: "screenLaptop", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   screenDash: { tex: "screenDash", emissiveTex: true, emissiveFactor: [1, 1, 1], pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.2 } },
   paperDoc: { tex: "paperDoc", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.7 } },
