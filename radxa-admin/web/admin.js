@@ -666,21 +666,51 @@ function problemsDialog(problems) {
   document.body.append(dlg); dlg.showModal();
 }
 
+/** The publish log, one coloured line each: OK green, warnings yellow, errors red, steps blue, the rest muted (an all-OK log needs no reading). */
+const LOG_RULES = [
+  ["dim", /post-quantum|store now, decrypt later|openssh\.com\/pq|may need to be upgraded/i],        // the known ssh notice, repeated on every connection: not worth a colour
+  ["ok", /^\s*(ok|published|deployed|uploaded|✔|✓)\b|^reserve on the radxa updated/i],
+  ["err", /^\s*(error|fail(ed)?|check|npm err|✖|✘)\b|\b(failed|cannot|refused|not found|enospc|denied|unsupported)\b|непідтримана|помилка/i],
+  ["warn", /^\*\* |^\s*(warning|warn)\b|\bwarning\b|not updated/i],
+  ["step", /^\s*(downloading|verifying|deploying|staged|building|starting|current version)\b/i],
+];
+function logView(text) {
+  const lines = String(text).split("\n");
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  return h("pre", { class: "mono log" }, lines.map((line) => {
+    const hit = LOG_RULES.find(([, re]) => re.test(line));
+    return h("span", { class: `ln ${hit ? hit[0] : "dim"}` }, line || " ");
+  }));
+}
+
 function publishBox(id) {
   const d = S.status?.deploy || { state: "idle" };
   const mine = d.id === id;
   const busy = mine && (d.state === "queued" || d.state === "running");
   const label = { queued: "У черзі…", running: "Публікується…", ok: "Опубліковано", failed: "Помилка публікації" }[mine ? d.state : ""] || "";
   const btn = h("button", { class: "btn primary", type: "button", disabled: busy || null, onclick: () => publish(id) }, busy ? "Публікується…" : "Опублікувати цю версію");
+  const stale = id === S.status?.built && S.status?.changedSinceBuild;
+  const staleNote = stale && !busy ? h("p", { class: "chip warn" }, "У чернетці є зміни після цієї збірки: кнопка спершу збере свіжий пакет, а потім опублікує його.") : null;
   const note = !d.agentOnline && !busy ? h("p", { class: "muted" }, "Агент публікації на основному ПК зараз не на зв'язку: запит дочекається, поки його запустять (deploy-agent.sh).") : null;
   return h("div", { class: "card" }, h("strong", {}, `Опублікувати ${id}`),
     h("p", { class: "muted" }, "Кнопка ставить публікацію в чергу; ключі Cloudflare лишаються на основному ПК, де її виконує агент."),
-    h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), note,
-    mine && d.log ? h("pre", { class: "mono", style: "white-space:pre-wrap;max-height:240px;overflow:auto" }, d.log) : null);
+    h("div", { class: "row" }, btn, label ? h("span", { class: d.state === "failed" ? "chip warn" : "chip" }, label) : null), staleNote, note,
+    mine && d.log ? logView(d.log) : null);
 }
 
 async function publish(id) {
-  try { const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender(); } catch (e) { fail(e); }
+  try {
+    if (id === S.status?.built && S.status?.changedSinceBuild) {          // the draft moved on after this package was built: publishing it would ship the old site
+      await save();
+      toast("Є зміни після збірки: збираю свіжий пакет перед публікацією");
+      const b = await api("build", { method: "POST", body: {} });
+      S.status = b.status; S.builds = b.builds; updateChips();
+      id = b.result.id;
+    }
+    const r = await api("deploy", { method: "POST", body: { id } }); S.status = r.status; toast("Публікацію поставлено в чергу"); watchDeploy(); rerender();
+  } catch (e) {
+    if (e.data?.problems) problemsDialog(e.data.problems); else fail(e);
+  }
 }
 
 let deployTimer = null;

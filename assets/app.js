@@ -141,12 +141,26 @@ const renderTrust = () => {
   mount("#trustList", state.site.trust.items.map((item) => h("li", {}, svgIcon("check"), tr(item))));
 };
 
+/** Inline emphasis for card texts, built as DOM nodes (never HTML): **key** = strong accent, ~~minor~~ = muted, {{aspect}} = chip. */
+const RICH = /\*\*(.+?)\*\*|~~(.+?)~~|\{\{(.+?)\}\}/g;
+const rich = (text) => {
+  const out = [];
+  let pos = 0;
+  for (const m of String(text).matchAll(RICH)) {
+    if (m.index > pos) out.push(text.slice(pos, m.index));
+    out.push(m[1] != null ? h("strong", { class: "em" }, m[1]) : m[2] != null ? h("span", { class: "minor" }, m[2]) : h("span", { class: "tag" }, m[3]));
+    pos = m.index + m[0].length;
+  }
+  if (pos < text.length) out.push(text.slice(pos));
+  return out;
+};
+
 const renderServices = () => {
   mount("#serviceGrid", state.site.services.items.map((item, index) => h("article", { class: "card reveal", "data-s": String(index) },
     h("div", { class: "card-icon" }, svgIcon(item.icon)),
     h("h3", {}, tr(item.title)),
-    h("p", {}, tr(item.text)),
-    h("ul", { class: "check-list" }, item.points.map((point) => h("li", {}, svgIcon("check"), tr(point)))),
+    h("p", {}, rich(tr(item.text))),
+    h("ul", { class: "check-list" }, item.points.map((point) => h("li", {}, svgIcon("check"), h("span", {}, rich(tr(point)))))),
   )));
 };
 

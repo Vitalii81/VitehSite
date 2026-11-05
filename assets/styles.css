@@ -230,6 +230,13 @@ h1 { font-size: clamp(34px, 5.2vw, 62px); font-weight: 800; }
 .check-list { display: grid; gap: 8px; margin-top: auto; padding-top: 10px; font-size: 15px; }
 .check-list li { display: flex; gap: 10px; align-items: flex-start; }
 .check-list .ico { color: var(--accent); margin-top: 3px; }
+.card p .em, .check-list .em { color: var(--accent-strong); font-weight: 700; }
+.card p .minor, .check-list .minor { color: var(--muted); font-size: 0.92em; opacity: 0.85; }
+.card .tag { display: inline-block; padding: 0 8px; margin: 1px 1px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-size: 0.9em; font-weight: 600; white-space: nowrap; }
+.check-list li > span { min-width: 0; }
+/* a service card without a 3D scene gets an illustrative band with its big icon, the same 3:2 shape as the scene */
+#serviceGrid .card:not(:has(> .g3d-media)) > .card-icon { width: auto; height: auto; aspect-ratio: 3 / 2; margin: -28px -28px 10px; border-radius: 18px 18px 0 0; background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 68%), var(--accent-soft); }
+#serviceGrid .card:not(:has(> .g3d-media)) > .card-icon svg { width: 76px; height: 76px; stroke-width: 1.4; opacity: 0.95; }
 
 /* AI section */
 .ai-grid { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: clamp(28px, 5vw, 64px); align-items: center; }

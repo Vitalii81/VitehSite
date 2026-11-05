@@ -388,7 +388,9 @@
             "en": "Dashboards and alerts",
             "de": "Dashboards und Benachrichtigungen"
           }
-        ]
+        ],
+        "model": "assets/models/iot-module.glb",
+        "poster": "assets/posters/iot-module"
       },
       {
         "icon": "flask",
@@ -418,7 +420,9 @@
             "en": "Scale-up recommendations",
             "de": "Empfehlungen zur Skalierung"
           }
-        ]
+        ],
+        "model": "assets/models/custom-electronics.glb",
+        "poster": "assets/posters/custom-electronics"
       },
       {
         "icon": "shield",
@@ -428,25 +432,25 @@
           "de": "Technisches Audit und Beratung"
         },
         "text": {
-          "uk": "Незалежний погляд на архітектуру, вибір компонентів, безпеку та якість коду.",
-          "en": "An independent view on architecture, component choice, security and code quality.",
-          "de": "Ein unabhängiger Blick auf Architektur, Komponentenwahl, Sicherheit und Code-Qualität."
+          "uk": "**Незалежний погляд** на {{архітектуру}}, {{вибір компонентів}}, {{безпеку}} та {{якість коду}}.",
+          "en": "An **independent view** on {{architecture}}, {{component choice}}, {{security}} and {{code quality}}.",
+          "de": "Ein **unabhängiger Blick** auf {{Architektur}}, {{Komponentenwahl}}, {{Sicherheit}} und {{Code-Qualität}}."
         },
         "points": [
           {
-            "uk": "Огляд архітектури",
-            "en": "Architecture review",
-            "de": "Architektur-Review"
+            "uk": "**Огляд** архітектури",
+            "en": "Architecture **review**",
+            "de": "Architektur-**Review**"
           },
           {
-            "uk": "Оцінка ризиків і витрат",
-            "en": "Risk and cost assessment",
-            "de": "Risiko- und Kostenbewertung"
+            "uk": "**Оцінка** ризиків і витрат",
+            "en": "Risk and cost **assessment**",
+            "de": "Risiko- und Kosten**bewertung**"
           },
           {
-            "uk": "Безпека за замовчуванням",
-            "en": "Security by default",
-            "de": "Sicherheit von Anfang an"
+            "uk": "**Безпека** за замовчуванням",
+            "en": "**Security** by default",
+            "de": "**Sicherheit** von Anfang an"
           }
         ]
       },
@@ -458,25 +462,25 @@
           "de": "Webseiten-Entwicklung"
         },
         "text": {
-          "uk": "Швидкі багатомовні сайти без трекерів і сторонніх запитів, форми зі вкладеннями, приватні адмінки та 3D-галереї виробів.",
-          "en": "Fast multilingual websites without trackers or third-party requests, forms with attachments, private admin tools and 3D product galleries.",
-          "de": "Schnelle mehrsprachige Webseiten ohne Tracker und Drittanbieter-Anfragen, Formulare mit Anhängen, private Admin-Werkzeuge und 3D-Produktgalerien."
+          "uk": "**Швидкі багатомовні сайти** без трекерів і сторонніх запитів. ~~Форми зі вкладеннями, приватні адмінки та 3D-галереї виробів.~~",
+          "en": "**Fast multilingual websites** without trackers or third-party requests. ~~Forms with attachments, private admin tools and 3D product galleries.~~",
+          "de": "**Schnelle mehrsprachige Webseiten** ohne Tracker und Drittanbieter-Anfragen. ~~Formulare mit Anhängen, private Admin-Werkzeuge und 3D-Produktgalerien.~~"
         },
         "points": [
           {
-            "uk": "Статичні сайти без збірки",
-            "en": "Static sites without a build step",
-            "de": "Statische Seiten ohne Build-Schritt"
+            "uk": "**Статичні сайти** без збірки",
+            "en": "**Static sites** without a build step",
+            "de": "**Statische Seiten** ohne Build-Schritt"
           },
           {
-            "uk": "Форми, пошта, Cloudflare Workers",
-            "en": "Forms, mail, Cloudflare Workers",
-            "de": "Formulare, Mail, Cloudflare Workers"
+            "uk": "**Форми, пошта**, {{Cloudflare Workers}}",
+            "en": "**Forms, mail**, {{Cloudflare Workers}}",
+            "de": "**Formulare, Mail**, {{Cloudflare Workers}}"
           },
           {
-            "uk": "3D-моделі виробів і приватна адмінка",
-            "en": "3D product models and a private admin",
-            "de": "3D-Produktmodelle und privates Admin"
+            "uk": "**3D-моделі** виробів і приватна адмінка",
+            "en": "**3D product models** and a private admin",
+            "de": "**3D-Produktmodelle** und privates Admin"
           }
         ]
       },
@@ -488,25 +492,25 @@
           "de": "Android-Apps"
         },
         "text": {
-          "uk": "Нативні застосунки на Kotlin і Jetpack Compose для ваших серверів і пристроїв: чат, голос, файли, сповіщення.",
-          "en": "Native apps in Kotlin and Jetpack Compose for your own servers and devices: chat, voice, files, notifications.",
-          "de": "Native Apps in Kotlin und Jetpack Compose für Ihre eigenen Server und Geräte: Chat, Sprache, Dateien, Benachrichtigungen."
+          "uk": "**Нативні застосунки** на {{Kotlin}} і {{Jetpack Compose}} для ваших серверів і пристроїв. ~~Чат, голос, файли, сповіщення.~~",
+          "en": "**Native apps** in {{Kotlin}} and {{Jetpack Compose}} for your own servers and devices. ~~Chat, voice, files, notifications.~~",
+          "de": "**Native Apps** in {{Kotlin}} und {{Jetpack Compose}} für Ihre eigenen Server und Geräte. ~~Chat, Sprache, Dateien, Benachrichtigungen.~~"
         },
         "points": [
           {
-            "uk": "Kotlin та Jetpack Compose",
-            "en": "Kotlin and Jetpack Compose",
-            "de": "Kotlin und Jetpack Compose"
+            "uk": "{{Kotlin}} та {{Jetpack Compose}}",
+            "en": "{{Kotlin}} and {{Jetpack Compose}}",
+            "de": "{{Kotlin}} und {{Jetpack Compose}}"
           },
           {
-            "uk": "Голос, переклад, фонові служби",
-            "en": "Voice, translation, background services",
-            "de": "Sprache, Übersetzung, Hintergrunddienste"
+            "uk": "**Голос**, переклад, фонові служби",
+            "en": "**Voice**, translation, background services",
+            "de": "**Sprache**, Übersetzung, Hintergrunddienste"
           },
           {
-            "uk": "Автооновлення й приватні мережі",
-            "en": "Automatic updates and private networks",
-            "de": "Automatische Updates und private Netzwerke"
+            "uk": "**Автооновлення** й приватні мережі",
+            "en": "**Automatic updates** and private networks",
+            "de": "**Automatische Updates** und private Netzwerke"
           }
         ]
       },
@@ -538,7 +542,9 @@
             "en": "Tests and support",
             "de": "Tests und Support"
           }
-        ]
+        ],
+        "model": "assets/models/agent-assistant.glb",
+        "poster": "assets/posters/agent-assistant"
       },
       {
         "icon": "chat",
@@ -548,25 +554,25 @@
           "de": "Lokale KI und Sprache"
         },
         "text": {
-          "uk": "Запуск локальних мовних моделей на власному обладнанні, голосові інтерфейси й донавчання.",
-          "en": "Running local language models on your own hardware, voice interfaces and fine-tuning.",
-          "de": "Lokale Sprachmodelle auf eigener Hardware, Sprachschnittstellen und Fine-Tuning."
+          "uk": "**Запуск локальних мовних моделей** на власному обладнанні. ~~Голосові інтерфейси й донавчання.~~",
+          "en": "**Running local language models** on your own hardware. ~~Voice interfaces and fine-tuning.~~",
+          "de": "**Lokale Sprachmodelle** auf eigener Hardware. ~~Sprachschnittstellen und Fine-Tuning.~~"
         },
         "points": [
           {
-            "uk": "Локальні LLM, квантизація (GGUF)",
-            "en": "Local LLMs, quantisation (GGUF)",
-            "de": "Lokale LLMs, Quantisierung (GGUF)"
+            "uk": "Локальні {{LLM}}, квантизація {{GGUF}}",
+            "en": "Local {{LLMs}}, quantisation {{GGUF}}",
+            "de": "Lokale {{LLMs}}, Quantisierung {{GGUF}}"
           },
           {
-            "uk": "Розпізнавання й синтез мовлення",
-            "en": "Speech recognition and synthesis",
-            "de": "Spracherkennung und Sprachsynthese"
+            "uk": "**Розпізнавання** й синтез мовлення",
+            "en": "**Speech recognition** and synthesis",
+            "de": "**Spracherkennung** und Sprachsynthese"
           },
           {
-            "uk": "Донавчання моделей",
-            "en": "Model fine-tuning",
-            "de": "Fine-Tuning von Modellen"
+            "uk": "**Донавчання** моделей",
+            "en": "Model **fine-tuning**",
+            "de": "**Fine-Tuning** von Modellen"
           }
         ]
       },
@@ -598,7 +604,9 @@
             "en": "Log analysis and debugging",
             "de": "Log-Analyse und Fehlersuche"
           }
-        ]
+        ],
+        "model": "assets/models/device-monitor.glb",
+        "poster": "assets/posters/device-monitor"
       },
       {
         "icon": "agent",
@@ -608,25 +616,25 @@
           "de": "KI-Server: Mail, Webseite, Dokumente"
         },
         "text": {
-          "uk": "Приватний AI-сервер під ваші задачі. Його частини підключаються окремими опціями: власна пошта з SMTP та AI-агенти для пошти, сайту й документів.",
-          "en": "A private AI server for your tasks. Its parts are added as separate options: your own mail with SMTP and AI agents for mail, website and documents.",
-          "de": "Ein privater KI-Server für Ihre Aufgaben. Seine Teile lassen sich als einzelne Optionen hinzufügen: eigene Mail mit SMTP sowie KI-Agenten für Mail, Webseite und Dokumente."
+          "uk": "**Приватний AI-сервер** під ваші задачі. ~~Його частини підключаються окремими опціями:~~ {{власна пошта з SMTP}} та {{AI-агенти}} для пошти, сайту й документів.",
+          "en": "A **private AI server** for your tasks. ~~Its parts are added as separate options:~~ {{own mail with SMTP}} and {{AI agents}} for mail, website and documents.",
+          "de": "Ein **privater KI-Server** für Ihre Aufgaben. ~~Seine Teile lassen sich als einzelne Optionen hinzufügen:~~ {{eigene Mail mit SMTP}} sowie {{KI-Agenten}} für Mail, Webseite und Dokumente."
         },
         "points": [
           {
-            "uk": "Опція: власна пошта й SMTP",
-            "en": "Option: own mail and SMTP",
-            "de": "Option: eigene Mail und SMTP"
+            "uk": "~~Опція:~~ **власна пошта** й SMTP",
+            "en": "~~Option:~~ **own mail** and SMTP",
+            "de": "~~Option:~~ **eigene Mail** und SMTP"
           },
           {
-            "uk": "Опція: AI-агент для пошти",
-            "en": "Option: AI agent for mail",
-            "de": "Option: KI-Agent für Mail"
+            "uk": "~~Опція:~~ **AI-агент** для пошти",
+            "en": "~~Option:~~ **AI agent** for mail",
+            "de": "~~Option:~~ **KI-Agent** für Mail"
           },
           {
-            "uk": "Опція: AI-агенти для сайту й документів",
-            "en": "Option: AI agents for website and documents",
-            "de": "Option: KI-Agenten für Webseite und Dokumente"
+            "uk": "~~Опція:~~ **AI-агенти** для сайту й документів",
+            "en": "~~Option:~~ **AI agents** for website and documents",
+            "de": "~~Option:~~ **KI-Agenten** für Webseite und Dokumente"
           }
         ]
       }
