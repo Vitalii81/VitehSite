@@ -99,7 +99,7 @@ const NAV = [
   ["Портфоліо", [["portfolio", "Елементи портфоліо"], ["portfolio-page", "Сторінка й PDF: розділи, тексти"]]],
   ["Вміст", [["texts", "Тексти (uk/en/de)"], ["pages", "Сторінки"], ["forms", "Форми"], ["files", "Файли"]]],
   ["Помічник", [["assistant", "Бот-помічник: база знань і фільтр"]]],
-  ["Випуск", [["builds", "Версії й публікація"]]],
+  ["Випуск", [["builds", "Версії й публікація"], ["stats", "Статистика відвідувань"]]],
 ];
 
 function updateChips() {
@@ -424,6 +424,46 @@ const avatarPicker = (A) => {
 };
 
 const VIEWS = {
+  async stats(main) {
+    main.append(...head("Статистика відвідувань", "Лічильники без cookies і без ідентифікації людей: це перегляди сторінок, а не окремі відвідувачі. Дані збирає Worker сайту; IP-адреси й повні адреси не зберігаються. Не рахуються боти та браузери з Do Not Track."));
+    const days = h("select", { "aria-label": "Період" }, ...[[7, "7 днів"], [30, "30 днів"], [90, "90 днів"], [365, "рік"]].map(([v, t]) => h("option", { value: v, selected: v === (S.statsDays || 30) }, t)));
+    const out = h("div", {});
+    const mmss = (sec) => (sec >= 60 ? `${Math.floor(sec / 60)} хв ${sec % 60} с` : `${sec} с`);
+    const bars = (title, rows, total, fmt = (r) => r.key) => h("div", { class: "card", style: "margin-top:10px" }, h("h3", { style: "margin:0 0 6px" }, title),
+      ...(rows.length ? rows.slice(0, 12).map((r) => h("div", { style: "display:grid;grid-template-columns:minmax(80px,200px) 1fr 56px;gap:8px;align-items:center;margin:3px 0" },
+        h("span", { style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap" }, fmt(r)),
+        h("div", { style: "height:10px;border-radius:6px;background:var(--soft)" }, h("div", { style: `height:100%;border-radius:6px;background:var(--accent, #4cc9ad);width:${Math.max(2, Math.round(100 * r.count / (total || 1)))}%` })),
+        h("span", { class: "muted", style: "text-align:right" }, String(r.count)))) : [h("p", { class: "muted" }, "Поки немає даних.")]));
+    const load = async () => {
+      S.statsDays = Number(days.value);
+      out.replaceChildren(h("p", { class: "muted" }, "Завантажую…"));
+      let d;
+      try { d = await api("stats", { query: `&days=${S.statsDays}` }); } catch (e) { out.replaceChildren(h("p", { class: "msg err" }, e.message || "Помилка")); return; }
+      const max = Math.max(1, ...d.days.map((x) => x.views));
+      const hmax = Math.max(1, ...d.hours);
+      const pageName = (r) => `${r.key}${r.avgSeconds ? ` · ${mmss(r.avgSeconds)}` : ""}`;
+      out.replaceChildren(
+        h("div", { class: "row", style: "gap:8px;flex-wrap:wrap" },
+          h("span", { class: "chip" }, `Переглядів: ${d.views}`), h("span", { class: "chip" }, `Середній час на сторінці: ${d.avgSeconds ? mmss(d.avgSeconds) : "—"}`),
+          h("span", { class: "chip" }, d.since ? `З ${d.since}` : "Даних ще немає")),
+        h("div", { class: "card", style: "margin-top:10px" }, h("h3", { style: "margin:0 0 6px" }, "За днями"),
+          h("div", { style: "display:flex;align-items:flex-end;gap:2px;height:90px", role: "img", "aria-label": "Перегляди за днями" },
+            ...d.days.map((x) => h("div", { title: `${x.date}: ${x.views}`, style: `flex:1;min-width:2px;border-radius:3px 3px 0 0;background:var(--accent, #4cc9ad);height:${Math.max(3, Math.round(100 * x.views / max))}%` })))),
+        bars("Сторінки (і середній час)", d.pages, d.views, pageName),
+        bars("Звідки прийшли", d.refs, d.views),
+        bars("Країни", d.countries, d.views),
+        bars("Пристрої", d.devices, d.views),
+        bars("Мови сторінки", d.langs, d.views),
+        h("div", { class: "card", style: "margin-top:10px" }, h("h3", { style: "margin:0 0 6px" }, "Година доби (UTC)"),
+          h("div", { style: "display:flex;align-items:flex-end;gap:2px;height:70px", role: "img", "aria-label": "Перегляди за годинами" },
+            ...d.hours.map((n, hr) => h("div", { title: `${hr}:00 — ${n}`, style: `flex:1;border-radius:3px 3px 0 0;background:var(--accent, #4cc9ad);height:${Math.max(3, Math.round(100 * n / hmax))}%` })))),
+        bars("Скільки сторінка була відкрита", d.bins, d.bins.reduce((a, b) => a + b.count, 0), (r) => r.label));
+    };
+    days.addEventListener("change", load);
+    main.append(h("div", { class: "row" }, h("label", {}, "Період: "), days, h("button", { class: "btn", type: "button", onclick: load }, "Оновити")), out);
+    await load();
+  },
+
   sections(main) {
     main.append(...head("Розділи головної сторінки", "Вимкнений розділ не потрапляє в HTML публічного сайту."));
     for (const s of S.catalog.sections) {

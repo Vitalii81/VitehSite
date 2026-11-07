@@ -1639,9 +1639,9 @@
             "de": "1. Überblick"
           },
           "p": {
-            "uk": "Цей сайт — статична вітрина. Ми не використовуємо cookies, засоби аналітики, рекламні пікселі чи сторонні шрифти й скрипти. Ваш вибір мови та теми зберігається лише локально у вашому браузері (localStorage) і нікуди не передається.",
-            "en": "This website is a static showcase. We do not use cookies, analytics, advertising pixels or third-party fonts and scripts. Your language and theme choice is stored only locally in your browser (localStorage) and is never transmitted.",
-            "de": "Diese Website ist eine statische Präsentation. Wir verwenden keine Cookies, keine Analyse- oder Werbe-Tools und keine Schriften oder Skripte von Drittanbietern. Ihre Sprach- und Designauswahl wird ausschließlich lokal in Ihrem Browser (localStorage) gespeichert und nicht übertragen."
+            "uk": "Цей сайт — статична вітрина. Ми не використовуємо cookies, рекламні пікселі, сторонні засоби аналітики, шрифти чи скрипти. Ваш вибір мови та теми зберігається лише локально у вашому браузері (localStorage) і нікуди не передається. Відвідування ми рахуємо самі, без cookies і без ідентифікації осіб (див. розділ 3).",
+            "en": "This website is a static showcase. We do not use cookies, advertising pixels, third-party analytics tools, fonts or scripts. Your language and theme choice is stored only locally in your browser (localStorage) and is never transmitted. We count visits ourselves, without cookies and without identifying anyone (see section 3).",
+            "de": "Diese Website ist eine statische Präsentation. Wir verwenden keine Cookies, keine Werbe-Pixel und keine Analyse-Tools, Schriften oder Skripte von Drittanbietern. Ihre Sprach- und Designauswahl wird ausschließlich lokal in Ihrem Browser (localStorage) gespeichert und nicht übertragen. Besuche zählen wir selbst, ohne Cookies und ohne jemanden zu identifizieren (siehe Abschnitt 3)."
           }
         },
         {
@@ -1658,9 +1658,21 @@
         },
         {
           "h": {
-            "uk": "3. Контактна форма та email",
-            "en": "3. Contact form and email",
-            "de": "3. Kontaktformular und E-Mail"
+            "uk": "3. Статистика відвідувань",
+            "en": "3. Visit statistics",
+            "de": "3. Besuchsstatistik"
+          },
+          "p": {
+            "uk": "Щоб розуміти, які сторінки цікавлять відвідувачів, ми рахуємо перегляди власними засобами, без cookies і без сторонніх сервісів. Зберігаються лише узагальнені лічильники за день: сторінка, країна (за визначенням Cloudflare), сайт, з якого прийшли (лише домен), тип пристрою, мова, година та приблизний час, скільки сторінка була відкрита. IP-адреса, ідентифікатори, повні адреси й дані браузера не зберігаються, окремих відвідувачів розпізнати не можна. Якщо ваш браузер надсилає сигнал Do Not Track або Global Privacy Control, підрахунок не виконується. Правова підстава: ст. 6(1)(f) GDPR (законний інтерес у покращенні сайту).",
+            "en": "To understand which pages interest visitors, we count page views with our own means, without cookies and without third-party services. Only aggregated daily counters are stored: page, country (as reported by Cloudflare), referring site (domain only), device type, language, hour and roughly how long the page was open. IP addresses, identifiers, full URLs and browser data are not stored, and individual visitors cannot be recognised. If your browser sends a Do Not Track or Global Privacy Control signal, nothing is counted. Legal basis: Art. 6(1)(f) GDPR (legitimate interest in improving the site).",
+            "de": "Um zu verstehen, welche Seiten die Besucher interessieren, zählen wir Seitenaufrufe mit eigenen Mitteln, ohne Cookies und ohne Dienste von Drittanbietern. Gespeichert werden nur zusammengefasste Tageszähler: Seite, Land (laut Cloudflare), verweisende Seite (nur die Domain), Gerätetyp, Sprache, Uhrzeit und ungefähr, wie lange die Seite geöffnet war. IP-Adressen, Kennungen, vollständige URLs und Browserdaten werden nicht gespeichert, einzelne Besucher können nicht wiedererkannt werden. Sendet Ihr Browser ein Do-Not-Track- oder Global-Privacy-Control-Signal, wird nichts gezählt. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Verbesserung der Website)."
+          }
+        },
+        {
+          "h": {
+            "uk": "4. Контактна форма та email",
+            "en": "4. Contact form and email",
+            "de": "4. Kontaktformular und E-Mail"
           },
           "p": {
             "uk": "Контактна форма надсилає введені вами ім'я, email, тип проєкту та повідомлення на нашу поштову скриньку. Передача йде через Cloudflare (хостинг і маршрутизація пошти), сама скринька розміщена в Google Mail. Ми обробляємо ці дані лише для відповіді на запит (ст. 6(1)(b) або (f) GDPR) і видаляємо їх, коли потреба зникає. Те саме стосується листів, які ви надсилаєте нам на email. Якщо ви додаєте документи, вони передаються разом із запитом тим самим шляхом і зберігаються лише для обробки запиту; не додавайте більше, ніж потрібно.",
@@ -1670,9 +1682,9 @@
         },
         {
           "h": {
-            "uk": "4. Ваші права",
-            "en": "4. Your rights",
-            "de": "4. Ihre Rechte"
+            "uk": "5. Ваші права",
+            "en": "5. Your rights",
+            "de": "5. Ihre Rechte"
           },
           "p": {
             "uk": "Ви маєте право на доступ, виправлення, видалення, обмеження обробки, перенесення даних та заперечення, а також на скаргу до наглядового органу.",
@@ -1682,9 +1694,9 @@
         },
         {
           "h": {
-            "uk": "5. Відповідальний",
-            "en": "5. Controller",
-            "de": "5. Verantwortlicher"
+            "uk": "6. Відповідальний",
+            "en": "6. Controller",
+            "de": "6. Verantwortlicher"
           },
           "p": {
             "uk": "[ПІБ / назва компанії, адреса, email]",

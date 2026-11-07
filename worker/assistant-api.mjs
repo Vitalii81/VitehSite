@@ -1,5 +1,6 @@
 // POST /api/assistant: the thin layer between the visitor and the owner's own model pool. See assistant.mjs for the logic.
 import { originAllowed } from "./contact.mjs";
+import { gateStats } from "./stats.mjs";
 import {
   Gate, LIMITS, OutputGuard, PRIVATE_KB_PATH, briefMessages, buildBriefPrompt, buildSystemPrompt, gateClient, looksLikeInjection, parseBackends, refusalText, sseDeltas, upstreamRequest, validateRequest,
 } from "./assistant.mjs";
@@ -16,6 +17,7 @@ export class AssistantGate {
     const path = new URL(request.url).pathname;
     if (path === "/settings-get") return jsonResponse(200, { value: (await this.state.storage.get("settings")) || {} });          // see settings.mjs
     if (path === "/settings-set") { await this.state.storage.put("settings", body.value || {}); return jsonResponse(200, { ok: true }); }
+    if (path === "/stats-hit" || path === "/stats-get") return jsonResponse(200, await gateStats(this.state.storage, path, body));          // see stats.mjs
     this.gate.setBackends(Array.isArray(body.ids) ? body.ids : [], body.slots && typeof body.slots === "object" ? body.slots : {});
     if (path === "/acquire") return jsonResponse(200, await this.gate.acquire(String(body.ip || "unknown"), Array.isArray(body.avoid) ? body.avoid : []));
     if (path === "/release") { this.gate.release(String(body.lease)); return jsonResponse(200, { ok: true }); }

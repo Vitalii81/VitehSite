@@ -1877,6 +1877,30 @@ class LiveSettingsTests(ApiTests):
         self.assertEqual(self.call("POST", "apply-settings", {})[0], 401, "needs a session")
 
 
+class VisitStatsTests(ApiTests):
+    def test_stats_come_from_the_worker_with_the_bearer_key_and_need_a_session(self):
+        from vadmin import settings, stats
+        cookie = self.login()
+        st, _, out = self.call("GET", "stats", {}, cookie=cookie)
+        self.assertEqual((st, out["error"]), (409, "no_token"), "no key file yet")
+        with open(settings.token_path(self.w.paths), "w") as f:
+            f.write("k-123\n")
+        sent = {}
+
+        def run(url, token):
+            sent.update(url=url, auth=token)
+            return '{"ok": true, "views": 3, "days": [], "pages": []}'
+        self.assertEqual(stats.fetch(self.w.paths, "7", run)["views"], 3)
+        self.assertEqual(sent, {"url": "https://viteh.org/api/stats?days=7", "auth": "k-123"})
+        stats.fetch(self.w.paths, "junk", run)
+        self.assertTrue(sent["url"].endswith("days=30"))
+        stats.fetch(self.w.paths, "99999", run)
+        self.assertTrue(sent["url"].endswith("days=400"))
+        with self.assertRaises(core.ApiError):
+            stats.fetch(self.w.paths, 7, lambda *a: '{"error": "auth"}')
+        self.assertEqual(self.call("GET", "stats", {})[0], 401, "needs a session")
+
+
 class IdeasCatalogTests(ApiTests):
     """The admin-only service-ideas catalog: sanitised like any custom service, added DISABLED, never part of a package."""
 

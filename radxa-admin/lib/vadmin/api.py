@@ -154,6 +154,9 @@ def _handle(paths, method, action, headers, body, query, client):
         if action == "edit-page":
             lang = str((query.get("lang") or [""])[0])
             return editpage.render_page(paths, ctx, read_draft(paths, ctx), lang, uploads.listing(paths), factory_images(paths), SECTION_LABELS, str((query.get("page") or [""])[0]))
+        if action == "stats":                                  # visit counters kept by the Worker (see stats.py)
+            from . import stats
+            return _json(200, stats.fetch(paths, (query.get("days") or ["30"])[0]))
         if action == "ideas":
             return _json(200, dict(ideas.view(ctx), ok=True, added=[s["title"] for s in read_draft(paths, ctx)["extra"]["services"]]))
         if action == "status":
